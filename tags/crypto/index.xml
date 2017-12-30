@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Crypto on Segflow</title>
+    <link>http://segflow.github.io/tags/crypto/</link>
+    <description>Recent content in Crypto on Segflow</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 30 Dec 2017 13:20:47 +0100</lastBuildDate>
+    
+	<atom:link href="http://segflow.github.io/tags/crypto/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>3DS CTF: Xesar (crypto)</title>
+      <link>http://segflow.github.io/post/xesar/</link>
+      <pubDate>Sat, 30 Dec 2017 13:20:47 +0100</pubDate>
+      
+      <guid>http://segflow.github.io/post/xesar/</guid>
+      <description>Recently i decided to start playing CTFs again, and since i needed some training before playing a real one, I decided to take a look at some recent CTF in CTFtime.org.
+And then i found this crypto task with no solution for it yet, and that&amp;rsquo;s why I jumped into it :)
+The task was the following:
+ We found a paperback with some notes. Help us to find what is this.</description>
+    </item>
+    
+  </channel>
+</rss>
