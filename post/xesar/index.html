@@ -49,9 +49,9 @@
       <div class="post-content">
         
 
-<p>Recently i decided to start playing CTFs again, and since i needed some training before playing a real one, I decided to take a look at some recent CTF in <a href="https://ctftime.org/">CTFtime.org</a>.</p>
+<p>Recently I decided to start playing CTFs again, and since I needed some training before playing a real one, I decided to take a look at some recent CTFs in <a href="https://ctftime.org/">CTFtime.org</a>.</p>
 
-<p>And then i found this crypto task with no solution for it yet, and that&rsquo;s why I jumped into it :)</p>
+<p>And then I found this crypto task with no solution for it yet, and that&rsquo;s why I jumped into it :)</p>
 
 <p>The task was the following:</p>
 
@@ -63,7 +63,7 @@
 
 <p>The zip file contains two files: <code>encrypted_message.txt</code> and <code>draft_xesar.jpg</code></p>
 
-<p>The <code>draft_xesar.jpg</code> images is the following:</p>
+<p>The <code>draft_xesar.jpg</code> image is the following:</p>
 
 <blockquote>
 
@@ -93,9 +93,9 @@ for i in range(len(keypass)):
 ciphertext = encode_base64(cipher)
 </code></pre>
 
-<p>So by base64 decoding the encrypted message we get the content of <code>cipher</code> which itself is created by XORing every byte in the plaintext by <code>Y</code>.</p>
+<p>So by base64 decoding the encrypted message, we get the content of <code>cipher</code> which itself is created by XORing every byte in the plaintext with <code>Y</code>.</p>
 
-<p>Y only depends on the key, making it act as a key itself, by being a direct derivate of the key we can compute Y even before start encrypting the original text, the following code shows how is that possible:</p>
+<p>Y only depends on the key, making it act as a key itself, by being a direct derivate of the key we can compute Y even before start encrypting the original text, the following code shows how this is possible:</p>
 
 <pre><code class="language-python">key = &quot;testkey&quot;
 plaintext = &quot;the flag is here&quot;
@@ -123,14 +123,14 @@ ciphertext = encode_base64(cipher)
 
 <ul>
 <li>Calculate the key length using <code>Kasiski examination</code> attack,</li>
-<li>Calculate the key byte per byte via a frequency analysis.</li>
+<li>Compute the key byte per byte via a frequency analysis.</li>
 </ul>
 
 <h3 id="calculate-the-key-length">Calculate the key length</h3>
 
 <p>First we need to find the key length, this can be done by performing a <a href="https://en.wikipedia.org/wiki/Kasiski_examination">Kasiski examination</a>,</p>
 
-<p>Mainly we need to take the ciphertext text, shift it by 1 byte left (of right) to have another ciphertext which we will name ciphertext_shifted1</p>
+<p>Mainly we need to take the ciphertext text, shift it by 1 byte to the left (or right) to have another ciphertext, which we will name ciphertext_shifted1</p>
 
 <p>Now via a simple loop we count how many bytes both <code>ciphertext</code> and <code>ciphertext_shifted1</code> have in the same position i, let&rsquo;s name this value <code>same_count</code>. Here is an example to make it more understandable:</p>
 
@@ -140,11 +140,11 @@ ciphertext_shifted1 = &quot;BCAA&quot;
                           ^
 </code></pre>
 
-<p>The result here is 1, since only at position 4, both the two cipher have the same value (the byte A).</p>
+<p>The result here is 1, since only at position 4 do  both the two ciphers have the same value (the byte A).</p>
 
-<p>We keep shift the ciphertext again by 2, 3 and so on and every time we calculate the <code>same_count</code>.</p>
+<p>We shift the ciphertext again by 2, 3 and so on and every time we calculate the <code>same_count</code>.</p>
 
-<p>The above code will do that for us:</p>
+<p>The next code will do that for us:</p>
 
 <pre><code class="language-python">with open(&quot;encrypted_message_raw.bin&quot;) as f:
     encrypted = f.read()
@@ -202,15 +202,15 @@ $ python same_counts.py
  32 | 129 |================================
 </code></pre>
 
-<p>We notice that <code>same_count</code> value is specially high when we shift the ciphertext by 10, 20 and 30. Kasisky says that in this case, where multiple shift values has high <code>same_count</code> values the key length is probably the Greatest common divisor (GCD), in this case it&rsquo;s 10.</p>
+<p>We notice that <code>same_count</code> value is especially high when we shift the ciphertext by 10, 20 and 30. Kasisky says that in this case, where multiple shift values have high <code>same_count</code> values the key length is probably the Greatest Common Divisor (GCD), in this case it&rsquo;s 10.</p>
 
 <p>So probably the key length is 10. Now let&rsquo;s crack it.</p>
 
 <h3 id="key-decode">Key decode</h3>
 
-<p>Since the key is repeated to make it&rsquo;s length equal to the original text, every i-th byte of the original is actually XORed with the same key. So by lining up the ciphertext in n columns (remember n in the key length), we will get N differents ciphertexts which can be treated like simple substitution ciphers</p>
+<p>Since the key is repeated to make its length equal to the original text, every i-th byte of the original text is actually XORed with the same key. So by lining up the ciphertext in n columns (remember n in the key length), we will get N different ciphertexts which can be treated as a simple substitution cipher.s</p>
 
-<p>Simple substitution ciphers can be broken by doing a simple frequency analysis, for example let&rsquo;s say we have XORed every byte of a message by the byte 0x40, the above code will do that</p>
+<p>Simple substitution ciphers can be broken by doing a simple frequency analysis, for example let&rsquo;s say we have XORed every byte of a message by the byte 0x40, and this code will do just that</p>
 
 <pre><code class="language-python">xor_key = 0x40
 data = LONG_PLAIN_TEXT_HERE
@@ -220,11 +220,11 @@ for x in data:
 print(cipher)
 </code></pre>
 
-<p>Frequency analysis can help breaking substitution ciphers here because of the fact that the count of the byte 0x20 in the original text is equal to the count of  0x20 XOR 0x40 (0x60) in the final cipher. So if we have an idea what the most present byte in the original text is we can recover the xor_key from the cipher.</p>
+<p>Frequency analysis can help breaking substitution ciphers here because of the fact that the count of the byte 0x20 in the original text is equal to the count of  0x20 XOR 0x40 (0x60) in the final cipher. So if we have an idea about the most present byte in the original text is, we can recover the xor_key from the cipher.</p>
 
-<p>In the english grammar the letter E is most used one, another candidate is <code>space</code>, yes there is lot of spaces in long texts right?</p>
+<p>In the english grammar the letter E is the most used one, and another candidate is <code>space</code>, yes there are a lot of spaces in long texts right?</p>
 
-<p>Notice that <code>frequency analysis</code> is only effective if the ciphertext is long enough, which is the case here!</p>
+<p>Notice that frequency analysis is only effective if the ciphertext is long enough, which is the case here!</p>
 
 <p>First let&rsquo;s start by splitting the cipher text into 10(the key length) columns.</p>
 
@@ -237,7 +237,7 @@ for i in range(0, key_len):
     columns.append(col)
 </code></pre>
 
-<p>Now we get the most frequent character in each columns and XOR it with our condidate &ldquo; &ldquo;, which is normally the most present character in a long human readable text. The result we get for each column <code>i</code> is actually <code>key[i]</code></p>
+<p>Now we get the most frequent character in each columns and XOR it with our condidate &ldquo; &ldquo;, which is normally the most present character in a long human-readable text. The result we get for each column <code>i</code> is actually <code>key[i]</code></p>
 
 <pre><code class="language-python">def most_frequent(text):
     frequency = Counter()
@@ -267,9 +267,9 @@ print(decrypt(encrypted, key))
 <pre><code class="language-text">LOREM  PSUM DOLO; SIT AMETE CONSECTE=UR ADIPIS*ING ELIT.IMAURIS MA=TIS RISUSIEU SUSCIP TCONSEQU(T. DONEC *ONGUE DAP BUS IPSUME A IMPERD ET EST RU=RUM ID. D&amp;NEC NON I9SUM EGET &amp;RCI VIVER;A PORTA. :ED SAGITT S IPSUM N,C LACUS S&lt;SCIPIT CO'VALLIS. N&lt;LLA IMPER-IET NISI &lt;T DICTUM :USCIPIT. -UIS AC SA.ITTIS LOR,M. PELLEN=ESQUE HAB TANT MORB  TRISTIQU, SENECTUSIET NETUS ,T MALESUA-A FAMES A* TURPIS E.ESTAS. PR&amp;IN BLANDI= NEQUE QU S MAURIS $AXIMUS,V,L PRETIUMINISI PORT(. INTEGERINEC SUSCI9IT URNA.F&lt;SCE IN PH(RETRA LAC&lt;S. FUSCE /EUGIATACIIPSUM ET $OLESTIE. :USPENDISS, NEC ENIMIA MASSA A*CUMSAN BL(NDIT. SUS9ENDISSE C&amp;NVALLIS O;CI SIT AM,T IPSUM C&amp;NSEQUAT, ?EL ALIQUA$ ENIM FEU.IAT. INTE.ER SED CO'DIMENTUM -OLOR, VIT(E CURSUS 'ULLA. VIV(MUS EGET 'UNC A MI 9LACERAT I$PERDIET. 'ULLAM ESTIJUSTO, AL QUET RHON*US ORCI S&amp;DALES, PU%VINAR VEH CULA DOLO;. VIVAMUSIRHONCUS D GNISSIM A;CU EU PHA;ETRA. SUS9ENDISSE E= DOLOR OD O. CURABI=UR IMPERD ET LECTUSISIT AMET %ACINIA VE!ICULA. FU:CE DIAM N SI, GRAVI-A ET SEMP,R SED, EL,IFEND UT $I.MAURIS :ODALES PU;US EFFICI=UR NISL C&lt;RSUS, AT =EMPOR PUR&lt;S PULVINA;. INTEGERIULTRICIESE IPSUM NE* LUCTUS C&amp;NSEQUAT, $AURIS EX =EMPUS MAS:A, NON MA%ESUADA LI.ULA TORTO; UT MASSAG SUSPENDI:SE VEHICU%A NEQUE V TAE LECTU: CONSEQUA=, QUIS CO'GUE ANTE ?OLUTPAT.  NTEGER SE$PER RUTRU$ MAGNA, S T AMET TR STIQUE MA.NA. ALIQU(M ERAT VO%UTPAT. ININON SOLLI*ITUDIN MIG MAECENASIVEHICULA (UGUE PURU:, A TINCI-UNT DOLORIFAUCIBUS :IT AMET. 'ULLAM BLA'DIT EFFIC TUR SAPIE' IN LAORE,T. CRAS V&amp;LUTPAT NE8UE MAGNA,IVOLUTPAT *ONSEQUAT %OREM FERM,NTUM EU. ,TIAM ET L&lt;CTUS METU:. NULLA A= METUS TE%LUS. PELL,NTESQUE R SUS IPSUME PORTA SI= AMET POS&lt;ERE ID, P!ARETRA NO' RISUS. Q&lt;ISQUE EGE= EST VEHI*ULA, TINC DUNT URNAIAT, MOLES=IE MI. SE- UT SEM A%IQUAM, TI'CIDUNT DI(M SED, PO;TTITOR OR*I. SED QU S BLANDITISEM. MAEC,NAS EST P&lt;RUS, VOLU=PAT SIT A$ET DUI EUE MATTIS A&lt;CTOR ELITGCRAS NEC 9URUS SIT (MET URNA 9LACERAT F,UGIAT. NU%LAM DICTU$ LIBERO E=ANTE GRA?IDA, LAOR,ET FACILI:IS URNA E&lt;ISMOD. ET AM ET QUA$ AC NIBH (CCUMSAN M&amp;LESTIE. VVAMUS MOL,STIE EST 8UIS SCELE;ISQUE IAC&lt;LIS. IN V,L ERAT NE8UE. NULLA$ SAGITTISINEC TELLU: ET PLACE;AT. MAURI: MOLESTIEISAPIEN SI= AMET SAP EN PLACER(T, EGET V,HICULA NU%LA DICTUMG NAM PURU: LECTUS, =RISTIQUE 'EC BLANDI= SED, VEH CULA VITA, NULLA. A%IQUAM ERA= VOLUTPATG QUISQUE -ICTUM ELE$ENTUM FEL S FEUGIATITEMPUS. I'TEGER ACC&lt;MSAN RISU: EGET MAX MUS EUISM&amp;D. PELLEN=ESQUE HAB TANT MORB  TRISTIQU, SENECTUSIET NETUS ,T MALESUA-A FAMES A* TURPIS E.ESTAS. VI?AMUS BLAN-IT, NISL  D CURSUS $OLESTIE, ?ELIT PURU: MATTIS L GULA, SITIAMET ELEM,NTUM AUGU, NISL VELITORTOR. P;OIN QUIS &lt;LTRICES N SL. CURAB TUR SEMPE; NULLA NO' ERAT PLA*ERAT, AT ;UTRUM TEL%US PELLEN=ESQUE. AE'EAN PELLE'TESQUE UL%AMCORPER =ELLUS, SO%LICITUDINIPORTTITORILACUS CON-IMENTUM E&lt;.UT NEC D&lt;I MOLLIS ,X VIVERRAICONVALLISG SUSPENDI:SE IN ANT, NON DIAMIULLAMCORP,R VARIUS ,U AC ODIOG DONEC OR*I VELIT, %UCTUS AC %ECTUS QUI:, BIBENDU$ ALIQUET -OLOR. AEN,AN QUAM T&lt;RPIS, PLA*ERAT SED (LIQUAM NO', PLACERA= QUIS LIG&lt;LA. MAURI: AC ANTE 9ORTTITOR %EO TINCID&lt;NT POSUER,. VESTIBU%UM MOLLISIID NULLA ,GET TRIST QUE. MAEC,NAS VIVER;A LACUS A&lt;CTOR LIGU%A POSUEREE EU SUSCI9IT EX HEN-RERIT.ETI(M EFFICIT&lt;R VESTIBU%UM DOLOR,INON PORTT TOR LECTU: PHARETRAIVEL. MAUR S PHARETR( ELEIFENDISCELERISQ&lt;E. PELLEN=ESQUE POR=A SEM LEOE NEC TEMP&amp;R URNA SE$PER SED. :ED DOLOR ,X, PRETIU$ VELENIMISED. THE /LAG IS 3D:{1_H4V3_5YM3_CR1P7065K1LL5}
 </code></pre>
 
-<p>Doesn&rsquo;t this looks familiar? yes it&rsquo;s the famous <code>Lorem Ipsum</code> text, but wait somethign is strange here instead of the I we have a space! Actually frequency analysis cannot be 100% accurate so human actions is sometines needed to finish the job.</p>
+<p>Doesn&rsquo;t this look familiar? yes it&rsquo;s the famous <code>Lorem Ipsum</code> text, but wait something is strange here. Instead of the character I we have a space! Actually, frequency analysis cannot be 100% accurate so human interference is sometimes needed to finish the job.</p>
 
-<p>In this case the key is <code>MOIIIG&quot;EMK</code>, and we notice that always at the 7th character the result is wrong, so the frequency analysis in the 7th columns was wrong. But since we know what the 7th character should be we can hardcode it.</p>
+<p>In this case the key is <code>MOIIIG&quot;EMK</code>, and we notice that always at the 7th character the result is wrong, so the frequency analysis in the 7th column was wrong. But since we know what the 7th character should be we can hardcode it.</p>
 
 <p>The 7th charatcter in the cipher text is 0x02, and in the final decoded text it should be 0x49 (ascii of I), so the 7th character of the key should be 0x02 XOR 0x49 which is 0x4b the ascii code of <code>K</code></p>
 
@@ -278,7 +278,7 @@ print(decrypt(encrypted, key))
 <pre><code class="language-text">LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. MAURIS MATTIS RISUS EU SUSCIPITCONSEQUAT. DONEC CONGUE DAPIBUS IPSUM, A IMPERDIET EST RUTRUM ID. DONEC NON IPSUM EGET ORCI VIVERRA PORTA. SED SAGITTIS IPSUM NEC LACUS SUSCIPIT CONVALLIS. NULLA IMPERDIET NISI UT DICTUM SUSCIPIT. DUIS AC SAGITTIS LOREM. PELLENTESQUE HABITANT MORBI TRISTIQUE SENECTUS ET NETUS ET MALESUADA FAMES AC TURPIS EGESTAS. PROIN BLANDIT NEQUE QUIS MAURIS MAXIMUS,VEL PRETIUM NISI PORTA. INTEGER NEC SUSCIPIT URNA.FUSCE IN PHARETRA LACUS. FUSCE FEUGIATAC IPSUM ET MOLESTIE. SUSPENDISSE NEC ENIM A MASSA ACCUMSAN BLANDIT. SUSPENDISSE CONVALLIS ORCI SIT AMET IPSUM CONSEQUAT, VEL ALIQUAM ENIM FEUGIAT. INTEGER SED CONDIMENTUM DOLOR, VITAE CURSUS NULLA. VIVAMUS EGET NUNC A MI PLACERAT IMPERDIET. NULLAM EST JUSTO, ALIQUET RHONCUS ORCI SODALES, PULVINAR VEHICULA DOLOR. VIVAMUS RHONCUS DIGNISSIM ARCU EU PHARETRA. SUSPENDISSE ET DOLOR ODIO. CURABITUR IMPERDIET LECTUS SIT AMET LACINIA VEHICULA. FUSCE DIAM NISI, GRAVIDA ET SEMPER SED, ELEIFEND UT MI.MAURIS SODALES PURUS EFFICITUR NISL CURSUS, AT TEMPOR PURUS PULVINAR. INTEGER ULTRICIES, IPSUM NEC LUCTUS CONSEQUAT, MAURIS EX TEMPUS MASSA, NON MALESUADA LIGULA TORTOR UT MASSA. SUSPENDISSE VEHICULA NEQUE VITAE LECTUS CONSEQUAT, QUIS CONGUE ANTE VOLUTPAT. INTEGER SEMPER RUTRUM MAGNA, SIT AMET TRISTIQUE MAGNA. ALIQUAM ERAT VOLUTPAT. IN NON SOLLICITUDIN MI. MAECENAS VEHICULA AUGUE PURUS, A TINCIDUNT DOLOR FAUCIBUS SIT AMET. NULLAM BLANDIT EFFICITUR SAPIEN IN LAOREET. CRAS VOLUTPAT NEQUE MAGNA, VOLUTPAT CONSEQUAT LOREM FERMENTUM EU. ETIAM ET LUCTUS METUS. NULLA AT METUS TELLUS. PELLENTESQUE RISUS IPSUM, PORTA SIT AMET POSUERE ID, PHARETRA NON RISUS. QUISQUE EGET EST VEHICULA, TINCIDUNT URNA AT, MOLESTIE MI. SED UT SEM ALIQUAM, TINCIDUNT DIAM SED, PORTTITOR ORCI. SED QUIS BLANDIT SEM. MAECENAS EST PURUS, VOLUTPAT SIT AMET DUI EU, MATTIS AUCTOR ELIT.CRAS NEC PURUS SIT AMET URNA PLACERAT FEUGIAT. NULLAM DICTUM LIBERO ETANTE GRAVIDA, LAOREET FACILISIS URNA EUISMOD. ETIAM ET QUAM AC NIBH ACCUMSAN MOLESTIE. VIVAMUS MOLESTIE EST QUIS SCELERISQUE IACULIS. IN VEL ERAT NEQUE. NULLAM SAGITTIS NEC TELLUS ET PLACERAT. MAURIS MOLESTIE SAPIEN SIT AMET SAPIEN PLACERAT, EGET VEHICULA NULLA DICTUM. NAM PURUS LECTUS, TRISTIQUE NEC BLANDIT SED, VEHICULA VITAE NULLA. ALIQUAM ERAT VOLUTPAT. QUISQUE DICTUM ELEMENTUM FELIS FEUGIAT TEMPUS. INTEGER ACCUMSAN RISUS EGET MAXIMUS EUISMOD. PELLENTESQUE HABITANT MORBI TRISTIQUE SENECTUS ET NETUS ET MALESUADA FAMES AC TURPIS EGESTAS. VIVAMUS BLANDIT, NISL ID CURSUS MOLESTIE, VELIT PURUS MATTIS LIGULA, SIT AMET ELEMENTUM AUGUE NISL VEL TORTOR. PROIN QUIS ULTRICES NISL. CURABITUR SEMPER NULLA NON ERAT PLACERAT, AT RUTRUM TELLUS PELLENTESQUE. AENEAN PELLENTESQUE ULLAMCORPER TELLUS, SOLLICITUDIN PORTTITOR LACUS CONDIMENTUM EU.UT NEC DUI MOLLIS EX VIVERRA CONVALLIS. SUSPENDISSE IN ANTE NON DIAM ULLAMCORPER VARIUS EU AC ODIO. DONEC ORCI VELIT, LUCTUS AC LECTUS QUIS, BIBENDUM ALIQUET DOLOR. AENEAN QUAM TURPIS, PLACERAT SED ALIQUAM NON, PLACERAT QUIS LIGULA. MAURIS AC ANTE PORTTITOR LEO TINCIDUNT POSUERE. VESTIBULUM MOLLIS ID NULLA EGET TRISTIQUE. MAECENAS VIVERRA LACUS AUCTOR LIGULA POSUERE, EU SUSCIPIT EX HENDRERIT.ETIAM EFFICITUR VESTIBULUM DOLOR, NON PORTTITOR LECTUS PHARETRA VEL. MAURIS PHARETRA ELEIFEND SCELERISQUE. PELLENTESQUE PORTA SEM LEO, NEC TEMPOR URNA SEMPER SED. SED DOLOR EX, PRETIUM VELENIM SED. THE FLAG IS 3DS{1_H4V3_50M3_CR1P70_5K1LL5}
 </code></pre>
 
-<p>And that&rsquo;s it, the text is human readable and at the end we can see that the actual flag is <code>3DS{1_H4V3_50M3_CR1P70_5K1LL5}</code></p>
+<p>And that&rsquo;s it, the text is human-readable and at the end we can see that the actual flag is <code>3DS{1_H4V3_50M3_CR1P70_5K1LL5}</code></p>
 
 <p>The final code can be found here: <a href="/code/3ds-ctf-2017/xesar.py">Xesar.py</a></p>
 
