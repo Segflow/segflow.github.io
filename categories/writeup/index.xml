@@ -13,14 +13,15 @@
     
     <item>
       <title>3DS CTF: Xesar (crypto)</title>
-      <link>https://segflow.github.io/post/xesar/</link>
+      <link>https://segflow.github.io/post/3ds-ctf-xesar/</link>
       <pubDate>Sat, 30 Dec 2017 13:20:47 +0100</pubDate>
       
-      <guid>https://segflow.github.io/post/xesar/</guid>
-      <description>Recently I decided to start playing CTFs again, and since I needed some training before playing a real one, I decided to take a look at some recent CTFs in CTFtime.org.
-And then I found this crypto task with no solution for it yet, and that&amp;rsquo;s why I jumped into it :)
-The task was the following:
- We found a paperback with some notes. Help us to find what is this.</description>
+      <guid>https://segflow.github.io/post/3ds-ctf-xesar/</guid>
+      <description>&lt;p&gt;Recently I decided to start playing CTFs again, and since I needed some training before playing a real one, I decided to take a look at some recent CTFs in &lt;a href=&#34;https://ctftime.org/&#34;&gt;CTFtime.org&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;And then I found this crypto task with no writeup for it yet, and that&amp;rsquo;s why I jumped into it :)&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;</description>
     </item>
     
   </channel>
