@@ -315,7 +315,7 @@ The logic behind this function is the following:</p>
 0x870: jg 0x94c            ; jump to 0x94c if greater
 </code></pre>
 
-<p>The conditional jump is done using the <code>jg</code> instruction which is used for <strong>signed</strong> comparison. Check this nice page to better understand <a href="http://unixwiz.net/techtips/x86-jumps.html">x86-jumps</a>. But the <code>read</code> function interpret it&rsquo;s argument as an unsigned integer, which mean if, when prompted for the size, we type <code>-1</code> (<strong>0xffffffff</strong> in hex) we can bypass the check against <strong>0x63</strong>. This is possible because <strong>0xffffffff &lt; 0x63</strong> when they are interpreted as unsigned numbers.</p>
+<p>The conditional jump is done using the <code>jg</code> instruction which is used for <strong>signed</strong> comparison. Check this nice page to better understand <a href="http://unixwiz.net/techtips/x86-jumps.html">x86-jumps</a>. But the <code>read</code> function interpret it&rsquo;s argument as an unsigned integer, which mean if, when prompted for the size, we type <code>-1</code> (<strong>0xffffffff</strong> in hex) we can bypass the check against <strong>0x63</strong>. This is possible because <strong>0xffffffff &lt; 0x63</strong> when they are interpreted as <em>signed</em> numbers.</p>
 
 <p>Later when we reach the <code>read</code> function, <strong>0xffffffff</strong> is interpreted as an unsigned number so it&rsquo;s possible to read up to <code>4GB</code> of data.</p>
 
