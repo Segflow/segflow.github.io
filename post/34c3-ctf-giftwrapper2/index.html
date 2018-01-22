@@ -21,7 +21,7 @@
     
     <meta property="og:tags" content="rop">
     
-    <meta name="generator" content="Hugo 0.32.1" />
+    <meta name="generator" content="Hugo 0.33" />
     <title>34C3 CTF: GiftWrapper 2 (pwn) &middot; Segflow</title>
     
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -184,9 +184,9 @@ Wow! This looks so beautiful
 &gt; 
 </code></pre>
 
-<p>The <code>modinfo</code> command print some info about loaded module and it&rsquo;s base address. Probably this is about the <code>giftwrapper2.so</code> found in the challenge files.</p>
+<p>The <code>modinfo</code> command prints some info about the loaded module and its base address. Probably this is about the <code>giftwrapper2.so</code> found in the challenge files.</p>
 
-<p>The <code>wrap</code> command asks as about the size of the gift and the gift content, after that a nice ascii art is shown containing the gift message.</p>
+<p>The <code>wrap</code> command asks about the size of the gift and the gift text, after that a nice ascii art is shown containing the gift message.</p>
 
 <p>Since the gift message is printed back to us, I thought it will be a good idea to test if there is a <code>format string</code> vulnerability. Turns out there wasn&rsquo;t.</p>
 
@@ -232,7 +232,7 @@ Sorry! This gift is too large.
 &gt; 
 </code></pre>
 
-<p>Humm it gets truncated, we are also not allowed to have very big gift messages. So probably the size field is controlled (is it?).</p>
+<p>Humm it gets truncated, we are also not allowed to have a very big gift message. So probably the size field is controlled (is it?).</p>
 
 <p>Now that we understand what the server is doing, let&rsquo;s check the source file.</p>
 
@@ -240,13 +240,13 @@ Sorry! This gift is too large.
 
 <ul>
 <li>Setup a socket</li>
-<li>Load module</li>
-<li>Enter  the regular <code>accept -&gt; fork -&gt; drop_priv -&gt; interact</code> loop</li>
+<li>Load the <code>giftwrapper2.so</code> module</li>
+<li>Enter the regular <code>accept -&gt; fork -&gt; drop_priv -&gt; interact</code> loop</li>
 </ul>
 
 <p>The <code>interact</code> function securely reads data from the user, and then calls <code>handle_input</code> which executes the corresponding command based on the user input.</p>
 
-<p><code>load_module</code> is as follow :</p>
+<p>The <code>load_module</code> function is as follow:</p>
 
 <pre><code class="language-cpp">void load_module() {
     char* error;
@@ -273,7 +273,7 @@ Sorry! This gift is too large.
 }
 </code></pre>
 
-<p>Mainly it loads the <code>giftwrapper2.so</code> module, calls <code>initialize_module</code> within that module and pass the <code>register_command</code> as the second argument. After that it registers two commands <code>help</code> and <code>modinfo</code>.</p>
+<p>Mainly it loads the <code>giftwrapper2.so</code> module, calls <code>initialize_module</code> within that module and pass the <code>register_command</code> as its second argument. After that it registers two commands <code>help</code> and <code>modinfo</code>.</p>
 
 <p>So probably the <code>wrap</code> command is registered by the module itself.</p>
 
@@ -287,11 +287,12 @@ Sorry! This gift is too large.
     
 </figure>
 
-<br/>
-The logic behind this function is the following:</p>
+<br/></p>
+
+<p>The logic behind this function is the following:</p>
 
 <ul>
-<li>Read the size from user and store it into a buffer
+<li>Read the size from the user and store it into a buffer
 
 <ul>
 <li>If the read fails -&gt; exit</li>
@@ -299,12 +300,12 @@ The logic behind this function is the following:</p>
 <li>Call <code>strtol</code> to convert the size into a number.
 
 <ul>
-<li>If the size is above 99 -&gt; print error message and exit the function</li>
-<li>Else, use the <code>read</code> function and pass the size to it&rsquo;s argument in order to read up to <code>size</code> bytes.</li>
+<li>If the size is above 99 -&gt; print an error message and exit the function</li>
+<li>Else, use the <code>read</code> function and pass the size as its argument in order to read up to <code>size</code> bytes.</li>
 </ul></li>
 </ul>
 
-<p>Even though it sounds secure, it&rsquo;s not. The flaw is within is block, can you spot it?</p>
+<p>Even though it sounds secure, it&rsquo;s not. The flaw is within this block, can you spot it?</p>
 
 <pre><code class="language-asm">0x855: lea rdi, rsp + 0x65
 0x85a: mov edx, 0
@@ -315,7 +316,7 @@ The logic behind this function is the following:</p>
 0x870: jg 0x94c            ; jump to 0x94c if greater
 </code></pre>
 
-<p>The conditional jump is done using the <code>jg</code> instruction which is used for <strong>signed</strong> comparison. Check this nice page to better understand <a href="http://unixwiz.net/techtips/x86-jumps.html">x86-jumps</a>. But the <code>read</code> function interpret it&rsquo;s argument as an unsigned integer, which mean if, when prompted for the size, we type <code>-1</code> (<strong>0xffffffff</strong> in hex) we can bypass the check against <strong>0x63</strong>. This is possible because <strong>0xffffffff &lt; 0x63</strong> when they are interpreted as <em>signed</em> numbers.</p>
+<p>The conditional jump is done using the <code>jg</code> instruction which is used for <strong>signed</strong> comparison. Check this nice page to better understand <a href="http://unixwiz.net/techtips/x86-jumps.html">x86-jumps</a>. But the <code>read</code> function interpret its argument as an unsigned integer, which mean if, when prompted for the size, we type <code>-1</code> (<strong>0xffffffff</strong> in hex) we can bypass the check against <strong>0x63</strong>. This is possible because <strong>0xffffffff &lt; 0x63</strong> when they are interpreted as <em>signed</em> numbers.</p>
 
 <p>Later when we reach the <code>read</code> function, <strong>0xffffffff</strong> is interpreted as an unsigned number so it&rsquo;s possible to read up to <code>4GB</code> of data.</p>
 
@@ -345,7 +346,7 @@ Wow! This looks so beautiful
 $ 
 </code></pre>
 
-<p>Great instead of printing the prompt again, the connection immediately exit after printing the ascii art, this mean we probably did overwrite the return address stored in the stack.</p>
+<p>Great instead of printing the prompt again, the connection immediately exit after printing the ascii art, this mean we probably did overwrite the return address stored in the stack, thus crashing the binary.</p>
 
 <p>Using <code>rabin2</code> from the <a href="http://rada.re/r/">radare2</a> suite, we can get some info from the binary:</p>
 
@@ -382,7 +383,7 @@ $
 
 <p>Great no <a href="https://en.wikipedia.org/wiki/Stack_buffer_overflow">stack canary</a>, but the stack is not executable (<a href="https://en.wikipedia.org/wiki/NX_bit">NX Bit</a> enabled).</p>
 
-<p>The next step is to know from what offset we start controlling the instruction pointer <strong>rip</strong>, we can do this manually but trying different lengths, but we can also use <code>ragg2</code> to generate a <a href="https://en.wikipedia.org/wiki/De_Bruijn_sequence">Debruijn sequence</a> and calculate the exact offset after the crash.</p>
+<p>The next step is to know from what offset we start controlling the instruction pointer <strong>rip</strong>, we can do this manually by trying different lengths, but we can also use <code>ragg2</code> to generate a <a href="https://en.wikipedia.org/wiki/De_Bruijn_sequence">Debruijn sequence</a> and calculate the exact offset after the crash.</p>
 
 <p>The size of wrap&rsquo;s stack frame is <strong>0x70</strong> (112 in decimal), so let&rsquo;s generate a sequence slightly greater than 112</p>
 
@@ -391,7 +392,7 @@ AAABAACAADAAEAAFAAGAAHAAIAAJAAKAALAAMAANAAOAAPAAQAARAASAATAAUAAVAAWAAXAAYAAZAAaA
 $ 
 </code></pre>
 
-<p>Now we can either attach the server to a debugger, configure it to follow child processes, and wait for it to crash so we can get the value of <code>rip</code> register and calculate the offset, or simple use <code>dmesg</code> command to print info about the last crashes happened in our system. Since I&rsquo;am lazy, I went for the second approach.</p>
+<p>Now we can either attach the server to a debugger, configure it to follow child process, and wait for it to crash so we can get the value of <code>rip</code> register and calculate the offset, or simply use the <code>dmesg</code> command to print info about the last crashes happened in our system. Since I&rsquo;am lazy, I went for the second approach.</p>
 
 <pre><code class="language-shell">$ nc 0 12345
 *
@@ -432,10 +433,10 @@ $
 
 <p>From <code>rabin2</code> output, we already know that the binary&rsquo;s <a href="https://en.wikipedia.org/wiki/Endianness">endianess</a> is Little Endian, so the offset value is <strong>136</strong>.</p>
 
-<p>At this step we know that we control the instruction pointer, we also know that the stack is executable. One way to exploit this is to <a href="https://en.wikipedia.org/wiki/Return-to-libc_attack">return to libc</a>, but since we don&rsquo;t know at what address <code>libc</code> is linked, we need to leak some addresses.</p>
+<p>At this step we know that we control the instruction pointer, we also know that the stack is not executable. One way to exploit this is to <a href="https://en.wikipedia.org/wiki/Return-to-libc_attack">return to libc</a>, but since we don&rsquo;t know at what address <code>libc</code> is mapped in the virtual memory, we need to leak some addresses.</p>
 
-<p>Using <a href="https://en.wikipedia.org/wiki/Return-oriented_programming">ROP</a> we can read from anywhere, this is done because the function <code>puts</code> actually prints bytes from the addresse pointed by <code>rdi</code> register. So by chaining
-<code>pop rdi</code> and <code>call puts</code> gadgets we can mount a read-anywhere attack. In order to calculate <code>libc</code> base address we need to read the address of any symbol from it. Reading any symbol from the <a href="https://en.wikipedia.org/wiki/Global_Offset_Table">GOT</a> table allows us to leak addresses from <code>libc</code>, one good condidate is puts&rsquo; entry in <code>GOT</code>, to get it&rsquo;s address we can use <code>objdump -R</code>:</p>
+<p>Using <a href="https://en.wikipedia.org/wiki/Return-oriented_programming">ROP</a> we can read data from anywhere, this is done because the function <code>puts</code> actually prints bytes from the address pointed by the <code>rdi</code> register. So by chaining
+<code>pop rdi</code> and <code>call puts</code> gadgets we can mount a read-anywhere attack. In order to calculate <code>libc</code> base address we need to read the address of any symbol from it. Reading any symbol from the <a href="https://en.wikipedia.org/wiki/Global_Offset_Table">GOT</a> table allows us to leak addresses from <code>libc</code>, one good candidate is puts&rsquo; entry in <code>GOT</code>, to get its address we can use <code>objdump -R</code>:</p>
 
 <pre><code class="language-shell">$ objdump -R server
 server:     file format elf64-x86-64
@@ -457,7 +458,7 @@ $
 [0x00400dc0]&gt; 
 </code></pre>
 
-<p>The following python code connect to server, interact with it and then send our rop chain. I&rsquo;am using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this, since it make network programming much more easy and funny.</p>
+<p>The following python code connect to server, interact with it and then send our rop chain. I&rsquo;am using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this, since it makes network programming much more easy and funny.</p>
 
 <pre><code class="language-python">from pwn import *
 
@@ -477,7 +478,7 @@ r.sendlineafter(&quot;&gt; &quot;, &quot;wrap&quot;)  # Send the wrap command
 r.sendlineafter(&quot;|&gt; &quot;, &quot;-1&quot;)  # set the size to -1
 r.sendlineafter(&quot;|&gt; &quot;, payload)  # send the payload
 
-# Get the last sended line, this contain raw data read from *puts_got
+# Get the last sent line, this contains raw data read from *puts_got
 r.recvuntil(&quot;Wow! This looks so beautiful\n&quot;)  # recv the data
 data = r.recvline().strip()
 print(repr(data)) # print raw data so we can verify
@@ -496,11 +497,11 @@ print &quot;puts is at&quot;, hex(puts_absolute)
 New connection from 127.0.0.1 on port 40450
 [+] Opening connection to localhost on port 12345: Done
 127.0.0.1:40450 disconnected
-'`\xc1\x07\xa0\xeb\x7f'
+'`\xc4\x07\xa0\xeb\x7f'
 puts is at 0x7feba007c460
 </code></pre>
 
-<p>Now we know that the absolute address of <code>puts</code> is <strong>0x7feba007c460</strong>, and since we have the libc used by the server we can know puts&rsquo; offset within that libc, we just need to open <code>libc-2.26.so</code> using binary ninja (or radare2 and use the <code>is</code> command) and navigste to <code>puts</code> function:</p>
+<p>Now we know that the absolute address of <code>puts</code> is <strong>0x7feba007c460</strong>, and since we have the libc used by the server we can know puts&rsquo; offset within that libc, we just need to open <code>libc-2.26.so</code> using binary ninja (or radare2 and use the <code>is</code> command) and navigate to <code>puts</code> function:</p>
 
 <p>
 <figure class="text-center">
@@ -517,12 +518,12 @@ puts is at 0x7feba007c460
 <blockquote>
 <p>libc_base = puts absolute address - puts relative offset</p>
 
-<p>libc_base = <strong>0x7feba007c160</strong> - <strong>0x78460</strong> = <strong>0x7feba0004000</strong></p>
+<p>libc_base = <strong>0x7feba007c460</strong> - <strong>0x78460</strong> = <strong>0x7feba0004000</strong></p>
 </blockquote>
 
-<p>By having the libc base address we can get the absolute of any symbol within it, so now we just need to call <code>system(&quot;/bin/sh&quot;)</code> and have our flag.</p>
+<p>By having the libc base address we can get the absolute address of any other symbol within it, so now we just need to call <code>system(&quot;/bin/sh&quot;)</code> and have our flag.</p>
 
-<p>Again using binary ninja we can get the offset of <code>system</code> as well as the string <code>/bin/sh</code>. <br>Argument for <code>system</code> are passed via <code>rdi</code> register, so just before jumping to it we need to load rdi with the address of <code>/bin/sh</code>.</p>
+<p>Again using binary ninja we can get the offset of <code>system</code> as well as the string <code>/bin/sh</code>. <br>Argument for <code>system</code> are passed via the <code>rdi</code> register, so just before jumping into it we need to load rdi with the address of <code>/bin/sh</code>.</p>
 
 <p>We already have a <code>pop rdi</code> gadget so this should be easy now. The final exploit is the following:</p>
 
@@ -533,9 +534,9 @@ puts is at 0x7feba007c460
 New connection from 127.0.0.1 on port 40450
 [+] Opening connection to localhost on port 12345: Done
 127.0.0.1:40450 disconnected
-'`\xc1\x07\xa0\xeb\x7f'
-puts is at 0x7feba007c160
-libc is at 0x7feba0012000
+'`\xc4\x07\xa0\xeb\x7f'
+puts is at 0x7feba007c460
+libc is at 0x7feba0004000
 system is at 0x7feba0052d60
 /bin/sh is at 0x7feba017a917
 [*] Closed connection to localhost port 12345
