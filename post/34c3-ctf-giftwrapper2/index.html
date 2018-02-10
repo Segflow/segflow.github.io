@@ -453,12 +453,12 @@ $
 
 <pre><code class="language-shell">$ radare2 server
 [0x00400dc0]&gt; /Rl pop rdi
-0x00401550: pop rdi; ret;
+0x00401550: pop rdi; ret; 
 0x004015c3: pop rdi; ret;
 [0x00400dc0]&gt; 
 </code></pre>
 
-<p>The following python code connect to server, interact with it and then send our rop chain. I&rsquo;am using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this, since it makes network programming much more easy and funny.</p>
+<p>The following python code connect to server, interact with it and then send our rop chain. I&rsquo;m using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this, since it makes network programming much more easy and funny.</p>
 
 <pre><code class="language-python">from pwn import *
 

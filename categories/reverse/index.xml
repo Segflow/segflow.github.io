@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Reverse on Segflow</title>
+    <link>https://segflow.github.io/categories/reverse/</link>
+    <description>Recent content in Reverse on Segflow</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 30 Jan 2018 21:12:11 +0100</lastBuildDate>
+    
+	<atom:link href="https://segflow.github.io/categories/reverse/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>AceBear CTF: Secure login (reverse)</title>
+      <link>https://segflow.github.io/post/acebear-ctf-secure_login/</link>
+      <pubDate>Tue, 30 Jan 2018 21:12:11 +0100</pubDate>
+      
+      <guid>https://segflow.github.io/post/acebear-ctf-secure_login/</guid>
+      <description>&lt;p&gt;In this article I will share with you the solution to &lt;code&gt;Secure Login&lt;/code&gt; challenge presented at &lt;em&gt;Acebear CTF&lt;/em&gt;, this task was worth 900 points. Even though I did not manage to solve the challenge on time, I still enjoyed it a lot.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
