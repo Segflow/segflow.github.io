@@ -259,7 +259,7 @@ return result
 
 <p>x <code>=</code> s (because b <code>XOR</code> b <code>=</code> 0)</p>
 
-<p>x <code>=</code> 0 (because b <code>XOR</code> b <code>=</code> 0)</p>
+<p>x <code>=</code> 0</p>
 </blockquote>
 
 <p>We know that, in the first iteration <strong>s</strong> is equal to 0, which means that <strong>x</strong> is 0, which also means that <strong>r</strong> is in fact equal to <strong>c</strong> (the first 4 bytes of the key). And just like that we are able to leak the first 4 bytes of the key, simply by forcing <strong>a</strong> to be equal to <strong>b</strong>.</p>
