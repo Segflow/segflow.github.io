@@ -285,9 +285,9 @@ libc.srand(seed)
 <p>Now every time we call <code>libc.rand()</code> we will get the same random number the server will get, this allowing us to leak the value of key, 4 bytes each time. After the first iteration, <strong>s</strong> will no longer contains null, it will contains the first leaked 4 bytes. Again to leak the second 4 bytes, we need to nullify the value of <strong>x</strong>, to do so we just need to have the value of the second 4 bytes of the input equal to <code>b XOR s</code>,</p>
 
 <blockquote>
-<p>x <code>=</code> (b XOR s) <code>XOR</code> b <code>XOR</code> s</p>
+<p>x <code>=</code> (b <code>XOR</code> s) <code>XOR</code> b <code>XOR</code> s</p>
 
-<p>x <code>=</code> b XOR s <code>XOR</code> b <code>XOR</code> s</p>
+<p>x <code>=</code> b <code>XOR</code> s <code>XOR</code> b <code>XOR</code> s</p>
 
 <p>x <code>=</code> 0</p>
 </blockquote>
