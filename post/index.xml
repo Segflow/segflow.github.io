@@ -23,6 +23,17 @@
     </item>
     
     <item>
+      <title>PlaidCTF: Shop (pwn)</title>
+      <link>https://segflow.github.io/post/plaid-ctf-shop/</link>
+      <pubDate>Tue, 30 Jan 2018 21:12:11 +0100</pubDate>
+      
+      <guid>https://segflow.github.io/post/plaid-ctf-shop/</guid>
+      <description>&lt;p&gt;Below you find the full exploit for PlaidCTF pwn200 task. Full write up will follow up.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;</description>
+    </item>
+    
+    <item>
       <title>34C3 CTF: GiftWrapper 2 (pwn)</title>
       <link>https://segflow.github.io/post/34c3-ctf-giftwrapper2/</link>
       <pubDate>Sun, 21 Jan 2018 09:21:10 +0100</pubDate>

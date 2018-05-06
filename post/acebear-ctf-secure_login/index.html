@@ -19,7 +19,7 @@
     
     <meta property="og:tags" content="reverse">
     
-    <meta name="generator" content="Hugo 0.33" />
+    <meta name="generator" content="Hugo 0.40.2" />
     <title>AceBear CTF: Secure login (reverse) &middot; Segflow</title>
     
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -188,7 +188,7 @@ $
 <p>Great! Now the program prints a <code>Generated password</code> and then a <code>Password incorrect!</code> message, hummm. Going back to Binary Ninja, we see this blocks:</p>
 
 <p>
-<figure >
+<figure>
     
         <img src="../../img/acebear-ctf-2018/safe_login-binja-generate-password.png" width="100%" />
     
@@ -216,7 +216,7 @@ if (strcmp(generated_password,hard_coded_password) == 0) {
 
 <p>The following loop can easily be spotted, by reading it carefully we knew that the password generation happens here:
 
-<figure >
+<figure>
     
         <img src="../../img/acebear-ctf-2018/safe_login-binja-generate-hash.png" width="100%" />
     

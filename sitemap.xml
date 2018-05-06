@@ -8,6 +8,11 @@
   </url>
   
   <url>
+    <loc>https://segflow.github.io/post/plaid-ctf-shop/</loc>
+    <lastmod>2018-01-30T21:12:11+01:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://segflow.github.io/post/34c3-ctf-giftwrapper2/</loc>
     <lastmod>2018-01-21T09:21:10+01:00</lastmod>
   </url>
@@ -48,13 +53,13 @@
   
   <url>
     <loc>https://segflow.github.io/tags/pwn/</loc>
-    <lastmod>2018-01-21T09:21:10+01:00</lastmod>
+    <lastmod>2018-01-30T21:12:11+01:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://segflow.github.io/categories/pwn/</loc>
-    <lastmod>2018-01-21T09:21:10+01:00</lastmod>
+    <lastmod>2018-01-30T21:12:11+01:00</lastmod>
     <priority>0</priority>
   </url>
   

