@@ -6,10 +6,22 @@
     <description>Recent content in Pwn on Segflow</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 06 May 2018 20:17:33 +0100</lastBuildDate>
+    <lastBuildDate>Sun, 09 Sep 2018 19:21:10 +0100</lastBuildDate>
     
 	<atom:link href="https://segflow.github.io/categories/pwn/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Noxale CTF: Grocery List (pwn)</title>
+      <link>https://segflow.github.io/post/noxale-ctf-grocery_list/</link>
+      <pubDate>Sun, 09 Sep 2018 19:21:10 +0100</pubDate>
+      
+      <guid>https://segflow.github.io/post/noxale-ctf-grocery_list/</guid>
+      <description>&lt;p&gt;In this challenge we are given a service IP and PORT, to which we can connect using &lt;code&gt;netcat&lt;/code&gt; or any similar tool.
+We are also provided with an &lt;code&gt;ELF&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>PlaidCTF: Shop (pwn)</title>
