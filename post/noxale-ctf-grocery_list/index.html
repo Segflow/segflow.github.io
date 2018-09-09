@@ -137,7 +137,7 @@ We are also provided with an <code>ELF</code> file.</p>
 <a href="../../ctf-files/34c3-ctf-2017/noxale-ctf-2018/GroceryList">Challenge files</a></p>
 </blockquote>
 
-<blockquote class="twitter-tweet"><p lang="en" dir="ltr">I really enjoyed the GroceryList challenge of <a href="https://twitter.com/hashtag/noxale?src=hash&amp;ref_src=twsrc%5Etfw">#noxale</a> CTF. <br>Here is my writeup: <a href="https://t.co/hsZaYIJ6TH">https://t.co/hsZaYIJ6TH</a></p>&mdash; Assel Meher (@segfl0w) <a href="https://twitter.com/segfl0w/status/1038878513959452672?ref_src=twsrc%5Etfw">September 9, 2018</a></blockquote>
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">I really enjoyed the GroceryList challenge of <a href="https://twitter.com/hashtag/noxale?src=hash&amp;ref_src=twsrc%5Etfw">#noxale</a> CTF.  <br>Here is my writeup for it <a href="https://t.co/F3rKe1T1PS">https://t.co/F3rKe1T1PS</a></p>&mdash; Assel Meher (@segfl0w) <a href="https://twitter.com/segfl0w/status/1038879867725651968?ref_src=twsrc%5Etfw">September 9, 2018</a></blockquote>
 <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 
@@ -377,7 +377,7 @@ getchar = u64(leak.ljust(8, &quot;\x00&quot;))
 
 <p>Now we just need to place <code>__free_hook</code> in <code>items[0]</code> using the same trick as before, and edit it to write the address of <code>system</code>.</p>
 
-<p>The following python code connect to server, interact with it to chain a serie of events that will spawn a shell at the end. I&rsquo;m using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this, since it makes network programming much more easy and funny.</p>
+<p>The following python code is the final exploit. I&rsquo;m using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this, since it makes network programming much more easy and funny.</p>
 
 <script src="//gist.github.com/segflow/a7142d7e3b866c3577ab8a08ea0c3b9c.js"></script>
 
