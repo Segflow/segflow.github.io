@@ -17,7 +17,7 @@
       <pubDate>Sun, 09 Sep 2018 19:21:10 +0100</pubDate>
       
       <guid>https://segflow.github.io/post/noxale-ctf-grocery_list/</guid>
-      <description>&lt;p&gt;In this challenge we are given a service IP and PORT, to which we can connect using &lt;code&gt;netcat&lt;/code&gt; or any similar tool.
+      <description>&lt;p&gt;In this challenge, we are given a service IP and PORT, to which we can connect using &lt;code&gt;netcat&lt;/code&gt; or any similar tool.
 We are also provided with an &lt;code&gt;ELF&lt;/code&gt; file.&lt;/p&gt;
 
 &lt;p&gt;&lt;/p&gt;</description>

