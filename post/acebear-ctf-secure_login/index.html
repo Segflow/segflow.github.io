@@ -149,7 +149,7 @@ Wrong password type!
 $ 
 </code></pre>
 
-<p>So mainly the binary prints a hello message, the current time, and then asks us about the name and the password. Obviously the credentials we typed in are not correct, which made the server answer back with an error message. It also points out that the password <em>type</em> is wrong.</p>
+<p>So mainly the binary prints a hello message, the current time, and then asks us about the name and the password. Obviously, the credentials we typed in are not correct, which made the server answer back with an error message. It also points out that the password <em>type</em> is wrong.</p>
 
 <p>I always prefer to use a <code>static analysis</code> first and then a <code>dynamic analysis</code> to understand the behavior of a binary.</p>
 
@@ -172,7 +172,7 @@ $
 
 <p>Also after this, another check is done (function <code>sub_80488ed</code>), where the password is verified to only contain hexadecimal characters (<code>a-ZA-Z0-9</code>), if it does not, the program prints <code>Wrong password type!</code> and exits.</p>
 
-<p>With this in mind, let&rsquo;s try again with a valid password type, e.g: 64 character password with only hexadecimals characters</p>
+<p>With this in mind, let&rsquo;s try again with a valid password type, e.g: 64 character password with only hexadecimal characters</p>
 
 <pre><code class="language-shell">$ ./secure_login
 **************************Welcome to secure login**************************
@@ -191,7 +191,7 @@ Password incorrect!
 $ 
 </code></pre>
 
-<p>Great! Now the program prints a <code>Generated password</code> and then a <code>Password incorrect!</code> message, hummm. Going back to Binary Ninja, we see this blocks:</p>
+<p>Great! Now the program prints a <code>Generated password</code> and then a <code>Password incorrect!</code> message, hmmm. Going back to Binary Ninja, we see this blocks:</p>
 
 <p>
 <figure>
@@ -218,7 +218,7 @@ if (strcmp(generated_password,hard_coded_password) == 0) {
 
 <p>So the function <code>generate_password</code> will receive our typed password as an argument, do some magic and return a new string. If the generated password is <code>F05664E983F54E5FA6D5D4FFC5BF930743F60D8FC2C78AFBB0AF7C82664F2043</code> we win, else we lose.</p>
 
-<p>So, in order to solve this we need to reverse engineer the <code>generate_password</code> function so we can control its result and pass the <code>strcmp</code> check.</p>
+<p>So, in order to solve this, we need to reverse engineer the <code>generate_password</code> function so we can control its result and pass the <code>strcmp</code> check.</p>
 
 <p>The following loop can easily be spotted, by reading it carefully we knew that the password generation happens here:
 
@@ -254,11 +254,11 @@ return result
 
 <p>Mainly we loop over the user_input, taking 4 bytes each time and converting them to a long integer by calling <code>strtoul</code>. Remember that the user input should only contain hexadecimal characters, that&rsquo;s why the third argument to <a href="http://www.cplusplus.com/reference/cstdlib/strtoul/">strtoul</a>, the <code>base</code> argument, is 16.</p>
 
-<p>The only unknown value here is the value of <code>d</code>, by following the cross references of the address <strong>0x804b0c0</strong>, I found that, when the program starts, in addition to printing the hello message, a file with the name <code>key</code> is opened and its content is read into the address <strong>0x804b0c0</strong>.</p>
+<p>The only unknown value here is the value of <code>d</code>, by following the cross-references of the address <strong>0x804b0c0</strong>, I found that when the program starts, in addition to printing the hello message, a file with the name <code>key</code> is opened and its content is read into the address <strong>0x804b0c0</strong>.</p>
 
-<p>Humm, we do not have the <code>key</code> file, so at this point I started looking for a way to leak it. Fortunately, the programs prints the generated password even though it does not match the correct one, and with that fact we can craft a special input so that the generated password that will get printed is in fact the <code>key</code>.</p>
+<p>Humm, we do not have the <code>key</code> file, so at this point, I started looking for a way to leak it. Fortunately, the programs prints the generated password even though it does not match the correct one, and with that fact, we can craft a special input so that the generated password that will get printed is, in fact, the <code>key</code>.</p>
 
-<p>Basically we need to make the generation algorithm only depends on the <code>key</code> and nothing else, which means nullify the value of <code>x</code>. Since at the start <code>s</code> is null, we can nullify the value of <code>x</code> simply by forcing <code>a</code> to be equal to the value of <code>b</code> so that the value of <code>x</code> will be:</p>
+<p>Basically, we need to make the generation algorithm only depends on the <code>key</code> and nothing else, which means nullify the value of <code>x</code>. Since at the start <code>s</code> is null, we can nullify the value of <code>x</code> simply by forcing <code>a</code> to be equal to the value of <code>b</code> so that the value of <code>x</code> will be:</p>
 
 <blockquote>
 <p>x <code>=</code> b <code>XOR</code> b <code>XOR</code> s</p>
@@ -268,11 +268,11 @@ return result
 <p>x <code>=</code> 0</p>
 </blockquote>
 
-<p>We know that, in the first iteration <strong>s</strong> is equal to 0, which means that <strong>x</strong> is 0, which also means that <strong>r</strong> is in fact equal to <strong>c</strong> (the first 4 bytes of the key). And just like that we are able to leak the first 4 bytes of the key, simply by forcing <strong>a</strong> to be equal to <strong>b</strong>.</p>
+<p>We know that in the first iteration <strong>s</strong> is equal to 0, which means that <strong>x</strong> is 0, which also means that <strong>r</strong> is, in fact, equal to <strong>c</strong> (the first 4 bytes of the key). And just like that, we are able to leak the first 4 bytes of the key, simply by forcing <strong>a</strong> to be equal to <strong>b</strong>.</p>
 
-<p>Since we know the time of the server (UTC+0-), we can locally use <code>srand</code> to seed the random number generator with the server time, so we can predict the random numbers(huh? is it random?!) that will be used by the server.</p>
+<p>Since we know the time of the server (UTC+0-), we can locally use <code>srand</code> to seed the random number generator with the server time so we can predict the random numbers(huh? is it random?!) that will be used by the server.</p>
 
-<p><code>srand</code> and <code>rand</code> are both part of the c library <code>libc</code>, but we can also use them in python through the <code>ctypes</code> module.</p>
+<p><code>srand</code> and <code>rand</code> are both parts of the c library <code>libc</code>, but we can also use them in python through the <code>ctypes</code> module.</p>
 
 <pre><code class="language-python">import datetime
 import calendar
@@ -288,7 +288,7 @@ seed = libc.time()
 libc.srand(seed)
 </code></pre>
 
-<p>Now every time we call <code>libc.rand()</code> we will get the same random number the server will get, this allowing us to leak the value of key, 4 bytes each time. After the first iteration, <strong>s</strong> will no longer contains null, it will contains the first leaked 4 bytes. Again to leak the second 4 bytes, we need to nullify the value of <strong>x</strong>, to do so we just need to have the value of the second 4 bytes of the input equal to <code>b XOR s</code>,</p>
+<p>Now every time we call <code>libc.rand()</code> we will get the same random number the server will get, thus allowing us to leak the value of the key, 4 bytes each time. After the first iteration, <strong>s</strong> will no longer contain null, it will contain the first leaked 4 bytes. Again to leak the second 4 bytes, we need to nullify the value of <strong>x</strong>, to do so we just need to have the value of the second 4 bytes of the input equal to <code>b XOR s</code>,</p>
 
 <blockquote>
 <p>x <code>=</code> (b <code>XOR</code> s) <code>XOR</code> b <code>XOR</code> s</p>
@@ -312,9 +312,9 @@ libc.srand(seed)
           0x43F6, 0x0D8F, 0xC2C7, 0x8AFB, 0xB0AF, 0x7C82, 0x664F, 0x2043]
 </code></pre>
 
-<p>At this point we have all the data needed to come up with an input that, when processed by the algorithm, the result bytes should be equal to <strong>correct</strong>.</p>
+<p>At this point, we have all the data needed to come up with an input that, when processed by the algorithm, the result bytes should be equal to <strong>correct</strong>.</p>
 
-<p>You can do that manually if you are good at maths, or use a Theorem Prover like <a href="https://github.com/Z3Prover/z3">z3</a> to do that. I&rsquo;m bad at math, so you can guess what approach I chose.</p>
+<p>You can do that manually if you are good at maths, or use a Theorem Prover like <a href="https://github.com/Z3Prover/z3">z3</a> to do that. I&rsquo;m bad at math so you can guess what approach I chose.</p>
 
 <p>The final code is the following:</p>
 

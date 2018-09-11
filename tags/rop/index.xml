@@ -29,7 +29,7 @@ We are also provided with an &lt;code&gt;ELF&lt;/code&gt; file.&lt;/p&gt;
       <pubDate>Sun, 21 Jan 2018 09:21:10 +0100</pubDate>
       
       <guid>https://segflow.github.io/post/34c3-ctf-giftwrapper2/</guid>
-      <description>&lt;p&gt;In this challenge we are given a service IP and PORT, to which we can connect using &lt;code&gt;netcat&lt;/code&gt; or any similar tool. We are also provided with a &lt;code&gt;tar&lt;/code&gt; file that contains the service binary and some &lt;code&gt;.so&lt;/code&gt; modules.&lt;/p&gt;
+      <description>&lt;p&gt;In this challenge, we are given a service IP and PORT, to which we can connect using &lt;code&gt;netcat&lt;/code&gt; or any similar tool. We are also provided with a &lt;code&gt;tar&lt;/code&gt; file that contains the service binary and some &lt;code&gt;.so&lt;/code&gt; modules.&lt;/p&gt;
 
 &lt;p&gt;&lt;/p&gt;</description>
     </item>

