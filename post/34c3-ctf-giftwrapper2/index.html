@@ -21,7 +21,7 @@
     
     <meta property="og:tags" content="rop">
     
-    <meta name="generator" content="Hugo 0.45" />
+    <meta name="generator" content="Hugo 0.53" />
 
     
     <title>34C3 CTF: GiftWrapper 2 (pwn) &middot; Segflow</title>
@@ -118,8 +118,6 @@
 
 	<article>
 		<p>In this challenge, we are given a service IP and PORT, to which we can connect using <code>netcat</code> or any similar tool. We are also provided with a <code>tar</code> file that contains the service binary and some <code>.so</code> modules.</p>
-
-<p></p>
 
 <p>The task description is the following:</p>
 
@@ -285,12 +283,8 @@ Sorry! This gift is too large.
 
 <p>Now it&rsquo;s time to reverse engineer the <code>giftwrapper2.so</code> module and hopefully find a flaw there. For this task, I used Binary Ninja, the symbols were not stripped so it&rsquo;s easy to spot the <code>wrap</code> function and disassemble it.</p>
 
-<p>
-<figure>
-    
-        <img src="../../img/34c3-ctf-2017/giftwrapper2-binja-wrap.png" width="100%" />
-    
-    
+<p><figure>
+    <img src="../../img/34c3-ctf-2017/giftwrapper2-binja-wrap.png" width="100%"/> 
 </figure>
 
 <br/></p>
@@ -509,12 +503,8 @@ puts is at 0x7feba007c460
 
 <p>Now we know that the absolute address of <code>puts</code> is <strong>0x7feba007c460</strong>, and since we have the libc used by the server we can know puts&rsquo; offset within that libc, we just need to open <code>libc-2.26.so</code> using binary ninja (or radare2 and use the <code>is</code> command) and navigate to <code>puts</code> function:</p>
 
-<p>
-<figure class="text-center">
-    
-        <img src="../../img/34c3-ctf-2017/giftwrapper2-binja-puts.png" />
-    
-    
+<p><figure class="text-center">
+    <img src="../../img/34c3-ctf-2017/giftwrapper2-binja-puts.png"/> 
 </figure>
 
 <br/></p>
@@ -533,7 +523,7 @@ puts is at 0x7feba007c460
 
 <p>We already have a <code>pop rdi</code> gadget so this should be easy now. The final exploit is the following:</p>
 
-<script src="//gist.github.com/segflow/65ed5e55ad83ce9b5cf4aec9c0bc3ced.js"></script>
+<script type="application/javascript" src="//gist.github.com/segflow/65ed5e55ad83ce9b5cf4aec9c0bc3ced.js"></script>
 
 <pre><code class="language-shell">&gt; $ python giftwrapper2_exploit.py
 [/.......] Opening connection to localhost on port 12345: Trying 127.0.0.1
@@ -576,7 +566,7 @@ $
 
 
   <div id="disqus_thread"></div>
-<script>
+<script type="application/javascript">
     var disqus_config = function () {
     
     

@@ -19,7 +19,7 @@
     
     <meta property="og:tags" content="reverse">
     
-    <meta name="generator" content="Hugo 0.45" />
+    <meta name="generator" content="Hugo 0.53" />
 
     
     <title>AceBear CTF: Secure login (reverse) &middot; Segflow</title>
@@ -117,8 +117,6 @@
 	<article>
 		<p>In this article I will share with you the solution to <code>Secure Login</code> challenge presented at <em>Acebear CTF</em>, this task was worth 900 points. Even though I did not manage to solve the challenge on time, I still enjoyed it a lot.</p>
 
-<p></p>
-
 <p>The task description was the following:</p>
 
 <blockquote>
@@ -193,12 +191,8 @@ $
 
 <p>Great! Now the program prints a <code>Generated password</code> and then a <code>Password incorrect!</code> message, hmmm. Going back to Binary Ninja, we see this blocks:</p>
 
-<p>
-<figure>
-    
-        <img src="../../img/acebear-ctf-2018/safe_login-binja-generate-password.png" width="100%" />
-    
-    
+<p><figure>
+    <img src="../../img/acebear-ctf-2018/safe_login-binja-generate-password.png" width="100%"/> 
 </figure>
 
 <br/></p>
@@ -221,12 +215,8 @@ if (strcmp(generated_password,hard_coded_password) == 0) {
 <p>So, in order to solve this, we need to reverse engineer the <code>generate_password</code> function so we can control its result and pass the <code>strcmp</code> check.</p>
 
 <p>The following loop can easily be spotted, by reading it carefully we knew that the password generation happens here:
-
 <figure>
-    
-        <img src="../../img/acebear-ctf-2018/safe_login-binja-generate-hash.png" width="100%" />
-    
-    
+    <img src="../../img/acebear-ctf-2018/safe_login-binja-generate-hash.png" width="100%"/> 
 </figure>
 
 <br/></p>
@@ -318,7 +308,7 @@ libc.srand(seed)
 
 <p>The final code is the following:</p>
 
-<script src="//gist.github.com/segflow/034e7747ead98ce751939da33cc450e9.js"></script>
+<script type="application/javascript" src="//gist.github.com/segflow/034e7747ead98ce751939da33cc450e9.js"></script>
 
 <p>And we run it:</p>
 
@@ -349,7 +339,7 @@ $
 
 
   <div id="disqus_thread"></div>
-<script>
+<script type="application/javascript">
     var disqus_config = function () {
     
     
