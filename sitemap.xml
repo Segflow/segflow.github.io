@@ -33,13 +33,13 @@
   </url>
   
   <url>
-    <loc>https://segflow.github.io/categories/crypto/</loc>
+    <loc>https://segflow.github.io/tags/crypto/</loc>
     <lastmod>2017-12-30T13:20:47+01:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://segflow.github.io/tags/crypto/</loc>
+    <loc>https://segflow.github.io/categories/crypto/</loc>
     <lastmod>2017-12-30T13:20:47+01:00</lastmod>
     <priority>0</priority>
   </url>
@@ -63,25 +63,25 @@
   </url>
   
   <url>
-    <loc>https://segflow.github.io/categories/pwn/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
     <loc>https://segflow.github.io/tags/pwn/</loc>
     <lastmod>2018-09-09T19:21:10+01:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://segflow.github.io/categories/reverse/</loc>
-    <lastmod>2018-01-30T21:12:11+01:00</lastmod>
+    <loc>https://segflow.github.io/categories/pwn/</loc>
+    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://segflow.github.io/tags/reverse/</loc>
+    <lastmod>2018-01-30T21:12:11+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/categories/reverse/</loc>
     <lastmod>2018-01-30T21:12:11+01:00</lastmod>
     <priority>0</priority>
   </url>
@@ -105,13 +105,13 @@
   </url>
   
   <url>
-    <loc>https://segflow.github.io/categories/writeup/</loc>
+    <loc>https://segflow.github.io/tags/writeup/</loc>
     <lastmod>2018-09-09T19:21:10+01:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://segflow.github.io/tags/writeup/</loc>
+    <loc>https://segflow.github.io/categories/writeup/</loc>
     <lastmod>2018-09-09T19:21:10+01:00</lastmod>
     <priority>0</priority>
   </url>
