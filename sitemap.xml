@@ -1,9 +1,64 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://segflow.github.io/categories/</loc>
+    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/tags/ctf/</loc>
+    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/tags/heap/</loc>
+    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://segflow.github.io/post/noxale-ctf-grocery_list/</loc>
+    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/post/</loc>
+    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/categories/pwn/</loc>
+    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/tags/pwn/</loc>
+    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/tags/rop/</loc>
+    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/</loc>
+    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/tags/</loc>
+    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/tags/writeup/</loc>
+    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/categories/writeup/</loc>
     <lastmod>2018-09-09T19:21:10+01:00</lastmod>
   </url>
   
@@ -18,6 +73,16 @@
   </url>
   
   <url>
+    <loc>https://segflow.github.io/tags/reverse/</loc>
+    <lastmod>2018-01-30T21:12:11+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/categories/reverse/</loc>
+    <lastmod>2018-01-30T21:12:11+01:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://segflow.github.io/post/34c3-ctf-giftwrapper2/</loc>
     <lastmod>2018-01-21T09:21:10+01:00</lastmod>
   </url>
@@ -28,92 +93,13 @@
   </url>
   
   <url>
-    <loc>https://segflow.github.io/categories/</loc>
-    <priority>0</priority>
-  </url>
-  
-  <url>
     <loc>https://segflow.github.io/tags/crypto/</loc>
     <lastmod>2017-12-30T13:20:47+01:00</lastmod>
-    <priority>0</priority>
   </url>
   
   <url>
     <loc>https://segflow.github.io/categories/crypto/</loc>
     <lastmod>2017-12-30T13:20:47+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/tags/ctf/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/tags/heap/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/post/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/tags/pwn/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/categories/pwn/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/tags/reverse/</loc>
-    <lastmod>2018-01-30T21:12:11+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/categories/reverse/</loc>
-    <lastmod>2018-01-30T21:12:11+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/tags/rop/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/tags/</loc>
-    <lastmod>2017-12-30T13:20:47+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/tags/writeup/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/categories/writeup/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-    <priority>0</priority>
   </url>
   
 </urlset>

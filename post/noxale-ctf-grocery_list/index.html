@@ -23,7 +23,7 @@
     
     <meta property="og:tags" content="heap">
     
-    <meta name="generator" content="Hugo 0.53" />
+    <meta name="generator" content="Hugo 0.59.1" />
 
     
     <title>Noxale CTF: Grocery List (pwn) &middot; Segflow</title>
@@ -378,7 +378,8 @@ getchar = u64(leak.ljust(8, &quot;\x00&quot;))
 
 <p>The following python code is the final exploit. I&rsquo;m using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this since it makes network programming much more easy and funny.</p>
 
-<script type="application/javascript" src="//gist.github.com/segflow/a7142d7e3b866c3577ab8a08ea0c3b9c.js"></script>
+<script type="application/javascript" src="https://gist.github.com/segflow/a7142d7e3b866c3577ab8a08ea0c3b9c.js"></script>
+
 
 <pre><code class="language-shell">&gt; $ python exploit.py
 [*] '/MacOsHome/Desktop/CTFs/noxale-2018/grocery_list/GroceryList'

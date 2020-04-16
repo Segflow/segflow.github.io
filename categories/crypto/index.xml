@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Crypto on Segflow</title>
+    <title>crypto on Segflow</title>
     <link>https://segflow.github.io/categories/crypto/</link>
-    <description>Recent content in Crypto on Segflow</description>
+    <description>Recent content in crypto on Segflow</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sat, 30 Dec 2017 13:20:47 +0100</lastBuildDate>

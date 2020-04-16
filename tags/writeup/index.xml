@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Writeup on Segflow</title>
+    <title>writeup on Segflow</title>
     <link>https://segflow.github.io/tags/writeup/</link>
-    <description>Recent content in Writeup on Segflow</description>
+    <description>Recent content in writeup on Segflow</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sun, 09 Sep 2018 19:21:10 +0100</lastBuildDate>
