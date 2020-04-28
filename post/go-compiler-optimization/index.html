@@ -209,14 +209,14 @@ BenchmarkSwitchImpl-4  1000000000     0.648 ns/op
 
 <p>The first block is the function epilogue where mainly a stack frame needs to be allocated. The second one is the body, and the final block is the function prologue where the functions need to return to its caller.</p>
 
-<p>The function body in our case is a simple move instruction which moves 0 to the ~r0 registry. So the function is only returning 0 immediately there is nothing else. To confirm this I generated the SSA for the following function:</p>
+<p>The function body in our case is a simple move instruction which moves 0 to the ~<code>r0</code> registry. So the function is only returning 0 immediately there is nothing else. To confirm this I generated the SSA for the following function:</p>
 
 <pre><code>func return0() int {
     return 0
 }
 </code></pre>
 
-<p>And the final generated code is exactly the same as you can see it <a href="../../code/go-compiler-optimization/return0-ssa.html">here</a>. And that&rsquo;s was it&rsquo;s so fast.</p>
+<p>And the final generated code is exactly the same as you can see it <a href="../../code/go-compiler-optimization/return0-ssa.html">here</a>. And that&rsquo;s why it&rsquo;s so fast.</p>
 
 <h3 id="map-based-implementation">map based implementation</h3>
 
@@ -361,7 +361,7 @@ BenchmarkSwitchImpl-4  1000000000     0.648 ns/op
 }[aRandomFunc()]
 </code></pre>
 
-<p>At compile time, we can if both <code>right</code> and <code>left</code> nodes are constant, if they are, we see if what are we looking for (the key), is defined in the constant map, and if they are we replace the <code>INDEXMAP</code> node in the AST by the value of that key. This will replace all lookups on maps where the map is an <code>OMAPLIT</code> and the key is a constant with a constant if possible.</p>
+<p>At compile time, we can check if both <code>right</code> and <code>left</code> nodes are constant, if they are, we see if what are we looking for (the key), is defined in the constant map, and if it&rsquo;s the case we replace the <code>INDEXMAP</code> node in the AST by the value of that key. This will replace all lookups on maps where the map is an <code>OMAPLIT</code> and the key is a constant with a constant if possible.</p>
 
 <p>This optimization is applied directly to the AST and not the SSA form. This type of AST optimization is implemented inside the <code>walk</code> function.</p>
 
