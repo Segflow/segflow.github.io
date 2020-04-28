@@ -6,10 +6,23 @@
     <description>Recent content on Segflow</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 09 Sep 2018 19:21:10 +0100</lastBuildDate>
+    <lastBuildDate>Tue, 28 Apr 2020 13:20:28 +0100</lastBuildDate>
     
 	<atom:link href="https://segflow.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>My journey optimizing the Go Compiler</title>
+      <link>https://segflow.github.io/post/go-compiler-optimization/</link>
+      <pubDate>Tue, 28 Apr 2020 13:20:28 +0100</pubDate>
+      
+      <guid>https://segflow.github.io/post/go-compiler-optimization/</guid>
+      <description>&lt;p&gt;At &lt;a href=&#34;https://edge.network/&#34;&gt;EDGE&lt;/a&gt; we write a lot of Go, and we love it for various reasons, one of them being speed. One day I got into a situation where I need to assign an &lt;code&gt;int&lt;/code&gt; to a variable based on another string value.&lt;/p&gt;
+
+&lt;p&gt;Sounds easy right? well yes, but this particular use case awakened the beast in me and made me think what&amp;rsquo;s the &lt;strong&gt;best&lt;/strong&gt; way to do it.&lt;/p&gt;
+
+&lt;p&gt;The journey finished by me contributing to the language compiler and make &lt;code&gt;map&lt;/code&gt; lookups faster.&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>Noxale CTF: Grocery List (pwn)</title>

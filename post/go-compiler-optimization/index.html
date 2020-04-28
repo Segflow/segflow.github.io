@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="description" content="">
+    <meta property="og:title" content="My journey optimizing the Go Compiler">
+    
+    <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2020-04-28">
+    
+    <meta property="og:description" content="">
+    <meta property="og:url" content="https://segflow.github.io/post/go-compiler-optimization/">
+    <meta property="og:site_name" content="Segflow">
+    
+    <meta property="og:tags" content="Go">
+    
+    <meta property="og:tags" content="compiler">
+    
+    <meta property="og:tags" content="AST">
+    
+    <meta name="generator" content="Hugo 0.59.1" />
+
+    
+    <title>My journey optimizing the Go Compiler &middot; Segflow</title>
+    
+
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="https://segflow.github.io/css/style.css">
+    
+    <link href="https://segflow.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Segflow" />
+    
+    
+    <link rel="icon" href="https://segflow.github.io/favicon.ico" />
+    
+
+    
+    
+</head>
+<body>
+
+<nav class="navbar navbar-default navbar-fixed-top visible-xs">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+				<a class="navbar-brand" href="https://segflow.github.io/">Segflow</a>
+			
+		</div>
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				
+				
+					<li><a href="https://segflow.github.io//">Home</a></li>
+				
+					<li><a href="https://segflow.github.io/post/">Posts</a></li>
+				
+					<li><a href="https://segflow.github.io/resume.pdf">Resume</a></li>
+				
+			</ul>
+		</div>
+	</div>
+</nav>
+<div class="container-fluid">
+	<div class="row">
+		<div id="menu" class="hidden-xs col-sm-3 col-md-3">
+	<div id="menu-content" class="vertical-align">
+		
+			<h1 class="text-center"><a href="https://segflow.github.io/">Segflow</a></h1>
+		
+		
+		
+			<small class="text-center center-block">Assel Meher</small>
+		
+		
+		
+			<img id="profile-pic" src="https://segflow.github.io//img/hacker_emblem.png" alt="My Picture" class="img-circle center-block">
+		
+		<div id="social" class="text-center">
+			
+				<a href="https://github.com/segflow"><i class="fa fa-github fa-2x"></i></a>
+			
+				<a href="https://www.linkedin.com/in/meher-assel-0122798a"><i class="fa fa-linkedin fa-2x"></i></a>
+			
+				<a href="https://twitter.com/segfl0w"><i class="fa fa-twitter fa-2x"></i></a>
+			
+
+			<a href="mailto:asselmeher@gmail.com"><i class="fa fa-envelope-o fa-2x"></i></a>
+		</div>
+		<div id="links" class="text-center">
+			
+			
+				<a href="https://segflow.github.io//">Home</a>
+			
+				<a href="https://segflow.github.io/post/">Posts</a>
+			
+				<a href="https://segflow.github.io/resume.pdf">Resume</a>
+			
+		</div>
+	</div>
+</div>
+
+		<div id="content" class="col-xs-12 col-sm-9 col-md-9">
+			<div class="row">
+				<div id="post" class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10">
+
+<main>
+	<header>
+		<h1>My journey optimizing the Go Compiler</h1>
+	</header>
+
+	<article>
+		<p>At <a href="https://edge.network/">EDGE</a> we write a lot of Go, and we love it for various reasons, one of them being speed. One day I got into a situation where I need to assign an <code>int</code> to a variable based on another string value.</p>
+
+<p>Sounds easy right? well yes, but this particular use case awakened the beast in me and made me think what&rsquo;s the <strong>best</strong> way to do it.</p>
+
+<p>The journey finished by me contributing to the language compiler and make <code>map</code> lookups faster.</p>
+
+<h2 id="situation">Situation</h2>
+
+<p>Our binaries can be found in 3 flavors, <code>amd64</code>, <code>arm64</code>, and <code>arm</code>. Sometimes a running binary needs to know what is its architecture, for example when pulling images/other binaries if the current running binary is an <code>amd64</code> binary then we should use the <code>amd64</code> repository or registry.</p>
+
+<p>In Go that&rsquo;s easy. The <a href="https://golang.org/pkg/runtime/#pkg-constants">constant</a> <code>runtime.GOARCH</code> gives us the running program&rsquo;s architecture.</p>
+
+<p>In one case, I needed to assign an <code>int</code> to a variable based on the value of <code>runtime.GOARCH</code>. And the code below does exactly that:</p>
+
+<pre><code class="language-go">var archIndex int
+switch runtime.GOARCH {
+    case &quot;amd64&quot;: 
+        archIndex = 0
+    case &quot;arm64&quot;: 
+        archIndex = 1
+    case &quot;arm&quot;: 
+        archIndex = 2
+}
+</code></pre>
+
+<p>But I didn&rsquo;t want it to be that way because the day we support another architecture I need to add another <code>case</code> clause and that didn&rsquo;t feel right to me.</p>
+
+<p>It&rsquo;s a simple value mapping and I though using a <code>map</code> followed by a lookup would be better. Below was the <code>map</code> based solution:</p>
+
+<pre><code class="language-go">archIndex := map[string]int{
+        &quot;amd64&quot;: 0,
+        &quot;arm&quot;:   1,
+        &quot;arm64&quot;: 2,
+}[runtime.GOARCH]
+</code></pre>
+
+<h2 id="problem">Problem</h2>
+
+<p>The <code>map</code> based solution felt more readable and maintainable to me but I was curious which solution was faster?</p>
+
+<p><em>The code is not in a hot path, and micro-optimizing it is not needed. But still wanted to know what&rsquo;s faster.</em></p>
+
+<p>To satisfy my curiosity, I benchmarked both approaches.</p>
+
+<pre><code>goos: darwin
+goarch: amd64
+BenchmarkMapImpl-4     19503195       58.0 ns/op
+BenchmarkSwitchImpl-4  1000000000     0.648 ns/op
+</code></pre>
+
+<p>Turns out the <code>map</code> based solution is 96 times slower than the <code>switch</code> based one. To understand why it&rsquo;s the case I start analyzing the generated code for both approaches.</p>
+
+<h2 id="compiler-generated-code">Compiler generated code</h2>
+
+<p>Like any other language compiler, to generate the final output the Go compiler will pass through various phases:</p>
+
+<ul>
+<li><strong>Scanning</strong>: Scans the source code and split it into <strong>tokens</strong></li>
+<li><strong>Parsing</strong>: Parses those <strong>tokens</strong> and build the Abstract Syntax Tree (AST). Also checks that the code is a valid Go code (type checking etc..)</li>
+<li><strong>Code generating</strong>: convert the <strong>AST</strong> to a lower-level representation of the program, specifically into a Static Single Assignment (SSA) form</li>
+</ul>
+
+<p>At the end of the <strong>parsing</strong> phase, we are certain the program is valid Go code. The interesting phase for our case is the last one.</p>
+
+<p>The code generation phase takes the <strong>AST</strong>, applies some optimization to the <strong>AST</strong> itself by re-writing it, and then convert it into an <strong>SSA</strong> form. After the initial version of the <strong>SSA</strong> has been generated, several optimization passes will be applied like &ldquo;dead code elimination&rdquo;, &ldquo;constant propagation&rdquo; and &ldquo;bound check elimination&rdquo;</p>
+
+<p>We can see the work of each optimizer and the final <strong>SSA</strong> for our function by running this command</p>
+
+<pre><code>GOSSAFUNC=switchImplementation go tool compile benchmark_test.go
+</code></pre>
+
+<p>The command generates a html file <a href="../../code/go-compiler-optimization/switch-ssa.html">ssa.html</a> showing the generated <strong>SSA</strong> for the function <code>switchImplementation</code>.</p>
+
+<h3 id="switch-based-implementation">switch based implementation</h3>
+
+<p>The final SSA form for our <code>switchImplementation</code> function looks like this:</p>
+
+<pre><code>00000 (8) TEXT &quot;&quot;.switchImplementation(SB), ABIInternal
+00001 (8) FUNCDATA $0, gclocals·33cdeccccebe80329f1fdbee7f5874cb(SB)
+00002 (8) FUNCDATA $1, gclocals·33cdeccccebe80329f1fdbee7f5874cb(SB)
+00003 (8) FUNCDATA $2, gclocals·33cdeccccebe80329f1fdbee7f5874cb(SB)
+00004 (+11) PCDATA $0, $0
+00005 (+11) PCDATA $1, $0
+
+00006 (+11) MOVQ $0, &quot;&quot;.~r0(SP)
+
+00007 (11) RET
+00008 (?) END
+</code></pre>
+
+<p>The first block is the function epilogue where mainly a stack frame needs to be allocated. The second one is the body, and the final block is the function prologue where the functions need to return to its caller.</p>
+
+<p>The function body in our case is a simple move instruction which moves 0 to the ~r0 registry. So the function is only returning 0 immediately there is nothing else. To confirm this I generated the SSA for the following function:</p>
+
+<pre><code>func return0() int {
+    return 0
+}
+</code></pre>
+
+<p>And the final generated code is exactly the same as you can see it <a href="../../code/go-compiler-optimization/return0-ssa.html">here</a>. And that&rsquo;s was it&rsquo;s so fast.</p>
+
+<h3 id="map-based-implementation">map based implementation</h3>
+
+<p>As for the SSA form of the <code>mapImplementation</code> function, it&rsquo;s longer, I annotated it so it&rsquo;s easier to understand what&rsquo;s happening.</p>
+
+<pre><code>00000 (31) TEXT &quot;&quot;.mapImplementation(SB), ABIInternal
+00001 (31) FUNCDATA $0, gclocals·7d2d5fca80364273fb07d5820a76fef4(SB)
+00002 (31) FUNCDATA $1, gclocals·b9237f7ca55cc8bf6e05646631ad00ce(SB)
+00003 (31) FUNCDATA $2, gclocals·a5ed3e65458aadaa1d48863859d2a323(SB)
+00004 (31) FUNCDATA $3, &quot;&quot;.mapImplementation.stkobj(SB)
+00005 (+32) PCDATA $0, $0
+00006 (+32) PCDATA $1, $1
+00007 (+32) XORPS X0, X0
+00008 (32) MOVUPS X0, &quot;&quot;..autotmp_2-256(SP)
+00009 (32) MOVUPS X0, &quot;&quot;..autotmp_2-240(SP)
+00010 (32) MOVUPS X0, &quot;&quot;..autotmp_2-224(SP)
+00011 (32) PCDATA $0, $1
+00012 (32) PCDATA $1, $2
+00013 (32) LEAQ &quot;&quot;..autotmp_3-208(SP), DI
+00014 (32) PCDATA $0, $0
+00015 (32) LEAQ -48(DI), DI
+00016 (32) DUFFZERO $239
+00017 (32) PCDATA $0, $2
+00018 (32) PCDATA $1, $1
+00019 (32) LEAQ &quot;&quot;..autotmp_3-208(SP), AX
+00020 (32) PCDATA $0, $0
+00021 (32) MOVQ AX, &quot;&quot;..autotmp_2-240(SP)
+00022 (32) CALL runtime.fastrand(SB)
+00023 (32) MOVL (SP), AX
+00024 (32) MOVL AX, &quot;&quot;..autotmp_2-244(SP)
+00025 (33) PCDATA $0, $2
+00026 (+33) LEAQ type.map[string]int(SB), AX
+00027 (33) PCDATA $0, $0
+00028 (33) MOVQ AX, (SP)
+00029 (33) PCDATA $0, $3
+00030 (33) LEAQ &quot;&quot;..autotmp_2-256(SP), CX
+00031 (33) PCDATA $0, $0
+00032 (33) MOVQ CX, 8(SP)
+00033 (33) PCDATA $0, $4
+00034 (33) LEAQ go.string.&quot;amd64&quot;(SB), DX
+00035 (33) PCDATA $0, $0
+00036 (33) MOVQ DX, 16(SP)
+00037 (33) MOVQ $5, 24(SP)
+00038 (+33) CALL runtime.mapassign_faststr(SB)    // assign &quot;amd64&quot; key
+00039 (33) PCDATA $0, $2
+00040 (33) MOVQ 32(SP), AX
+00041 (33) PCDATA $0, $0
+00042 (33) MOVQ $0, (AX)                          // assign &quot;0&quot; value
+00043 (34) PCDATA $0, $2
+00044 (+34) LEAQ type.map[string]int(SB), AX
+00045 (34) PCDATA $0, $0
+00046 (34) MOVQ AX, (SP)
+00047 (34) PCDATA $0, $3
+00048 (34) LEAQ &quot;&quot;..autotmp_2-256(SP), CX
+00049 (34) PCDATA $0, $0
+00050 (34) MOVQ CX, 8(SP)
+00051 (34) PCDATA $0, $4
+00052 (34) LEAQ go.string.&quot;arm&quot;(SB), DX
+00053 (34) PCDATA $0, $0
+00054 (34) MOVQ DX, 16(SP)
+00055 (34) MOVQ $3, 24(SP)
+00056 (+34) CALL runtime.mapassign_faststr(SB)    // assign &quot;arm&quot; key
+00057 (34) PCDATA $0, $2
+00058 (34) MOVQ 32(SP), AX
+00059 (34) PCDATA $0, $0
+00060 (34) MOVQ $1, (AX)                          // assign &quot;1&quot; value
+00061 (35) PCDATA $0, $2
+00062 (+35) LEAQ type.map[string]int(SB), AX
+00063 (35) PCDATA $0, $0
+00064 (35) MOVQ AX, (SP)
+00065 (35) PCDATA $0, $3
+00066 (35) LEAQ &quot;&quot;..autotmp_2-256(SP), CX
+00067 (35) PCDATA $0, $0
+00068 (35) MOVQ CX, 8(SP)
+00069 (35) PCDATA $0, $4
+00070 (35) LEAQ go.string.&quot;arm64&quot;(SB), DX
+00071 (35) PCDATA $0, $0
+00072 (35) MOVQ DX, 16(SP)
+00073 (35) MOVQ $5, 24(SP)
+00074 (+35) CALL runtime.mapassign_faststr(SB)    // assign &quot;arm64&quot; key
+00075 (35) PCDATA $0, $2
+00076 (35) MOVQ 32(SP), AX
+00077 (35) PCDATA $0, $0
+00078 (35) MOVQ $2, (AX)                          // assign &quot;2&quot; value
+00079 (36) PCDATA $0, $2
+00080 (+36) LEAQ type.map[string]int(SB), AX
+00081 (36) PCDATA $0, $0
+00082 (36) MOVQ AX, (SP)
+00083 (36) PCDATA $0, $2
+00084 (36) PCDATA $1, $0
+00085 (36) LEAQ &quot;&quot;..autotmp_2-256(SP), AX
+00086 (36) PCDATA $0, $0
+00087 (36) MOVQ AX, 8(SP)
+00088 (36) PCDATA $0, $2
+00089 (36) LEAQ go.string.&quot;amd64&quot;(SB), AX
+00090 (36) PCDATA $0, $0
+00091 (36) MOVQ AX, 16(SP)
+00092 (36) MOVQ $5, 24(SP)
+00093 (+36) CALL runtime.mapaccess1_faststr(SB)  // perform the map lookup
+00094 (36) PCDATA $0, $2
+00095 (36) MOVQ 32(SP), AX
+00096 (36) PCDATA $0, $0
+00097 (36) MOVQ (AX), AX
+00098 (+32) MOVQ AX, &quot;&quot;.~r0(SP)
+00099 (+36) RET
+00100 (?) END
+</code></pre>
+
+<p>The reason behind this is the fact that the generated code is building the map which requires allocating it, assign the different values, and then doing a lookup.</p>
+
+<h2 id="constant-folding">Constant folding</h2>
+
+<p>The reason why the switch implementation is similar to a <code>return 0</code> is something called <code>constant folding</code>.</p>
+
+<blockquote>
+<p>Constant folding is the process of recognizing and evaluating constant expressions at compile time rather than computing them at runtime - Wikipedia</p>
+</blockquote>
+
+<p>We know that <code>runtime.GOARCH</code> is a constant, so not only its value cannot change but also it&rsquo;s known at compile time. The compiler can use this two properties to evaluate constant expression at compile time instead of doing that when running, in our case the compiler knew which of the <code>case</code> clauses is true so it deleted the conditional structure and replaced it with a naked <code>return 0</code>.</p>
+
+<p>This was not the case on the <code>map</code> based implementation.</p>
+
+<h2 id="implement-the-optimization">Implement the optimization</h2>
+
+<p>Our map lookup looks like this:</p>
+
+<pre><code class="language-go">map[string]int{
+        &quot;amd64&quot;: 0,
+        &quot;arm&quot;:   1,
+        &quot;arm64&quot;: 2,
+}[runtime.GOARCH]
+</code></pre>
+
+<p>This is represented in the AST using an <code>INDEXMAP</code> node. The <code>INDEXMAP</code> has two childs <code>left</code> and <code>right</code> (remember it&rsquo;s a tree).</p>
+
+<p>The <code>left</code> child is the map we will lookup from, and the <code>right</code> child is the key we are looking for. Both childs are also nodes, for example the <code>right</code> node can be a <code>FUNCCALL</code> node for a lookup like this:</p>
+
+<pre><code class="language-go">map[string]int{
+        &quot;amd64&quot;: 0,
+        &quot;arm&quot;:   1,
+        &quot;arm64&quot;: 2,
+}[aRandomFunc()]
+</code></pre>
+
+<p>At compile time, we can if both <code>right</code> and <code>left</code> nodes are constant, if they are, we see if what are we looking for (the key), is defined in the constant map, and if they are we replace the <code>INDEXMAP</code> node in the AST by the value of that key. This will replace all lookups on maps where the map is an <code>OMAPLIT</code> and the key is a constant with a constant if possible.</p>
+
+<p>This optimization is applied directly to the AST and not the SSA form. This type of AST optimization is implemented inside the <code>walk</code> function.</p>
+
+<p>The PR with this optimization can be seen here: <a href="https://go-review.googlesource.com/c/go/+/208323">https://go-review.googlesource.com/c/go/+/208323</a></p>
+
+<p>The new generated SSA with that optimization can be found <a href="../../code/go-compiler-optimization/optimized-map-ssa.html">here</a></p>
+
+<p>Now if we benchmark both implementations using the Go compiler from that branch we see that both are similar. They are both similar to our <code>return 0</code> function.</p>
+
+<pre><code>BenchmarkSwitchImpl-4           1000000000               0.599 ns/op           0 B/op          0 allocs/op
+BenchmarkMapImpl-4              1000000000               0.612 ns/op           0 B/op          0 allocs/op
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The PR is not merged yet, hopefully soon, it got added to Go 1.15 milestone which should be released in a month.</p>
+	</article>
+</main>
+
+<div id="bottom-nav" class="text-center center-block">
+	<a href=" https://segflow.github.io/" class="btn btn-default"><i class="fa fa-home"></i> Home</a>
+</div>
+
+
+  <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "segflow-io" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+  </div>
+  
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-111743535-1', 'auto');
+    ga('send', 'pageview');
+    window.baseURL = "https:\/\/segflow.github.io\/";
+  </script>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
+  
+  
+  <script src="https://segflow.github.io//js/App.js"></script>
+  
+</body>
+</html>

@@ -6,10 +6,37 @@
     <description>Recent content in Tags on Segflow</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 09 Sep 2018 19:21:10 +0100</lastBuildDate>
+    <lastBuildDate>Tue, 28 Apr 2020 13:20:28 +0100</lastBuildDate>
     
 	<atom:link href="https://segflow.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>AST</title>
+      <link>https://segflow.github.io/tags/ast/</link>
+      <pubDate>Tue, 28 Apr 2020 13:20:28 +0100</pubDate>
+      
+      <guid>https://segflow.github.io/tags/ast/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>compiler</title>
+      <link>https://segflow.github.io/tags/compiler/</link>
+      <pubDate>Tue, 28 Apr 2020 13:20:28 +0100</pubDate>
+      
+      <guid>https://segflow.github.io/tags/compiler/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Go</title>
+      <link>https://segflow.github.io/tags/go/</link>
+      <pubDate>Tue, 28 Apr 2020 13:20:28 +0100</pubDate>
+      
+      <guid>https://segflow.github.io/tags/go/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>ctf</title>

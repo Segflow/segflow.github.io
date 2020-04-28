@@ -3,8 +3,48 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://segflow.github.io/tags/ast/</loc>
+    <lastmod>2020-04-28T13:20:28+01:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://segflow.github.io/categories/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
+    <lastmod>2020-04-28T13:20:28+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/tags/compiler/</loc>
+    <lastmod>2020-04-28T13:20:28+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/tags/go/</loc>
+    <lastmod>2020-04-28T13:20:28+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/categories/go/</loc>
+    <lastmod>2020-04-28T13:20:28+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/post/go-compiler-optimization/</loc>
+    <lastmod>2020-04-28T13:20:28+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/post/</loc>
+    <lastmod>2020-04-28T13:20:28+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/</loc>
+    <lastmod>2020-04-28T13:20:28+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://segflow.github.io/tags/</loc>
+    <lastmod>2020-04-28T13:20:28+01:00</lastmod>
   </url>
   
   <url>
@@ -23,11 +63,6 @@
   </url>
   
   <url>
-    <loc>https://segflow.github.io/post/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://segflow.github.io/tags/pwn/</loc>
     <lastmod>2018-09-09T19:21:10+01:00</lastmod>
   </url>
@@ -39,16 +74,6 @@
   
   <url>
     <loc>https://segflow.github.io/tags/rop/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/</loc>
-    <lastmod>2018-09-09T19:21:10+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://segflow.github.io/tags/</loc>
     <lastmod>2018-09-09T19:21:10+01:00</lastmod>
   </url>
   
