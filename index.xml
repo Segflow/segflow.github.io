@@ -1,76 +1,11 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Segflow</title>
-    <link>https://segflow.github.io/</link>
-    <description>Recent content on Segflow</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language>
-    <lastBuildDate>Tue, 28 Apr 2020 13:20:28 +0100</lastBuildDate>
-    
-	<atom:link href="https://segflow.github.io/index.xml" rel="self" type="application/rss+xml" />
-    
-    
-    <item>
-      <title>My journey optimizing the Go Compiler</title>
-      <link>https://segflow.github.io/post/go-compiler-optimization/</link>
-      <pubDate>Tue, 28 Apr 2020 13:20:28 +0100</pubDate>
-      
-      <guid>https://segflow.github.io/post/go-compiler-optimization/</guid>
-      <description>&lt;p&gt;At &lt;a href=&#34;https://edge.network/&#34;&gt;EDGE&lt;/a&gt; we write a lot of Go, and we love it for various reasons, one of them being speed. One day I got into a situation where I need to assign an &lt;code&gt;int&lt;/code&gt; to a variable based on another string value.&lt;/p&gt;
-
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Segflow</title><link>https://segflow.github.io/</link><description>Recent content on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 14 Sep 2020 10:00:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>Inlining budgets, and why your one-liner stayed slow</title><link>https://segflow.github.io/post/inlining-budgets/</link><pubDate>Mon, 14 Sep 2020 10:00:00 +0100</pubDate><guid>https://segflow.github.io/post/inlining-budgets/</guid><description>&lt;p&gt;After &lt;a href="./post/go-compiler-optimization/"&gt;my map-lookup contribution to the Go compiler&lt;/a&gt;
+back in April, I kept poking the toolchain whenever a benchmark surprised me.
+Last week it surprised me again, and the lesson is short enough to fit in one
+post: Go inlines aggressively, but not infinitely, and the &lt;em&gt;shape&lt;/em&gt; of your
+function matters more than its length.&lt;/p&gt;
+&lt;p&gt;The story starts with a three-line helper that I was sure the compiler would
+inline. &lt;code&gt;pprof&lt;/code&gt; disagreed.&lt;/p&gt;</description></item><item><title>My journey optimizing the Go Compiler</title><link>https://segflow.github.io/post/go-compiler-optimization/</link><pubDate>Tue, 28 Apr 2020 13:20:28 +0100</pubDate><guid>https://segflow.github.io/post/go-compiler-optimization/</guid><description>&lt;p&gt;At &lt;a href="https://edge.network/"&gt;EDGE&lt;/a&gt; we write a lot of Go, and we love it for various reasons, one of them being speed. One day I got into a situation where I need to assign an &lt;code&gt;int&lt;/code&gt; to a variable based on another string value.&lt;/p&gt;
 &lt;p&gt;Sounds easy right? well yes, but this particular use case awakened the beast in me and made me think what&amp;rsquo;s the &lt;strong&gt;best&lt;/strong&gt; way to do it.&lt;/p&gt;
-
-&lt;p&gt;The journey finished by me contributing to the language compiler and make &lt;code&gt;map&lt;/code&gt; lookups faster.&lt;/p&gt;</description>
-    </item>
-    
-    <item>
-      <title>Noxale CTF: Grocery List (pwn)</title>
-      <link>https://segflow.github.io/post/noxale-ctf-grocery_list/</link>
-      <pubDate>Sun, 09 Sep 2018 19:21:10 +0100</pubDate>
-      
-      <guid>https://segflow.github.io/post/noxale-ctf-grocery_list/</guid>
-      <description>&lt;p&gt;In this challenge, we are given a service IP and PORT, to which we can connect using &lt;code&gt;netcat&lt;/code&gt; or any similar tool.
-We are also provided with an &lt;code&gt;ELF&lt;/code&gt; file.&lt;/p&gt;</description>
-    </item>
-    
-    <item>
-      <title>PlaidCTF: Shop (pwn)</title>
-      <link>https://segflow.github.io/post/plaid-ctf-shop/</link>
-      <pubDate>Sun, 06 May 2018 20:17:33 +0100</pubDate>
-      
-      <guid>https://segflow.github.io/post/plaid-ctf-shop/</guid>
-      <description>&lt;p&gt;Below you find the full exploit for PlaidCTF pwn200 task. The full write up will follow up.&lt;/p&gt;</description>
-    </item>
-    
-    <item>
-      <title>AceBear CTF: Secure login (reverse)</title>
-      <link>https://segflow.github.io/post/acebear-ctf-secure_login/</link>
-      <pubDate>Tue, 30 Jan 2018 21:12:11 +0100</pubDate>
-      
-      <guid>https://segflow.github.io/post/acebear-ctf-secure_login/</guid>
-      <description>&lt;p&gt;In this article I will share with you the solution to &lt;code&gt;Secure Login&lt;/code&gt; challenge presented at &lt;em&gt;Acebear CTF&lt;/em&gt;, this task was worth 900 points. Even though I did not manage to solve the challenge on time, I still enjoyed it a lot.&lt;/p&gt;</description>
-    </item>
-    
-    <item>
-      <title>34C3 CTF: GiftWrapper 2 (pwn)</title>
-      <link>https://segflow.github.io/post/34c3-ctf-giftwrapper2/</link>
-      <pubDate>Sun, 21 Jan 2018 09:21:10 +0100</pubDate>
-      
-      <guid>https://segflow.github.io/post/34c3-ctf-giftwrapper2/</guid>
-      <description>&lt;p&gt;In this challenge, we are given a service IP and PORT, to which we can connect using &lt;code&gt;netcat&lt;/code&gt; or any similar tool. We are also provided with a &lt;code&gt;tar&lt;/code&gt; file that contains the service binary and some &lt;code&gt;.so&lt;/code&gt; modules.&lt;/p&gt;</description>
-    </item>
-    
-    <item>
-      <title>3DS CTF: Xesar (crypto)</title>
-      <link>https://segflow.github.io/post/3ds-ctf-xesar/</link>
-      <pubDate>Sat, 30 Dec 2017 13:20:47 +0100</pubDate>
-      
-      <guid>https://segflow.github.io/post/3ds-ctf-xesar/</guid>
-      <description>&lt;p&gt;Recently I decided to start playing CTFs again, and since I needed some training before playing a real one, I decided to take a look at some recent CTFs in &lt;a href=&#34;https://ctftime.org/&#34;&gt;CTFtime.org&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;And then I found this crypto task with no writeup for it yet, and that&amp;rsquo;s why I jumped into it :)&lt;/p&gt;</description>
-    </item>
-    
-  </channel>
-</rss>
+&lt;p&gt;The journey finished by me contributing to the language compiler and make &lt;code&gt;map&lt;/code&gt; lookups faster.&lt;/p&gt;</description></item><item><title>Noxale CTF: Grocery List (pwn)</title><link>https://segflow.github.io/post/noxale-ctf-grocery_list/</link><pubDate>Sun, 09 Sep 2018 19:21:10 +0100</pubDate><guid>https://segflow.github.io/post/noxale-ctf-grocery_list/</guid><description>&lt;p&gt;In this challenge, we are given a service IP and PORT, to which we can connect using &lt;code&gt;netcat&lt;/code&gt; or any similar tool.
+We are also provided with an &lt;code&gt;ELF&lt;/code&gt; file.&lt;/p&gt;</description></item><item><title>PlaidCTF: Shop (pwn)</title><link>https://segflow.github.io/post/plaid-ctf-shop/</link><pubDate>Sun, 06 May 2018 20:17:33 +0100</pubDate><guid>https://segflow.github.io/post/plaid-ctf-shop/</guid><description>&lt;p&gt;Below you find the full exploit for PlaidCTF pwn200 task. The full write up will follow up.&lt;/p&gt;</description></item><item><title>AceBear CTF: Secure login (reverse)</title><link>https://segflow.github.io/post/acebear-ctf-secure_login/</link><pubDate>Tue, 30 Jan 2018 21:12:11 +0100</pubDate><guid>https://segflow.github.io/post/acebear-ctf-secure_login/</guid><description>&lt;p&gt;In this article I will share with you the solution to &lt;code&gt;Secure Login&lt;/code&gt; challenge presented at &lt;em&gt;Acebear CTF&lt;/em&gt;, this task was worth 900 points. Even though I did not manage to solve the challenge on time, I still enjoyed it a lot.&lt;/p&gt;</description></item><item><title>34C3 CTF: GiftWrapper 2 (pwn)</title><link>https://segflow.github.io/post/34c3-ctf-giftwrapper2/</link><pubDate>Sun, 21 Jan 2018 09:21:10 +0100</pubDate><guid>https://segflow.github.io/post/34c3-ctf-giftwrapper2/</guid><description>&lt;p&gt;In this challenge, we are given a service IP and PORT, to which we can connect using &lt;code&gt;netcat&lt;/code&gt; or any similar tool. We are also provided with a &lt;code&gt;tar&lt;/code&gt; file that contains the service binary and some &lt;code&gt;.so&lt;/code&gt; modules.&lt;/p&gt;</description></item><item><title>3DS CTF: Xesar (crypto)</title><link>https://segflow.github.io/post/3ds-ctf-xesar/</link><pubDate>Sat, 30 Dec 2017 13:20:47 +0100</pubDate><guid>https://segflow.github.io/post/3ds-ctf-xesar/</guid><description>&lt;p&gt;Recently I decided to start playing CTFs again, and since I needed some training before playing a real one, I decided to take a look at some recent CTFs in &lt;a href="https://ctftime.org/"&gt;CTFtime.org&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;And then I found this crypto task with no writeup for it yet, and that&amp;rsquo;s why I jumped into it :)&lt;/p&gt;</description></item></channel></rss>

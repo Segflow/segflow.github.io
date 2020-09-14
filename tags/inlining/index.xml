@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Inlining on Segflow</title><link>https://segflow.github.io/tags/inlining/</link><description>Recent content in Inlining on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 14 Sep 2020 10:00:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/inlining/index.xml" rel="self" type="application/rss+xml"/><item><title>Inlining budgets, and why your one-liner stayed slow</title><link>https://segflow.github.io/post/inlining-budgets/</link><pubDate>Mon, 14 Sep 2020 10:00:00 +0100</pubDate><guid>https://segflow.github.io/post/inlining-budgets/</guid><description>&lt;p&gt;After &lt;a href="../../post/go-compiler-optimization/"&gt;my map-lookup contribution to the Go compiler&lt;/a&gt;
+back in April, I kept poking the toolchain whenever a benchmark surprised me.
+Last week it surprised me again, and the lesson is short enough to fit in one
+post: Go inlines aggressively, but not infinitely, and the &lt;em&gt;shape&lt;/em&gt; of your
+function matters more than its length.&lt;/p&gt;
+&lt;p&gt;The story starts with a three-line helper that I was sure the compiler would
+inline. &lt;code&gt;pprof&lt;/code&gt; disagreed.&lt;/p&gt;</description></item></channel></rss>
