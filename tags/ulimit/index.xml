@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ulimit on Segflow</title><link>https://segflow.github.io/tags/ulimit/</link><description>Recent content in Ulimit on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 22 Mar 2021 18:30:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/ulimit/index.xml" rel="self" type="application/rss+xml"/><item><title>Tuning a Go TCP server toward 1M idle connections on a laptop</title><link>https://segflow.github.io/post/million-idle-connections/</link><pubDate>Mon, 22 Mar 2021 18:30:00 +0100</pubDate><guid>https://segflow.github.io/post/million-idle-connections/</guid><description>&lt;p&gt;I had been telling people for months that Go can &amp;ldquo;trivially&amp;rdquo; hold a million
+idle TCP connections. The runtime uses epoll, goroutines are cheap, what
+could go wrong. Then a colleague asked me to actually do it, and I realised
+I had never tried. So I sat down with my laptop, a fresh &lt;code&gt;net.Listen&lt;/code&gt;, and
+a client that just wants to open a lot of sockets.&lt;/p&gt;
+&lt;p&gt;The first wall I hit was 1024 file descriptors. After that came five more
+walls in quick succession, none of them in user code. This post is the log
+of every wall I walked into and how to move it. Code, logs, and scripts
+are in the &lt;a href="./million-idle-connections/code/"&gt;scratch directory&lt;/a&gt;.&lt;/p&gt;</description></item></channel></rss>
