@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Architecture on Segflow</title><link>https://segflow.github.io/tags/architecture/</link><description>Recent content in Architecture on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 11 Oct 2021 09:15:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/architecture/index.xml" rel="self" type="application/rss+xml"/><item><title>Designing for deletion</title><link>https://segflow.github.io/post/designing-for-deletion/</link><pubDate>Mon, 11 Oct 2021 09:15:00 +0100</pubDate><guid>https://segflow.github.io/post/designing-for-deletion/</guid><description>&lt;p&gt;A few months ago my team had to kill a feature. Nothing dramatic; a
+half-finished onboarding flow product had quietly stopped believing in.
+The ticket said &amp;ldquo;remove the new welcome wizard.&amp;rdquo; I estimated two days.
+It took three weeks.&lt;/p&gt;
+&lt;p&gt;The wizard itself was about 400 lines. The reason it took three weeks
+is that those 400 lines had grown roots. A flag on the user record. A
+column in the analytics table. Three branches in the auth middleware. A
+template partial pulled into the main layout. A background job that
+&amp;ldquo;would be useful for other things later.&amp;rdquo; A helper in &lt;code&gt;internal/util&lt;/code&gt;
+that nine packages now imported. By the time we&amp;rsquo;d traced every tendril
+the diff touched 60 files and the review thread looked like a hostage
+negotiation.&lt;/p&gt;</description></item></channel></rss>
