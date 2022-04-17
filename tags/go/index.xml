@@ -1,4 +1,14 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Go on Segflow</title><link>https://segflow.github.io/tags/go/</link><description>Recent content in Go on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 11 Oct 2021 09:15:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/go/index.xml" rel="self" type="application/rss+xml"/><item><title>Designing for deletion</title><link>https://segflow.github.io/post/designing-for-deletion/</link><pubDate>Mon, 11 Oct 2021 09:15:00 +0100</pubDate><guid>https://segflow.github.io/post/designing-for-deletion/</guid><description>&lt;p&gt;A few months ago my team had to kill a feature. Nothing dramatic; a
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Go on Segflow</title><link>https://segflow.github.io/tags/go/</link><description>Recent content in Go on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sun, 17 Apr 2022 14:45:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/go/index.xml" rel="self" type="application/rss+xml"/><item><title>Escape analysis, demystified by 6 tiny examples</title><link>https://segflow.github.io/post/escape-analysis-examples/</link><pubDate>Sun, 17 Apr 2022 14:45:00 +0100</pubDate><guid>https://segflow.github.io/post/escape-analysis-examples/</guid><description>&lt;p&gt;A while back I had a hot loop that profiled like a heap-allocation
+machine gun. &lt;code&gt;pprof&lt;/code&gt; blamed &lt;code&gt;runtime.mallocgc&lt;/code&gt;. The code looked
+innocent. The fix turned out to be a one-line signature change, and
+the compiler had been quietly screaming at me about it the whole
+time via &lt;code&gt;-gcflags=-m&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;This post is the second half of a tour I started in &lt;a href="../../post/go-compiler-optimization/"&gt;My journey
+optimizing the Go Compiler&lt;/a&gt; and
+continued in &lt;a href="../../post/inlining-budgets/"&gt;What actually fits in Go&amp;rsquo;s inlining
+budget&lt;/a&gt;. Inlining decides &lt;em&gt;where&lt;/em&gt; code runs;
+escape analysis decides &lt;em&gt;where data lives&lt;/em&gt;. Six 10-line examples
+cover roughly 90% of what you&amp;rsquo;ll see in real Go.&lt;/p&gt;</description></item><item><title>Designing for deletion</title><link>https://segflow.github.io/post/designing-for-deletion/</link><pubDate>Mon, 11 Oct 2021 09:15:00 +0100</pubDate><guid>https://segflow.github.io/post/designing-for-deletion/</guid><description>&lt;p&gt;A few months ago my team had to kill a feature. Nothing dramatic; a
 half-finished onboarding flow product had quietly stopped believing in.
 The ticket said &amp;ldquo;remove the new welcome wizard.&amp;rdquo; I estimated two days.
 It took three weeks.&lt;/p&gt;
