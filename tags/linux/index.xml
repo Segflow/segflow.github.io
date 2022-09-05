@@ -1,4 +1,16 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Linux on Segflow</title><link>https://segflow.github.io/tags/linux/</link><description>Recent content in Linux on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 22 Mar 2021 18:30:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/linux/index.xml" rel="self" type="application/rss+xml"/><item><title>Tuning a Go TCP server toward 1M idle connections on a laptop</title><link>https://segflow.github.io/post/million-idle-connections/</link><pubDate>Mon, 22 Mar 2021 18:30:00 +0100</pubDate><guid>https://segflow.github.io/post/million-idle-connections/</guid><description>&lt;p&gt;I had been telling people for months that Go can &amp;ldquo;trivially&amp;rdquo; hold a million
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Linux on Segflow</title><link>https://segflow.github.io/tags/linux/</link><description>Recent content in Linux on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 05 Sep 2022 11:20:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/linux/index.xml" rel="self" type="application/rss+xml"/><item><title>What strace -c taught me about a fast CLI</title><link>https://segflow.github.io/post/strace-c-fast-cli/</link><pubDate>Mon, 05 Sep 2022 11:20:00 +0100</pubDate><guid>https://segflow.github.io/post/strace-c-fast-cli/</guid><description>&lt;p&gt;The CLI was fast. I had benchmarked it on my laptop, on a fresh clone of the
+repo, and it finished in well under a second. Then a coworker pointed it at a
+real monorepo, the kind with 30,000 files spread across a few thousand
+directories, and the thing crawled. Same code, same machine class, just more
+files. The user-visible work had not changed. The wall clock had.&lt;/p&gt;
+&lt;p&gt;This is the story of the half hour I spent figuring out why, what &lt;code&gt;strace -c&lt;/code&gt;
+showed me, and why I now reach for it before any profiler when something
+&amp;ldquo;feels slow&amp;rdquo; on Linux.&lt;/p&gt;
+&lt;p&gt;My first instinct was wrong, by the way. I assumed disk. The repo was big,
+the laptop has an NVMe drive but it is not magic, and &amp;ldquo;more files&amp;rdquo; sounds
+like &amp;ldquo;more IO.&amp;rdquo; So I ran the program twice in a row, expecting the second
+run to be fast off the page cache. It was not. Both runs took roughly the
+same time. Whatever was slow, it was not waiting on the disk.&lt;/p&gt;</description></item><item><title>Tuning a Go TCP server toward 1M idle connections on a laptop</title><link>https://segflow.github.io/post/million-idle-connections/</link><pubDate>Mon, 22 Mar 2021 18:30:00 +0100</pubDate><guid>https://segflow.github.io/post/million-idle-connections/</guid><description>&lt;p&gt;I had been telling people for months that Go can &amp;ldquo;trivially&amp;rdquo; hold a million
 idle TCP connections. The runtime uses epoll, goroutines are cheap, what
 could go wrong. Then a colleague asked me to actually do it, and I realised
 I had never tried. So I sat down with my laptop, a fresh &lt;code&gt;net.Listen&lt;/code&gt;, and

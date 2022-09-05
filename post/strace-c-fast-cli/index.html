@@ -1,0 +1,158 @@
+<!doctype html><html lang=en><head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#"><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta name=description content><meta property="og:title" content="What strace -c taught me about a fast CLI"><meta property="og:type" content="article"><meta property="article:published_time" content="2022-09-05"><meta property="og:description" content><meta property="og:url" content="https://segflow.github.io/post/strace-c-fast-cli/"><meta property="og:site_name" content="Segflow"><meta property="og:tags" content="Go"><meta property="og:tags" content="Linux"><meta property="og:tags" content="strace"><meta property="og:tags" content="syscalls"><meta property="og:tags" content="performance"><meta name=generator content="Hugo 0.162.0"><title>What strace -c taught me about a fast CLI &#183; Segflow</title><link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css><link rel=stylesheet href=https://segflow.github.io/css/style.css><link rel=icon href=https://segflow.github.io/favicon.ico></head><body><nav class="navbar navbar-default navbar-fixed-top visible-xs"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#bs-example-navbar-collapse-1>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+</button>
+<a class=navbar-brand href=https://segflow.github.io/>Segflow</a></div><div class="collapse navbar-collapse" id=bs-example-navbar-collapse-1><ul class="nav navbar-nav"><li><a href=https://segflow.github.io//>Home</a></li><li><a href=https://segflow.github.io/post/>Posts</a></li><li><a href=https://segflow.github.io/resume.pdf>Resume</a></li></ul></div></div></nav><div class=container-fluid><div class=row><div id=menu class="hidden-xs col-sm-3 col-md-3"><div id=menu-content class=vertical-align><h1 class=text-center><a href=https://segflow.github.io/>Segflow</a></h1><small class="text-center center-block">Assel Meher</small>
+<img id=profile-pic src=https://segflow.github.io//img/hacker_emblem.png alt="My Picture" class="img-circle center-block"><div id=social class=text-center><a href=https://github.com/segflow><i class="fa fa-github fa-2x"></i></a>
+<a href=https://www.linkedin.com/in/meher-assel-0122798a><i class="fa fa-linkedin fa-2x"></i></a>
+<a href=https://twitter.com/segfl0w><i class="fa fa-twitter fa-2x"></i></a>
+<a href=mailto:asselmeher@gmail.com><i class="fa fa-envelope-o fa-2x"></i></a></div><div id=links class=text-center><a href=https://segflow.github.io//>Home</a>
+<a href=https://segflow.github.io/post/>Posts</a>
+<a href=https://segflow.github.io/resume.pdf>Resume</a></div></div></div><div id=content class="col-xs-12 col-sm-9 col-md-9"><div class=row><div id=post class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10"><main><header><h1>What strace -c taught me about a fast CLI</h1></header><article><p>The CLI was fast. I had benchmarked it on my laptop, on a fresh clone of the
+repo, and it finished in well under a second. Then a coworker pointed it at a
+real monorepo, the kind with 30,000 files spread across a few thousand
+directories, and the thing crawled. Same code, same machine class, just more
+files. The user-visible work had not changed. The wall clock had.</p><p>This is the story of the half hour I spent figuring out why, what <code>strace -c</code>
+showed me, and why I now reach for it before any profiler when something
+&ldquo;feels slow&rdquo; on Linux.</p><p>My first instinct was wrong, by the way. I assumed disk. The repo was big,
+the laptop has an NVMe drive but it is not magic, and &ldquo;more files&rdquo; sounds
+like &ldquo;more IO.&rdquo; So I ran the program twice in a row, expecting the second
+run to be fast off the page cache. It was not. Both runs took roughly the
+same time. Whatever was slow, it was not waiting on the disk.</p><h2 id=the-suspect>The suspect</h2><p>The CLI is small. It walks a directory tree, counts non-empty lines in every
+text file, and prints the total. The Go reads like the kind of code you write
+once and never look at again:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>filepath</span>.<span style=color:#a6e22e>Walk</span>(<span style=color:#a6e22e>root</span>, <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>p</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>info</span> <span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>FileInfo</span>, <span style=color:#a6e22e>err</span> <span style=color:#66d9ef>error</span>) <span style=color:#66d9ef>error</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> <span style=color:#f92672>||</span> <span style=color:#a6e22e>info</span>.<span style=color:#a6e22e>IsDir</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> !<span style=color:#a6e22e>parentsOK</span>(<span style=color:#a6e22e>p</span>) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>n</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>countLines</span>(<span style=color:#a6e22e>p</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>total</span> <span style=color:#f92672>+=</span> <span style=color:#a6e22e>n</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>})
+</span></span></code></pre></div><p><code>parentsOK</code> walks up from the file, calling <code>os.Stat</code> on every ancestor,
+because two years ago a bug report blamed a missing parent directory and
+somebody added a belt-and-braces check. Nobody ever took it out.</p><p><code>countLines</code> opens the file and uses a <code>bufio.Scanner</code> with a 1 KiB scratch
+buffer, because that is what the example in the docs uses.</p><p>On a synthetic tree of 30,600 files in 1,861 directories, totalling 224 MiB,
+the CLI takes about 320 ms with a warm cache. That sounds fine. It is not
+fine, and <code>strace -c</code> is going to tell us why.</p><h2 id=the-30-second-tool>The 30-second tool</h2><p><code>strace -c</code> does not print every syscall. It runs your program to completion
+and prints a histogram of which syscalls were made, how often, and how much
+time the kernel spent in each. The crucial flag for Go is <code>-f</code>, &ldquo;follow
+child threads,&rdquo; because the Go runtime is multi-threaded and without <code>-f</code>
+you only see the main thread&rsquo;s syscalls.</p><pre tabindex=0><code>$ strace -cf ./slow /tmp/many &gt;/dev/null
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ------------------
+ 81.19  154.531378        6883     22448      1839 futex
+ 11.21   21.329266         189    112511           nanosleep
+  2.92    5.565586          25    216061           newfstatat
+  2.53    4.819692          24    194731           read
+  0.56    1.071126          32     32462           openat
+  0.47    0.901634         168      5364         5 epoll_pwait
+  0.42    0.807935          24     32462           close
+  0.37    0.697828          21     32462     32461 epoll_ctl
+  ...
+------ ----------- ----------- --------- --------- ------------------
+100.00  190.331611         286    664447     34393 total
+</code></pre><p>A few notes on reading this table before we panic at the numbers. The
+<code>seconds</code> column is heavily inflated by <code>strace</code> itself; ptrace is expensive
+and the wall time you see here is not the wall time of the unstraced program.
+The columns I actually trust are <code>calls</code>, <code>errors</code>, and the relative shape of
+the histogram. Always cross-check wall time with <code>/usr/bin/time</code> outside of
+<code>strace</code>.</p><p>With that caveat, here is what jumps out.</p><p>Look at the rightmost columns first. <code>calls</code> is how many times the kernel was
+entered, period. It does not lie, it is not warped by ptrace overhead, and
+it is the number you can reason about. The <code>errors</code> column is the count of
+calls that returned a non-zero error code; a huge value there usually means
+the program is using errors as control flow, which is its own kind of slow.</p><h2 id=the-smoking-gun>The smoking gun</h2><p>For 30,600 files, the program made <strong>216,061 <code>newfstatat</code> calls</strong>. That is
+roughly seven <code>stat</code> per file. Where do seven stats per file come from?</p><pre tabindex=0><code>parentsOK(&#34;/tmp/many/grp00/sub00/file_00.txt&#34;)
+  stat(&#34;/tmp/many/grp00/sub00/file_00.txt&#34;)
+  stat(&#34;/tmp/many/grp00/sub00&#34;)
+  stat(&#34;/tmp/many/grp00&#34;)
+  stat(&#34;/tmp/many&#34;)
+  stat(&#34;/tmp&#34;)
+  stat(&#34;/&#34;)
+</code></pre><p>Six stats from <code>parentsOK</code>, plus one lstat from <code>filepath.Walk</code> as it
+descends into each entry. Six plus one is seven. The math closes on the dot.</p><p>The second worst row is <code>read</code>: <strong>194,731 calls</strong>, which is about 6.3 reads
+per file for files that average 6 KiB. The <code>bufio.Scanner</code> is doing its job,
+but its scratch buffer is so small that even modest files come back in five
+or six chunks. Each chunk is a separate syscall, each syscall is a separate
+trip into the kernel and back, and for tiny files that round trip is the
+dominant cost.</p><p><code>openat</code> and <code>close</code> come in at 32,462 each. That is one open and one close
+per file, plus a couple of thousand for directories. There is nothing to fix
+there. You cannot read a file without opening it. But the ratio is telling:
+<strong><code>read</code> is 6× the file count, <code>stat</code> is 7× the file count</strong>. Every extra
+syscall is overhead the program does not need.</p><p>Also worth noting: <code>futex</code> is at the top with 81% of the (inflated) seconds.
+That is the Go runtime&rsquo;s scheduler talking to itself across goroutines. On a
+ptrace-slowed run it always looks dramatic, because every context switch
+becomes a <code>futex</code> storm of its own. Without <code>strace</code>, the runtime barely
+shows up. This is one of those places where you have to know what your
+language emits as syscalls before you can read its histogram.</p><h2 id=five-syscalls-you-do-not-want-to-see-in-the-top-three>Five syscalls you do not want to see in the top three</h2><p>Before the fix, a short rule of thumb that has held up for me:</p><ul><li><code>stat</code>, <code>lstat</code>, <code>newfstatat</code>: usually means you are checking the same
+paths over and over. Cache it, or trust the <code>DirEntry</code> you already have.</li><li><code>read</code> with a huge call count and a small <code>usecs/call</code>: your buffer is too
+small or you are reading one byte at a time. Bump the buffer.</li><li><code>openat</code> / <code>close</code> pairs hugely exceeding the file count: you are opening
+the same file more than once. Open once, pass the fd.</li><li><code>getdents64</code> running into the thousands for a flat directory: you are
+listing the same directory repeatedly. Cache the entries.</li><li><code>futex</code> dominating wall time with hundreds of <code>usecs/call</code>: lock
+contention. Profile with <code>pprof</code>, not <code>strace</code>.</li></ul><h2 id=the-fix>The fix</h2><p>Two changes. The first deletes <code>parentsOK</code> entirely. <code>filepath.Walk</code> already
+gives me an <code>os.FileInfo</code> per entry and <code>WalkDir</code> does even better by handing
+me a <code>fs.DirEntry</code> that was populated from <code>getdents64</code> without a stat. If
+the user mis-typed the root, I will find out at <code>os.Open</code> time.</p><p>The second swaps the <code>bufio.Scanner</code> with a tiny buffer for a <code>bufio.Reader</code>
+sized at 64 KiB. Almost every text file in this tree fits in a single read.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>filepath</span>.<span style=color:#a6e22e>WalkDir</span>(<span style=color:#a6e22e>root</span>, <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>p</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>d</span> <span style=color:#a6e22e>fs</span>.<span style=color:#a6e22e>DirEntry</span>, <span style=color:#a6e22e>err</span> <span style=color:#66d9ef>error</span>) <span style=color:#66d9ef>error</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> <span style=color:#f92672>||</span> <span style=color:#a6e22e>d</span>.<span style=color:#a6e22e>IsDir</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>n</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>countLines</span>(<span style=color:#a6e22e>p</span>) <span style=color:#75715e>// now uses bufio.NewReaderSize(f, 64*1024)</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>total</span> <span style=color:#f92672>+=</span> <span style=color:#a6e22e>n</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>})
+</span></span></code></pre></div><p>Same input, same output (2,447,945 non-empty lines either way). New
+<code>strace -c</code> summary:</p><pre tabindex=0><code>$ strace -cf ./fast /tmp/many &gt;/dev/null
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ------------------
+ 78.04   43.335523        2863     15135      1625 futex
+ 13.32    7.394392         247     29903           nanosleep
+  2.60    1.442270          23     61203           read
+  1.81    1.004006          30     32462           openat
+  1.42    0.786105          24     32462           close
+  1.17    0.651540          20     32462     32461 epoll_ctl
+  ...
+  0.00    0.000102         102         1           newfstatat
+------ ----------- ----------- --------- --------- ------------------
+100.00   55.532420         255    217161     34134 total
+</code></pre><p><img src=../../content-assets/strace-c-fast-cli/charts/syscalls.svg alt="Top syscalls before vs after (log scale)"></p><p><code>newfstatat</code> went from 216,061 to <strong>1</strong>. That single stat is Go&rsquo;s runtime
+checking the root directory I passed on the command line. The whole rest of
+the walk runs off <code>getdents64</code> and the <code>d_type</code> byte. <code>read</code> dropped from
+194,731 to 61,203, which is closer to two reads per file: one to grab the
+contents, one to hit EOF and stop. Total syscalls dropped from <strong>664,447
+to 217,161</strong>, a 3× reduction. Wall time outside strace dropped from a
+steady 320 ms to a steady 270 ms.</p><p>The wall-time win is real but modest, and that is worth saying plainly.
+With a warm page cache, a syscall is cheap; the kernel&rsquo;s stat fast path is
+a handful of hundred nanoseconds. The reason this matters anyway is two
+fold. First, syscall count scales with input size. On a tree ten times
+bigger the slow version would have made 2.16 million stats and the fast
+version still just one; the gap would not have stayed at fifty milliseconds.
+Second, on a cold cache, every stat that misses the dentry cache turns into
+a directory read on disk, and that is where this style of code falls off a
+cliff. I cannot drop the page cache on this machine to demo it, but I have
+been bitten by it on production CI runners more than once.</p><h2 id=what-strace--c-is-and-is-not>What <code>strace -c</code> is and is not</h2><p><code>strace -c</code> is not a profiler. It is a histogram. It will not tell you that
+80% of your CPU is in a regex compiler or that a <code>map</code> lookup is going
+quadratic. For that, <code>go test -cpuprofile</code> and <code>pprof</code> are still the right
+tools.</p><p>What <code>strace -c</code> is good at is one specific question: <strong>is my program
+spending its life in syscalls it does not need?</strong> That is a question CPU
+profilers answer badly, because most of the time hides inside the kernel
+and barely registers in a user-space profile. A 30-second <code>strace -c</code> run
+gives you a syscall histogram, and once you see the histogram, the obvious
+calls jump out: the <code>stat</code> storm, the tiny <code>read</code>, the redundant <code>openat</code>.</p><p>Two warnings before you go.</p><p>First, <code>strace</code> uses ptrace. Ptrace adds a context switch on every syscall,
+which is why my wall times inside <code>strace</code> looked like 190 seconds for a
+program that runs in 0.3 seconds. Never quote <code>strace</code> wall times as if
+they were real. Use it for the call counts and ratios, then measure wall
+time separately.</p><p>Second, on a production box, <code>strace</code> is the wrong tool. It pauses every
+syscall and can wreck latency. For production triage, reach for <code>perf trace --summary</code>, which uses tracepoints and is far cheaper. But on my laptop,
+on a Friday afternoon, with a CLI that &ldquo;feels slow,&rdquo; <code>strace -cf</code> is still
+the first thing I run.</p><p>The fix to my slow CLI took ten minutes once I had the histogram. Finding
+the histogram took thirty seconds. That ratio is why I keep coming back to
+<code>strace -c</code>.</p></article></main><div id=bottom-nav class="text-center center-block"><a href=https://segflow.github.io/ class="btn btn-default"><i class="fa fa-home"></i> Home</a></div><div id=disqus_thread></div><script>window.disqus_config=function(){},function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById("disqus_thread").innerHTML="Disqus comments not available by default when the website is previewed locally.";return}var t=document,e=t.createElement("script");e.async=!0,e.src="//segflow-io.disqus.com/embed.js",e.setAttribute("data-timestamp",+new Date),(t.head||t.body).appendChild(e)}()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div></div></div></div></div><script>(function(e,t,n,s,o,i,a){e.GoogleAnalyticsObject=o,e[o]=e[o]||function(){(e[o].q=e[o].q||[]).push(arguments)},e[o].l=1*new Date,i=t.createElement(n),a=t.getElementsByTagName(n)[0],i.async=1,i.src=s,a.parentNode.insertBefore(i,a)})(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-111743535-1","auto"),ga("send","pageview"),window.baseURL="https://segflow.github.io/"</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js></script><script src=https://segflow.github.io//js/App.js></script></body></html>
