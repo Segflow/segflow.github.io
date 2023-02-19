@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 540" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">
+<rect width="980" height="540" fill="#fdfdfb"/>
+<text x="490.0" y="30" text-anchor="middle" font-size="18" font-weight="600" fill="#222">Latency by backpressure pattern</text>
+<text x="490.0" y="50" text-anchor="middle" font-size="12" fill="#666">2000 requests, 1000 req/s burst, ~100 ms work, 16 worker slots. Log scale. Lower is better.</text>
+<line x1="78" y1="430.0" x2="950" y2="430.0" stroke="#e0e0e0" stroke-width="1"/>
+<text x="70" y="434.0" text-anchor="end" fill="#666" font-size="11">50 ms</text>
+<line x1="78" y1="388.4" x2="950" y2="388.4" stroke="#bbb" stroke-width="1"/>
+<text x="70" y="392.4" text-anchor="end" fill="#666" font-size="11">100 ms</text>
+<line x1="78" y1="346.7" x2="950" y2="346.7" stroke="#e0e0e0" stroke-width="1"/>
+<text x="70" y="350.7" text-anchor="end" fill="#666" font-size="11">200 ms</text>
+<line x1="78" y1="291.6" x2="950" y2="291.6" stroke="#e0e0e0" stroke-width="1"/>
+<text x="70" y="295.6" text-anchor="end" fill="#666" font-size="11">500 ms</text>
+<line x1="78" y1="250.0" x2="950" y2="250.0" stroke="#bbb" stroke-width="1"/>
+<text x="70" y="254.0" text-anchor="end" fill="#666" font-size="11">1 s</text>
+<line x1="78" y1="208.4" x2="950" y2="208.4" stroke="#e0e0e0" stroke-width="1"/>
+<text x="70" y="212.4" text-anchor="end" fill="#666" font-size="11">2 s</text>
+<line x1="78" y1="153.3" x2="950" y2="153.3" stroke="#e0e0e0" stroke-width="1"/>
+<text x="70" y="157.3" text-anchor="end" fill="#666" font-size="11">5 s</text>
+<line x1="78" y1="111.6" x2="950" y2="111.6" stroke="#bbb" stroke-width="1"/>
+<text x="70" y="115.6" text-anchor="end" fill="#666" font-size="11">10 s</text>
+<line x1="78" y1="70.0" x2="950" y2="70.0" stroke="#e0e0e0" stroke-width="1"/>
+<text x="70" y="74.0" text-anchor="end" fill="#666" font-size="11">20 s</text>
+<text x="22" y="250.0" text-anchor="middle" transform="rotate(-90, 22, 250.0)" fill="#444" font-size="13">end-to-end latency (log)</text>
+<rect x="78.0" y="344.9" width="86.2" height="85.1" fill="#7fb3e6" rx="2"/>
+<text x="121.1" y="339.9" text-anchor="middle" fill="#222" font-size="10.5" font-weight="600">206 ms</text>
+<rect x="168.2" y="339.9" width="86.2" height="90.1" fill="#3b6db5" rx="2"/>
+<text x="211.3" y="334.9" text-anchor="middle" fill="#222" font-size="10.5" font-weight="600">224 ms</text>
+<rect x="258.4" y="335.3" width="86.2" height="94.7" fill="#1f3d6f" rx="2"/>
+<text x="301.6" y="330.3" text-anchor="middle" fill="#222" font-size="10.5" font-weight="600">242 ms</text>
+<text x="211.3" y="452.0" text-anchor="middle" fill="#222" font-size="13" font-weight="600">bounded channel</text>
+<text x="211.3" y="469.0" text-anchor="middle" fill="#666" font-size="11">served 2000 / dropped 0</text>
+<rect x="380.7" y="149.3" width="86.2" height="280.7" fill="#7fb3e6" rx="2"/>
+<text x="423.8" y="144.3" text-anchor="middle" fill="#222" font-size="10.5" font-weight="600">5.3 s</text>
+<rect x="470.9" y="111.2" width="86.2" height="318.8" fill="#3b6db5" rx="2"/>
+<text x="514.0" y="106.2" text-anchor="middle" fill="#222" font-size="10.5" font-weight="600">10.1 s</text>
+<rect x="561.1" y="108.7" width="86.2" height="321.3" fill="#1f3d6f" rx="2"/>
+<text x="604.2" y="103.7" text-anchor="middle" fill="#222" font-size="10.5" font-weight="600">10.5 s</text>
+<text x="514.0" y="452.0" text-anchor="middle" fill="#222" font-size="13" font-weight="600">semaphore.Weighted</text>
+<text x="514.0" y="469.0" text-anchor="middle" fill="#666" font-size="11">served 2000 / dropped 0</text>
+<rect x="683.3" y="387.8" width="86.2" height="42.2" fill="#7fb3e6" rx="2"/>
+<text x="726.4" y="382.8" text-anchor="middle" fill="#222" font-size="10.5" font-weight="600">101 ms</text>
+<rect x="773.6" y="385.4" width="86.2" height="44.6" fill="#3b6db5" rx="2"/>
+<text x="816.7" y="380.4" text-anchor="middle" fill="#222" font-size="10.5" font-weight="600">105 ms</text>
+<rect x="863.8" y="384.9" width="86.2" height="45.1" fill="#1f3d6f" rx="2"/>
+<text x="906.9" y="379.9" text-anchor="middle" fill="#222" font-size="10.5" font-weight="600">106 ms</text>
+<text x="816.7" y="452.0" text-anchor="middle" fill="#222" font-size="13" font-weight="600">token bucket</text>
+<text x="816.7" y="469.0" text-anchor="middle" fill="#666" font-size="11">served 351 / dropped 1649</text>
+<rect x="722" y="62" width="220" height="26" rx="4" fill="#ffffff" stroke="#ddd"/>
+<rect x="730" y="70" width="14" height="10" fill="#7fb3e6" rx="1"/>
+<text x="750" y="79" fill="#222" font-size="11" font-weight="600">p50</text>
+<rect x="800" y="70" width="14" height="10" fill="#3b6db5" rx="1"/>
+<text x="820" y="79" fill="#222" font-size="11" font-weight="600">p95</text>
+<rect x="870" y="70" width="14" height="10" fill="#1f3d6f" rx="1"/>
+<text x="890" y="79" fill="#222" font-size="11" font-weight="600">p99</text>
+<text x="950" y="528" text-anchor="end" fill="#777" font-size="11">Go 1.20 | GOMAXPROCS=12 | 12-core Linux box | two-run reproducibility within a few ms</text>
+</svg>

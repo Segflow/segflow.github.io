@@ -1,0 +1,175 @@
+<!doctype html><html lang=en><head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#"><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta name=description content><meta property="og:title" content="Backpressure for the impatient: channels vs. semaphores vs. tokens"><meta property="og:type" content="article"><meta property="article:published_time" content="2023-02-19"><meta property="og:description" content><meta property="og:url" content="https://segflow.github.io/post/backpressure-patterns/"><meta property="og:site_name" content="Segflow"><meta property="og:tags" content="Go"><meta property="og:tags" content="Concurrency"><meta property="og:tags" content="Backpressure"><meta property="og:tags" content="Performance"><meta name=generator content="Hugo 0.162.0"><title>Backpressure for the impatient: channels vs. semaphores vs. tokens &#183; Segflow</title><link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css><link rel=stylesheet href=https://segflow.github.io/css/style.css><link rel=icon href=https://segflow.github.io/favicon.ico></head><body><nav class="navbar navbar-default navbar-fixed-top visible-xs"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#bs-example-navbar-collapse-1>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+</button>
+<a class=navbar-brand href=https://segflow.github.io/>Segflow</a></div><div class="collapse navbar-collapse" id=bs-example-navbar-collapse-1><ul class="nav navbar-nav"><li><a href=https://segflow.github.io//>Home</a></li><li><a href=https://segflow.github.io/post/>Posts</a></li><li><a href=https://segflow.github.io/resume.pdf>Resume</a></li></ul></div></div></nav><div class=container-fluid><div class=row><div id=menu class="hidden-xs col-sm-3 col-md-3"><div id=menu-content class=vertical-align><h1 class=text-center><a href=https://segflow.github.io/>Segflow</a></h1><small class="text-center center-block">Assel Meher</small>
+<img id=profile-pic src=https://segflow.github.io//img/hacker_emblem.png alt="My Picture" class="img-circle center-block"><div id=social class=text-center><a href=https://github.com/segflow><i class="fa fa-github fa-2x"></i></a>
+<a href=https://www.linkedin.com/in/meher-assel-0122798a><i class="fa fa-linkedin fa-2x"></i></a>
+<a href=https://twitter.com/segfl0w><i class="fa fa-twitter fa-2x"></i></a>
+<a href=mailto:asselmeher@gmail.com><i class="fa fa-envelope-o fa-2x"></i></a></div><div id=links class=text-center><a href=https://segflow.github.io//>Home</a>
+<a href=https://segflow.github.io/post/>Posts</a>
+<a href=https://segflow.github.io/resume.pdf>Resume</a></div></div></div><div id=content class="col-xs-12 col-sm-9 col-md-9"><div class=row><div id=post class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10"><main><header><h1>Backpressure for the impatient: channels vs. semaphores vs. tokens</h1></header><article><p>A pipeline has backpressure when the consumer can make the producer
+slow down, or refuse the work, or both. A bigger buffer does neither.
+It just defers the same problem, with more memory held hostage in the
+meantime. The two get confused a lot, and the difference shows up
+unmistakably in the tail latency numbers, so this post does the
+comparison directly.</p><p>When load exceeds capacity you have three sane options:</p><ol><li><strong>Block the caller</strong> until a slot frees. Throughput pins to whatever
+the consumer sustains; tail latency degrades cleanly.</li><li><strong>Reject the caller</strong> so they retry, fall back, or shed. Latency
+stays low for accepted work; some work never happens.</li><li><strong>Rate-limit the caller</strong> so they never get close to overloading you.
+Predictable throughput, the rest is queued or dropped.</li></ol><p>Go has a direct idiom for each: a <strong>bounded channel</strong> for option 1, the
+<strong><code>golang.org/x/sync/semaphore</code></strong> package for option 1 with per-item
+weighting, and a <strong><code>time.Ticker</code> token bucket</strong> for option 3 (and
+trivially option 2). They are not interchangeable. They produce three
+very different latency curves under the same workload, which is what we
+will see below.</p><h2 id=the-workload>The workload</h2><p>I built one harness and reused the same request schedule against all
+three patterns. Knobs:</p><ul><li><strong>2000 requests</strong> at a steady <strong>1000 req/s</strong> burst (so the arrival
+stream completes in 2 seconds).</li><li>Each request does <strong>~100 ms of work</strong> (<code>time.Sleep</code> with a small
+jitter so the consumer is the bottleneck, not the harness).</li><li><strong>16 worker slots</strong> for the blocking patterns: 160 req/s sustained
+against a 1000 req/s burst, a 6.25x overload.</li><li>Token bucket at <strong>160 tokens/s, burst 32</strong>, matched to the consumer&rsquo;s
+actual capacity.</li><li>Latency measured from the moment the producer attempts to submit to
+the moment the work completes. That is what the caller sees.</li></ul><p>Hardware: 12 logical CPUs, Go 1.20, <code>GOMAXPROCS=12</code>. Each pattern ran
+twice with different RNG seeds and the numbers below reproduced to
+within a couple of milliseconds.</p><h2 id=pattern-a-bounded-channel>Pattern A: bounded channel</h2><p>The simplest possible thing that works. A buffered <code>chan</code> is the slot
+pool. A fixed number of workers reads from it. Producers <code>send</code> blocks
+when the channel is full. That <code>send</code> blocking is the backpressure.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>runBounded</span>(<span style=color:#a6e22e>reqs</span> []<span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Time</span>, <span style=color:#a6e22e>workers</span> <span style=color:#66d9ef>int</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>jobs</span> <span style=color:#f92672>:=</span> make(<span style=color:#66d9ef>chan</span> <span style=color:#66d9ef>int</span>, <span style=color:#a6e22e>workers</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>wg</span> <span style=color:#a6e22e>sync</span>.<span style=color:#a6e22e>WaitGroup</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#a6e22e>workers</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#a6e22e>workers</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>go</span> <span style=color:#66d9ef>func</span>() {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>defer</span> <span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Done</span>()
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>idx</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>jobs</span> {
+</span></span><span style=display:flex><span>                <span style=color:#a6e22e>doWork</span>(<span style=color:#a6e22e>idx</span>) <span style=color:#75715e>// ~100ms</span>
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>reqs</span> {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// pace producer to the arrival schedule, then submit</span>
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>jobs</span> <span style=color:#f92672>&lt;-</span> <span style=color:#a6e22e>i</span> <span style=color:#75715e>// blocks when full -&gt; caller waits</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    close(<span style=color:#a6e22e>jobs</span>)
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Wait</span>()
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Capacity is the channel buffer plus the in-flight workers, which is why
+I set the buffer equal to <code>workers</code>. Make it bigger and you are just
+preallocating queue depth in front of the same consumer.</p><p>Fair (FIFO on the same channel), cheap, no imports, no goroutine per
+request.</p><h2 id=pattern-b-weighted-semaphore>Pattern B: weighted semaphore</h2><p><code>golang.org/x/sync/semaphore.Weighted</code> is what you reach for when your
+work items have different costs. Image resizing, encoding, an &ldquo;import a
+10 MB CSV&rdquo; handler next to a &ldquo;lookup by id&rdquo; handler. You do not want one
+fat job hogging a slot another job could share.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>import</span> <span style=color:#e6db74>&#34;golang.org/x/sync/semaphore&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>runSemaphore</span>(<span style=color:#a6e22e>reqs</span> []<span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Time</span>, <span style=color:#a6e22e>capacity</span> <span style=color:#66d9ef>int64</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>sem</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>semaphore</span>.<span style=color:#a6e22e>NewWeighted</span>(<span style=color:#a6e22e>capacity</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>wg</span> <span style=color:#a6e22e>sync</span>.<span style=color:#a6e22e>WaitGroup</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>reqs</span> {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>go</span> <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>idx</span> <span style=color:#66d9ef>int</span>) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>defer</span> <span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Done</span>()
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>sem</span>.<span style=color:#a6e22e>Acquire</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#ae81ff>1</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>return</span>
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>defer</span> <span style=color:#a6e22e>sem</span>.<span style=color:#a6e22e>Release</span>(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>doWork</span>(<span style=color:#a6e22e>idx</span>)
+</span></span><span style=display:flex><span>        }(<span style=color:#a6e22e>i</span>)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Wait</span>()
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Big difference from Pattern A: <strong>the producer is not blocked.</strong> It
+spawns a goroutine per request and the goroutines park in <code>Acquire</code>.
+That gives you per-item weighting (<code>sem.Acquire(ctx, 5)</code> for a heavy
+job) and <code>context</code> cancellation for free, but nothing throttles the
+rate at which goroutines accumulate. If the producer outruns the
+consumer by 6x, you get 6x more parked goroutines than the bounded
+channel would. Sounds harmless. It is not.</p><h2 id=pattern-c-token-bucket-with-timeticker>Pattern C: token bucket with <code>time.Ticker</code></h2><p>The two patterns above are admission-based: the consumer decides who
+gets in based on whether there is a free slot. A token bucket is
+<em>rate</em>-based: somebody drips tokens at a fixed rate, and you must hold
+one to be admitted. No tokens, no admission.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>runTokenBucket</span>(<span style=color:#a6e22e>reqs</span> []<span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Time</span>, <span style=color:#a6e22e>ratePerSec</span>, <span style=color:#a6e22e>burst</span> <span style=color:#66d9ef>int</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>tokens</span> <span style=color:#f92672>:=</span> make(<span style=color:#66d9ef>chan</span> <span style=color:#66d9ef>struct</span>{}, <span style=color:#a6e22e>burst</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#a6e22e>burst</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>tokens</span> <span style=color:#f92672>&lt;-</span> <span style=color:#66d9ef>struct</span>{}{}
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>go</span> <span style=color:#66d9ef>func</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>t</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>NewTicker</span>(<span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Second</span> <span style=color:#f92672>/</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Duration</span>(<span style=color:#a6e22e>ratePerSec</span>))
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>defer</span> <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Stop</span>()
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>C</span> {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>select</span> {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>case</span> <span style=color:#a6e22e>tokens</span> <span style=color:#f92672>&lt;-</span> <span style=color:#66d9ef>struct</span>{}{}:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>default</span>: <span style=color:#75715e>// bucket full, drop new token</span>
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// worker pool (sized generously; admission is what shapes the curve)</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>jobs</span> <span style=color:#f92672>:=</span> make(<span style=color:#66d9ef>chan</span> <span style=color:#66d9ef>int</span>, <span style=color:#ae81ff>1024</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#ae81ff>64</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>go</span> <span style=color:#66d9ef>func</span>() {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>idx</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>jobs</span> {
+</span></span><span style=display:flex><span>                <span style=color:#a6e22e>doWork</span>(<span style=color:#a6e22e>idx</span>)
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>reqs</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>select</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> <span style=color:#f92672>&lt;-</span><span style=color:#a6e22e>tokens</span>:
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>jobs</span> <span style=color:#f92672>&lt;-</span> <span style=color:#a6e22e>i</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>default</span>:
+</span></span><span style=display:flex><span>            <span style=color:#75715e>// shed: caller&#39;s problem now</span>
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Classic <code>time.Ticker</code> + buffered channel. The buffer is the burst
+budget, the ticker rate is the steady-state ceiling. The <code>select</code> on
+the producer side decides whether to block (omit <code>default</code>) or shed
+(<code>default</code> returns immediately). I picked shed because that makes the
+contrast with the first two patterns clearest.</p><p>The worker pool is intentionally oversized: the bucket, not the
+workers, is the throttle. Throttle in two places and you have two
+regulators arguing.</p><h2 id=one-workload-three-answers>One workload, three answers</h2><p>Identical 2000-request burst at 1000 req/s. Each consumer slot does
+~100ms of work. Latency is end to end (submission to completion). All
+numbers below are from real runs on the same box.</p><table><thead><tr><th>Pattern</th><th>Served</th><th>Dropped</th><th>p50</th><th>p95</th><th>p99</th><th>Wall</th></tr></thead><tbody><tr><td>bounded</td><td>2000</td><td>0</td><td>206 ms</td><td>224 ms</td><td>242 ms</td><td>12.66 s</td></tr><tr><td>semaphore</td><td>2000</td><td>0</td><td>5346 ms</td><td>10077 ms</td><td>10502 ms</td><td>12.63 s</td></tr><tr><td>tokenbkt</td><td>351</td><td>1649</td><td>101 ms</td><td>105 ms</td><td>106 ms</td><td>2.10 s</td></tr></tbody></table><p><img src=../../content-assets/backpressure-patterns/charts/latency.svg alt="Latency by backpressure pattern (log scale)"></p><p>Three very different stories.</p><h3 id=bounded-channel-graceful-queue-predictable-tail>Bounded channel: graceful queue, predictable tail</h3><p>p50 of 206 ms is what you would expect. 16 workers at 100 ms per job is
+160 jobs/s steady-state. The arrival burst piles up in the
+channel-plus-producer wait, and the average wait grows linearly with
+queue depth. p99 of 242 ms is the queue length at the worst moment.
+Memory stayed flat: heap allocation delta was 0.2 MiB for the whole
+run.</p><p>The producer&rsquo;s <code>send</code> blocks. That blocking propagates up the call
+stack and naturally rate-limits whatever generated the arrivals.
+<strong>No goroutine accumulates.</strong></p><h3 id=semaphore-same-throughput-dramatically-worse-tail>Semaphore: same throughput, dramatically worse tail</h3><p>This one surprises people. Same workers, same work, same wall time, but
+<strong>p50 of 5.3 seconds and p99 above 10 seconds</strong>.</p><p>The reason is in the code. Pattern B spawns a goroutine per request and
+parks it in <code>Acquire</code>. The arrival schedule is 1000 req/s for 2
+seconds, so by the time the burst ends, roughly 1840 goroutines are
+waiting on the semaphore. They drain at 160 req/s. The goroutine that
+arrives at t=1.9 s waits for ~1800 jobs ahead of it. That is your p99.</p><p>The bounded channel never has more than 16 jobs queued because the
+producer is blocked on the 17th. The semaphore has all of them queued
+because the producer was never blocked.</p><p>The semaphore is still doing its job: concurrency capped, no OOM, same
+wall time. The throughput is identical; only the latency distribution
+is different, because everything queues in-process instead of upstream.
+If you have weight-asymmetric work, the trade is often worth it. If you
+do not, a bounded channel is strictly better.</p><p>(In a real server the difference is worse, because each parked
+goroutine holds the request object, headers, body buffers, and so on.
+1840 of those is not free. The harness uses trivial state, so memory
+delta was only 1.6 MiB.)</p><h3 id=token-bucket-low-latency-for-accepted-work-lots-of-drops>Token bucket: low latency for accepted work, lots of drops</h3><p>p99 of 106 ms, which is essentially just the work time. The token bucket
+admitted 351 of 2000 requests and shed the other 1649. There is no
+queueing on the accepted-work side because admission was already paced
+to the consumer&rsquo;s rate.</p><p>Wall time is 2.10 s, which is the arrival burst duration. The consumer
+goes idle as soon as the arrivals stop, because nothing was queued.</p><p>This is the opposite extreme from the semaphore. There you queue
+everything in-process. Here you queue nothing and just say no.</p><h2 id=decision-matrix>Decision matrix</h2><p>You generally want a bounded channel. The interesting question is when
+to reach for the other two.</p><table><thead><tr><th>If you&mldr;</th><th>Reach for</th></tr></thead><tbody><tr><td>have homogeneous work and one producer</td><td>bounded channel</td></tr><tr><td>have weight-asymmetric work (CPU, memory, payload size)</td><td>semaphore</td></tr><tr><td>need per-context cancellation while waiting</td><td>semaphore</td></tr><tr><td>must protect a downstream system at a fixed rate</td><td>token bucket</td></tr><tr><td>can afford to drop, would rather shed than queue</td><td>token bucket</td></tr><tr><td>have nothing to push back on the producer (e.g. HTTP)</td><td>token bucket + 429</td></tr></tbody></table><p>A pattern I have used in production: a token bucket at the edge,
+shedding 429s to clients during sudden overload, with a bounded channel
+<strong>inside</strong> the service to make sure that even if the bucket admits a
+burst, the internal pipeline never grows past a fixed size. Two layers,
+each doing the thing it is best at.</p><p>The semaphore is a specialist. Use it when you mean it: items truly
+differ in cost, or you need <code>context.Context</code> plumbing through the
+wait.</p><h2 id=what-i-would-not-do>What I would not do</h2><p>Buffering. Specifically, an unbounded channel, or a <code>chan</code> with capacity
+&ldquo;big enough that this never blocks.&rdquo; That is not backpressure; that is
+deferring the problem until the heap runs out, which on a managed
+runtime means a long GC pause, then OOM, then a page.</p><p>If you must buffer (bursty arrivals with a smoothing window that makes
+sense), bound it explicitly, and decide ahead of time what happens at
+the bound. Block? Drop? Both are fine. Silently growing is not.</p><h2 id=if-you-want-this-productionized>If you want this productionized</h2><p>The above is intentionally minimal. Real codebases will want
+<code>golang.org/x/time/rate</code> for the token bucket. Same algorithm, plus
+per-key limits, <code>Wait(ctx)</code> that respects deadlines, and <code>Reserve</code> for
+&ldquo;tell me how long until I would be allowed&rdquo;. I just wanted to show what
+the patterns underneath the library look like, and why picking the
+wrong one quietly puts 10 seconds onto your tail.</p><p>The point is not the absolute numbers. It is that the same workload
+produces three completely different latency distributions depending on
+which knob you turn, and &ldquo;I added a bigger buffer&rdquo; is not on the list.</p></article></main><div id=bottom-nav class="text-center center-block"><a href=https://segflow.github.io/ class="btn btn-default"><i class="fa fa-home"></i> Home</a></div><div id=disqus_thread></div><script>window.disqus_config=function(){},function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById("disqus_thread").innerHTML="Disqus comments not available by default when the website is previewed locally.";return}var t=document,e=t.createElement("script");e.async=!0,e.src="//segflow-io.disqus.com/embed.js",e.setAttribute("data-timestamp",+new Date),(t.head||t.body).appendChild(e)}()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div></div></div></div></div><script>(function(e,t,n,s,o,i,a){e.GoogleAnalyticsObject=o,e[o]=e[o]||function(){(e[o].q=e[o].q||[]).push(arguments)},e[o].l=1*new Date,i=t.createElement(n),a=t.getElementsByTagName(n)[0],i.async=1,i.src=s,a.parentNode.insertBefore(i,a)})(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-111743535-1","auto"),ga("send","pageview"),window.baseURL="https://segflow.github.io/"</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js></script><script src=https://segflow.github.io//js/App.js></script></body></html>

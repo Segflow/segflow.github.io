@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Backpressure on Segflow</title><link>https://segflow.github.io/tags/backpressure/</link><description>Recent content in Backpressure on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sun, 19 Feb 2023 16:00:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/backpressure/index.xml" rel="self" type="application/rss+xml"/><item><title>Backpressure for the impatient: channels vs. semaphores vs. tokens</title><link>https://segflow.github.io/post/backpressure-patterns/</link><pubDate>Sun, 19 Feb 2023 16:00:00 +0100</pubDate><guid>https://segflow.github.io/post/backpressure-patterns/</guid><description>&lt;p&gt;A pipeline has backpressure when the consumer can make the producer
+slow down, or refuse the work, or both. A bigger buffer does neither.
+It just defers the same problem, with more memory held hostage in the
+meantime. The two get confused a lot, and the difference shows up
+unmistakably in the tail latency numbers, so this post does the
+comparison directly.&lt;/p&gt;
+&lt;p&gt;When load exceeds capacity you have three sane options:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Block the caller&lt;/strong&gt; until a slot frees. Throughput pins to whatever
+the consumer sustains; tail latency degrades cleanly.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Reject the caller&lt;/strong&gt; so they retry, fall back, or shed. Latency
+stays low for accepted work; some work never happens.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Rate-limit the caller&lt;/strong&gt; so they never get close to overloading you.
+Predictable throughput, the rest is queued or dropped.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Go has a direct idiom for each: a &lt;strong&gt;bounded channel&lt;/strong&gt; for option 1, the
+&lt;strong&gt;&lt;code&gt;golang.org/x/sync/semaphore&lt;/code&gt;&lt;/strong&gt; package for option 1 with per-item
+weighting, and a &lt;strong&gt;&lt;code&gt;time.Ticker&lt;/code&gt; token bucket&lt;/strong&gt; for option 3 (and
+trivially option 2). They are not interchangeable. They produce three
+very different latency curves under the same workload, which is what we
+will see below.&lt;/p&gt;</description></item></channel></rss>
