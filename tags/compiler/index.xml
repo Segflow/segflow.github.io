@@ -1,4 +1,19 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Compiler on Segflow</title><link>https://segflow.github.io/tags/compiler/</link><description>Recent content in Compiler on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sun, 17 Apr 2022 14:45:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/compiler/index.xml" rel="self" type="application/rss+xml"/><item><title>Escape analysis, demystified by 6 tiny examples</title><link>https://segflow.github.io/post/escape-analysis-examples/</link><pubDate>Sun, 17 Apr 2022 14:45:00 +0100</pubDate><guid>https://segflow.github.io/post/escape-analysis-examples/</guid><description>&lt;p&gt;A while back I had a hot loop that profiled like a heap-allocation
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Compiler on Segflow</title><link>https://segflow.github.io/tags/compiler/</link><description>Recent content in Compiler on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 08 Jul 2023 13:30:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/compiler/index.xml" rel="self" type="application/rss+xml"/><item><title>Bounds-check elimination in Go: making the prover happy</title><link>https://segflow.github.io/post/bounds-check-elimination/</link><pubDate>Sat, 08 Jul 2023 13:30:00 +0100</pubDate><guid>https://segflow.github.io/post/bounds-check-elimination/</guid><description>&lt;p&gt;I had a hot loop I could not get any faster. Plain &lt;code&gt;for i := 0; i &amp;lt; n; i++&lt;/code&gt;,
+two slice reads, one add, return. On paper that is three or four x86
+instructions per iteration. In practice it was running at about half the
+throughput I expected, and &lt;code&gt;perf&lt;/code&gt; kept pointing at the same two lines.&lt;/p&gt;
+&lt;p&gt;When I finally dumped the assembly, the answer was sitting right there: a
+&lt;code&gt;CMPQ&lt;/code&gt; followed by a conditional jump to &lt;code&gt;runtime.panicIndex&lt;/code&gt; on every read.
+The compiler was leaving the runtime bounds check in. The &amp;ldquo;work&amp;rdquo; of the
+loop was 8 bytes of useful instructions, plus 6 bytes of &amp;ldquo;is this index
+still safe&amp;rdquo;, every single iteration.&lt;/p&gt;
+&lt;p&gt;This is the fourth post in what was supposed to be a trilogy on the Go
+compiler: after &lt;a href="../../post/go-compiler-optimization/"&gt;following an &lt;code&gt;int&lt;/code&gt;-from-&lt;code&gt;string&lt;/code&gt; lookup down into the
+compiler itself&lt;/a&gt;, &lt;a href="../../post/inlining-budgets/"&gt;budgeting
+inlining&lt;/a&gt;, and &lt;a href="../../post/escape-analysis-examples/"&gt;reading escape-analysis
+output&lt;/a&gt;, it would be rude to skip the one
+where rewriting two lines wins back 22% on the same hardware. Quartet it
+is.&lt;/p&gt;</description></item><item><title>Escape analysis, demystified by 6 tiny examples</title><link>https://segflow.github.io/post/escape-analysis-examples/</link><pubDate>Sun, 17 Apr 2022 14:45:00 +0100</pubDate><guid>https://segflow.github.io/post/escape-analysis-examples/</guid><description>&lt;p&gt;A while back I had a hot loop that profiled like a heap-allocation
 machine gun. &lt;code&gt;pprof&lt;/code&gt; blamed &lt;code&gt;runtime.mallocgc&lt;/code&gt;. The code looked
 innocent. The fix turned out to be a one-line signature change, and
 the compiler had been quietly screaming at me about it the whole

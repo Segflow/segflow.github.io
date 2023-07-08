@@ -1,0 +1,177 @@
+<!doctype html><html lang=en><head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#"><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta name=description content><meta property="og:title" content="Bounds-check elimination in Go: making the prover happy"><meta property="og:type" content="article"><meta property="article:published_time" content="2023-07-08"><meta property="og:description" content><meta property="og:url" content="https://segflow.github.io/post/bounds-check-elimination/"><meta property="og:site_name" content="Segflow"><meta property="og:tags" content="Go"><meta property="og:tags" content="compiler"><meta property="og:tags" content="performance"><meta property="og:tags" content="SSA"><meta property="og:tags" content="BCE"><meta name=generator content="Hugo 0.162.0"><title>Bounds-check elimination in Go: making the prover happy &#183; Segflow</title><link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css><link rel=stylesheet href=https://segflow.github.io/css/style.css><link rel=icon href=https://segflow.github.io/favicon.ico></head><body><nav class="navbar navbar-default navbar-fixed-top visible-xs"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#bs-example-navbar-collapse-1>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+</button>
+<a class=navbar-brand href=https://segflow.github.io/>Segflow</a></div><div class="collapse navbar-collapse" id=bs-example-navbar-collapse-1><ul class="nav navbar-nav"><li><a href=https://segflow.github.io//>Home</a></li><li><a href=https://segflow.github.io/post/>Posts</a></li><li><a href=https://segflow.github.io/resume.pdf>Resume</a></li></ul></div></div></nav><div class=container-fluid><div class=row><div id=menu class="hidden-xs col-sm-3 col-md-3"><div id=menu-content class=vertical-align><h1 class=text-center><a href=https://segflow.github.io/>Segflow</a></h1><small class="text-center center-block">Assel Meher</small>
+<img id=profile-pic src=https://segflow.github.io//img/hacker_emblem.png alt="My Picture" class="img-circle center-block"><div id=social class=text-center><a href=https://github.com/segflow><i class="fa fa-github fa-2x"></i></a>
+<a href=https://www.linkedin.com/in/meher-assel-0122798a><i class="fa fa-linkedin fa-2x"></i></a>
+<a href=https://twitter.com/segfl0w><i class="fa fa-twitter fa-2x"></i></a>
+<a href=mailto:asselmeher@gmail.com><i class="fa fa-envelope-o fa-2x"></i></a></div><div id=links class=text-center><a href=https://segflow.github.io//>Home</a>
+<a href=https://segflow.github.io/post/>Posts</a>
+<a href=https://segflow.github.io/resume.pdf>Resume</a></div></div></div><div id=content class="col-xs-12 col-sm-9 col-md-9"><div class=row><div id=post class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10"><main><header><h1>Bounds-check elimination in Go: making the prover happy</h1></header><article><p>I had a hot loop I could not get any faster. Plain <code>for i := 0; i &lt; n; i++</code>,
+two slice reads, one add, return. On paper that is three or four x86
+instructions per iteration. In practice it was running at about half the
+throughput I expected, and <code>perf</code> kept pointing at the same two lines.</p><p>When I finally dumped the assembly, the answer was sitting right there: a
+<code>CMPQ</code> followed by a conditional jump to <code>runtime.panicIndex</code> on every read.
+The compiler was leaving the runtime bounds check in. The &ldquo;work&rdquo; of the
+loop was 8 bytes of useful instructions, plus 6 bytes of &ldquo;is this index
+still safe&rdquo;, every single iteration.</p><p>This is the fourth post in what was supposed to be a trilogy on the Go
+compiler: after <a href=../../post/go-compiler-optimization/>following an <code>int</code>-from-<code>string</code> lookup down into the
+compiler itself</a>, <a href=../../post/inlining-budgets/>budgeting
+inlining</a>, and <a href=../../post/escape-analysis-examples/>reading escape-analysis
+output</a>, it would be rude to skip the one
+where rewriting two lines wins back 22% on the same hardware. Quartet it
+is.</p><p>All numbers below are real, on <code>go1.21.13 linux/amd64</code>, AMD Ryzen 5 9600X,
+<code>benchstat</code> on 15 runs at <code>-cpu=1</code>. The scratch project is a handful of
+files long.</p><h2 id=the-flag-that-tells-you-what-is-going-on>The flag that tells you what is going on</h2><p>The bounds-check elimination pass (BCE) lives in the SSA backend. It has a
+debug flag that prints every <code>IsInBounds</code> and <code>IsSliceInBounds</code> the prover
+could <strong>not</strong> discharge:</p><pre tabindex=0><code>go build -gcflags=&#34;-d=ssa/check_bce/debug=1&#34; ./...
+</code></pre><p>Each line of output is one runtime bounds check that survived into the
+generated code. Zero lines means every index in the file was proved safe
+at compile time. The flag is older than module support and it is still the
+fastest way to find loops worth tightening.</p><p>The second tool is just <code>-gcflags="-S"</code>. Read the disassembly. If you see
+a <code>CALL runtime.panicIndex</code> in the trailer of your hot function, the
+prover gave up somewhere.</p><h2 id=patterns-the-prover-already-handles>Patterns the prover already handles</h2><p>Before showing off the wins, the honest part. The prover on 1.21 is good
+enough that a lot of the &ldquo;tricks&rdquo; you find on older blog posts no longer
+buy anything. These three loops all generate the same hot path with zero
+bounds checks:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// 1</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; len(<span style=color:#a6e22e>s</span>); <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> { <span style=color:#a6e22e>sum</span> = <span style=color:#a6e22e>sum</span><span style=color:#f92672>*</span><span style=color:#ae81ff>31</span> <span style=color:#f92672>+</span> uint32(<span style=color:#a6e22e>s</span>[<span style=color:#a6e22e>i</span>]) }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// 2</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>b</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>s</span> { <span style=color:#a6e22e>sum</span> = <span style=color:#a6e22e>sum</span><span style=color:#f92672>*</span><span style=color:#ae81ff>31</span> <span style=color:#f92672>+</span> uint32(<span style=color:#a6e22e>b</span>) }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// 3</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>n</span> <span style=color:#f92672>:=</span> len(<span style=color:#a6e22e>s</span>)
+</span></span><span style=display:flex><span><span style=color:#a6e22e>_</span> = <span style=color:#a6e22e>s</span>[<span style=color:#a6e22e>n</span><span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>]            <span style=color:#75715e>// the &#34;classic&#34; hoist hint</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#a6e22e>n</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> { <span style=color:#a6e22e>sum</span> = <span style=color:#a6e22e>sum</span><span style=color:#f92672>*</span><span style=color:#ae81ff>31</span> <span style=color:#f92672>+</span> uint32(<span style=color:#a6e22e>s</span>[<span style=color:#a6e22e>i</span>]) }
+</span></span></code></pre></div><p>The first one already gets BCE because <code>i</code> is bounded by <code>len(s)</code> in the
+exact form the prover understands. The third one used to be the canonical
+recipe; on 1.21 it is just clutter. If a hot loop matches one of these
+shapes, leave it alone.</p><p>The patterns the prover still misses fall into two buckets I keep hitting
+in real code.</p><h2 id=pattern-1-look-ahead-si1>Pattern 1: look-ahead, <code>s[i+1]</code></h2><p>The textbook one. We are computing a sum of adjacent pairs, which shows
+up in delta encoders, simple stencils, and any &ldquo;compare with neighbour&rdquo;
+loop:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>SumNextNaive</span>(<span style=color:#a6e22e>s</span> []<span style=color:#66d9ef>uint32</span>) <span style=color:#66d9ef>uint32</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>sum</span> <span style=color:#66d9ef>uint32</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; len(<span style=color:#a6e22e>s</span>)<span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>sum</span> <span style=color:#f92672>+=</span> <span style=color:#a6e22e>s</span>[<span style=color:#a6e22e>i</span>] <span style=color:#f92672>+</span> <span style=color:#a6e22e>s</span>[<span style=color:#a6e22e>i</span><span style=color:#f92672>+</span><span style=color:#ae81ff>1</span>]
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>sum</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>s[i]</code> is fine. <code>s[i+1]</code> is not. The loop guard says <code>i &lt; len(s)-1</code>, but
+the prover does not propagate that into a &ldquo;<code>i+1 &lt; len(s)</code>&rdquo; fact for the
+second read. So we get this in the body:</p><pre tabindex=0><code>ADDL   4(AX)(CX*4), DI      ; s[i+1], speculatively
+ADDL   DI, DX                ; sum += ...
+MOVQ   SI, CX                ; i = i+1
+LEAQ   -1(BX), SI            ; len(s)-1
+CMPQ   CX, SI
+JGE    out
+LEAQ   1(CX), SI             ; i+1
+MOVL   (AX)(CX*4), DI        ; s[i]
+CMPQ   BX, SI
+JHI    body                  ; bounds check for s[i+1]
+JMP    panic
+...
+CALL   runtime.panicIndex(SB)
+</code></pre><p>Two compares per iteration, plus a tail that calls into the runtime.
+<code>ssa/check_bce/debug=1</code> flags exactly one <code>IsInBounds</code> here, on the
+<code>s[i+1]</code> access. The prover is honest about what it could not prove.</p><p>A 3-second CPU profile of just this benchmark looks like a single tall
+stack:</p><p><img src=../../content-assets/bounds-check-elimination/flamegraphs/naive.svg alt="CPU flamegraph of SumNextNaive showing bounds-check overhead"></p><p><code>pprof -top</code> reports <strong>99.15% of samples inside <code>bce.SumNextNaive</code></strong> and
+essentially nothing anywhere else, no <code>runtime.panicIndex</code> frame, no
+scheduler. That is exactly what you would expect: the extra compare and
+the conditional jump to the panic trailer are inlined into the function
+itself, they only show up as wider per-iteration cost on the same frame.
+The point of the flamegraph is the <em>shape</em>: one function, one block, all
+the time. There is no kernel or runtime to blame, the cycles really are
+being burned on bounds-checking arithmetic.</p><p>The fix is to re-slice the input once, up front, into the two views the
+loop actually wants:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>SumNextHint</span>(<span style=color:#a6e22e>s</span> []<span style=color:#66d9ef>uint32</span>) <span style=color:#66d9ef>uint32</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> len(<span style=color:#a6e22e>s</span>) &lt; <span style=color:#ae81ff>2</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>n</span> <span style=color:#f92672>:=</span> len(<span style=color:#a6e22e>s</span>) <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>head</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>s</span>[:<span style=color:#a6e22e>n</span>:<span style=color:#a6e22e>n</span>]
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>tail</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>s</span>[<span style=color:#ae81ff>1</span> : <span style=color:#a6e22e>n</span><span style=color:#f92672>+</span><span style=color:#ae81ff>1</span> : <span style=color:#a6e22e>n</span><span style=color:#f92672>+</span><span style=color:#ae81ff>1</span>]
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>sum</span> <span style=color:#66d9ef>uint32</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#a6e22e>n</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>sum</span> <span style=color:#f92672>+=</span> <span style=color:#a6e22e>head</span>[<span style=color:#a6e22e>i</span>] <span style=color:#f92672>+</span> <span style=color:#a6e22e>tail</span>[<span style=color:#a6e22e>i</span>]
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>sum</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The 3-index slice expressions (<code>s[:n:n]</code> and <code>s[1:n+1:n+1]</code>) are doing the
+real work. They tell the compiler &ldquo;this is a slice whose length is exactly
+<code>n</code>&rdquo;, and the slice operation itself is checked once on entry. Inside the
+loop, <code>head[i]</code> and <code>tail[i]</code> with <code>i &lt; n</code> are both proved safe in one
+shot. The debug flag reports a single <code>IsSliceInBounds</code> outside the loop
+and zero inside it.</p><p>The body collapses to five instructions:</p><pre tabindex=0><code>MOVL   (AX)(DX*4), SI       ; head[i]
+ADDL   4(AX)(DX*4), SI      ; + tail[i]   (same backing array, +4 byte offset)
+INCQ   DX
+ADDL   SI, BX               ; sum += ...
+CMPQ   DX, CX
+JLT    body
+</code></pre><p>No panic trailer, no second compare. <code>benchstat</code>, 15 runs each:</p><pre tabindex=0><code>name        old time/op    new time/op    delta
+SumNext     1.04µs ± 8%    0.85µs ± 3%   -18.13%  (p=0.000 n=15+14)
+
+name        old speed      new speed      delta
+SumNext     15.8GB/s ± 7%  19.2GB/s ± 3%  +22.07%  (p=0.000 n=15+14)
+</code></pre><p>Reading 4 KiB of <code>uint32</code>s goes from 15.8 GB/s to 19.2 GB/s. The CPU was
+not the bottleneck; the redundant branch was.</p><h2 id=pattern-2-length-passed-as-an-argument>Pattern 2: length passed as an argument</h2><p>This one bit me in real code. Imagine a helper that some caller has
+already decided to walk only <code>n</code> of the elements of <code>s</code>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>SumExternalNaive</span>(<span style=color:#a6e22e>s</span> []<span style=color:#66d9ef>uint32</span>, <span style=color:#a6e22e>n</span> <span style=color:#66d9ef>int</span>) <span style=color:#66d9ef>uint32</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>sum</span> <span style=color:#66d9ef>uint32</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#a6e22e>n</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>sum</span> <span style=color:#f92672>+=</span> <span style=color:#a6e22e>s</span>[<span style=color:#a6e22e>i</span>]
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>sum</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>It looks fine. The caller is well behaved. But the prover sees <code>n</code> as a
+black box <code>int</code> parameter, unrelated to <code>len(s)</code>. So every <code>s[i]</code> is
+checked, and the loop carries the panic tail:</p><pre tabindex=0><code>MOVL   (AX)(CX*4), SI
+INCQ   CX
+ADDL   SI, DX
+CMPQ   DI, CX
+JLE    out
+CMPQ   BX, CX               ; the actual bounds check
+JHI    body
+JMP    panic
+</code></pre><p>The fix is one line:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>SumExternalHint</span>(<span style=color:#a6e22e>s</span> []<span style=color:#66d9ef>uint32</span>, <span style=color:#a6e22e>n</span> <span style=color:#66d9ef>int</span>) <span style=color:#66d9ef>uint32</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>s</span> = <span style=color:#a6e22e>s</span>[:<span style=color:#a6e22e>n</span>]
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>sum</span> <span style=color:#66d9ef>uint32</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#a6e22e>n</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>sum</span> <span style=color:#f92672>+=</span> <span style=color:#a6e22e>s</span>[<span style=color:#a6e22e>i</span>]
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>sum</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The re-slice teaches the prover &ldquo;from now on, <code>len(s) == n</code>&rdquo;. Indexing
+<code>s[i]</code> with <code>i &lt; n</code> is now obvious. The check moves from inside the loop
+to a single <code>panicSliceAcap</code> on entry, executed once per call. The hot
+body drops to four instructions plus the back-edge compare. Numbers:</p><pre tabindex=0><code>name        old time/op    new time/op    delta
+SumExternal  883ns ± 9%     803ns ± 3%    -9.12%  (p=0.000 n=15+13)
+</code></pre><p>Ten percent on a loop that was already as tight as I knew how to make it.
+Side by side, both patterns:</p><p><img src=../../content-assets/bounds-check-elimination/charts/throughput.svg alt="Throughput: naive vs BCE-hinted (higher is better)"></p><h2 id=things-the-prover-still-does-not-get>Things the prover still does not get</h2><p>While I had the SSA debug flag turned on I went looking for what else it
+flags. Two patterns that come up over and over:</p><ul><li><strong>Indexing two slices of the same length</strong> without re-slicing. <code>if len(a) != len(b) { ... }</code> is not enough; the prover does not carry that
+invariant into the body. Re-slice <code>b = b[:len(a):len(a)]</code> and the check
+on <code>b[i]</code> disappears.</li><li><strong>Index arithmetic with a constant offset other than +1</strong>. <code>s[i-1]</code>,
+<code>s[i+2]</code>, <code>s[i*4]</code> all trip it. The same re-slice trick applies, you
+just slice out <code>s[1:]</code> or <code>s[2:]</code> or whatever the offset is.</li></ul><p>Both of these are mechanical rewrites. The cost is two or three extra
+lines of slice juggling at the top of the function; the win is a tighter
+inner loop and, often, the compiler suddenly deciding the loop is small
+enough to inline somewhere else (which is the connection back to the
+<a href=../../post/inlining-budgets/>inlining-budget post</a>, where every byte of
+generated code matters).</p><h2 id=the-honest-caveat>The honest caveat</h2><p>Two things to remember.</p><p>First: I have caught past versions of myself &ldquo;optimising&rdquo; away a bounds
+check that the prover had already eliminated. When I bisect across Go
+releases, hand-tuned hot loops occasionally regress because the prover got
+smarter and my workaround now looks like dead code that the compiler
+cannot quite eliminate. Always re-run <code>-d=ssa/check_bce/debug=1</code> after a
+Go upgrade. If the only IsInBounds lines are in cold init code, your
+hint is now noise.</p><p>Second: bounds-check elimination is a peephole optimisation in the truest
+sense. It moves a compare out of the inner loop. It does not vectorise
+your code, it does not change cache behaviour, it does not let the
+compiler reorder anything fundamental. The wins are 10 to 25 percent on
+loops that were already CPU-bound and tiny, and zero on loops that were
+bound by memory or doing real work per iteration. The biggest practical
+benefit, in my experience, is that the loop body becomes small enough to
+inline, which then unlocks the gains from the
+<a href=../../post/escape-analysis-examples/>escape-analysis</a> and inlining work.</p><p>So the recipe is: <code>-d=ssa/check_bce/debug=1</code> first, then <code>-S</code> to confirm,
+then <code>benchstat</code>. If the prover is already happy, do nothing and go work
+on something that matters. If it is not, a 3-index slice expression is
+almost always the smallest change that fixes it.</p></article></main><div id=bottom-nav class="text-center center-block"><a href=https://segflow.github.io/ class="btn btn-default"><i class="fa fa-home"></i> Home</a></div><div id=disqus_thread></div><script>window.disqus_config=function(){},function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById("disqus_thread").innerHTML="Disqus comments not available by default when the website is previewed locally.";return}var t=document,e=t.createElement("script");e.async=!0,e.src="//segflow-io.disqus.com/embed.js",e.setAttribute("data-timestamp",+new Date),(t.head||t.body).appendChild(e)}()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div></div></div></div></div><script>(function(e,t,n,s,o,i,a){e.GoogleAnalyticsObject=o,e[o]=e[o]||function(){(e[o].q=e[o].q||[]).push(arguments)},e[o].l=1*new Date,i=t.createElement(n),a=t.getElementsByTagName(n)[0],i.async=1,i.src=s,a.parentNode.insertBefore(i,a)})(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-111743535-1","auto"),ga("send","pageview"),window.baseURL="https://segflow.github.io/"</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js></script><script src=https://segflow.github.io//js/App.js></script></body></html>
