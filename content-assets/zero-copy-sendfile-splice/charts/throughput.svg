@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 460" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">
+<rect width="980" height="460" fill="#fdfdfb"/>
+<text x="490.0" y="32" text-anchor="middle" font-size="18" font-weight="600" fill="#222">Throughput per second of server CPU</text>
+<text x="490.0" y="52" text-anchor="middle" font-size="12" fill="#666">MiB of payload moved per second of server user+sys CPU. Higher is better.</text>
+<text x="490.0" y="68" text-anchor="middle" font-size="11" fill="#888">10 sequential 512 MiB transfers, server pinned to CPU 0, page cache warm.</text>
+<line x1="90" y1="350.0" x2="956" y2="350.0" stroke="#bbb" stroke-width="1"/>
+<text x="84" y="354.0" text-anchor="end" fill="#666">0</text>
+<line x1="90" y1="325.5" x2="956" y2="325.5" stroke="#ddd" stroke-width="1"/>
+<line x1="90" y1="300.9" x2="956" y2="300.9" stroke="#bbb" stroke-width="1"/>
+<text x="84" y="304.9" text-anchor="end" fill="#666">4,000</text>
+<line x1="90" y1="276.4" x2="956" y2="276.4" stroke="#ddd" stroke-width="1"/>
+<line x1="90" y1="251.8" x2="956" y2="251.8" stroke="#bbb" stroke-width="1"/>
+<text x="84" y="255.8" text-anchor="end" fill="#666">8,000</text>
+<line x1="90" y1="227.3" x2="956" y2="227.3" stroke="#ddd" stroke-width="1"/>
+<line x1="90" y1="202.7" x2="956" y2="202.7" stroke="#bbb" stroke-width="1"/>
+<text x="84" y="206.7" text-anchor="end" fill="#666">12,000</text>
+<line x1="90" y1="178.2" x2="956" y2="178.2" stroke="#ddd" stroke-width="1"/>
+<line x1="90" y1="153.6" x2="956" y2="153.6" stroke="#bbb" stroke-width="1"/>
+<text x="84" y="157.6" text-anchor="end" fill="#666">16,000</text>
+<line x1="90" y1="129.1" x2="956" y2="129.1" stroke="#ddd" stroke-width="1"/>
+<line x1="90" y1="104.5" x2="956" y2="104.5" stroke="#bbb" stroke-width="1"/>
+<text x="84" y="108.5" text-anchor="end" fill="#666">20,000</text>
+<line x1="90" y1="80.0" x2="956" y2="80.0" stroke="#ddd" stroke-width="1"/>
+<text x="22" y="215.0" text-anchor="middle" transform="rotate(-90, 22, 215.0)" fill="#444" font-size="13">MiB per server CPU-second</text>
+<rect x="90.0" y="117.3" width="262.0" height="232.7" fill="#1f9d55" rx="3"/>
+<text x="221.0" y="109.3" text-anchor="middle" fill="#222" font-size="14" font-weight="700">18,963</text>
+<text x="221.0" y="370.0" text-anchor="middle" fill="#222" font-size="13" font-weight="700">raw</text>
+<text x="221.0" y="388.0" text-anchor="middle" fill="#555" font-size="11">io.Copy(conn, *os.File)</text>
+<rect x="392.0" y="281.7" width="262.0" height="68.3" fill="#c44" rx="3"/>
+<text x="523.0" y="273.7" text-anchor="middle" fill="#222" font-size="14" font-weight="600">5,565</text>
+<text x="523.0" y="370.0" text-anchor="middle" fill="#222" font-size="13" font-weight="700">wrapped</text>
+<text x="523.0" y="388.0" text-anchor="middle" fill="#555" font-size="11">io.Copy(conn, justReader{f})</text>
+<rect x="694.0" y="140.5" width="262.0" height="209.5" fill="#3b6db5" rx="3"/>
+<text x="825.0" y="132.5" text-anchor="middle" fill="#222" font-size="14" font-weight="600">17,067</text>
+<text x="825.0" y="370.0" text-anchor="middle" fill="#222" font-size="13" font-weight="700">limit</text>
+<text x="825.0" y="388.0" text-anchor="middle" fill="#555" font-size="11">io.Copy(conn, LimitReader)</text>
+<line x1="90" y1="350.0" x2="956" y2="350.0" stroke="#444" stroke-width="1.2"/>
+<text x="956" y="448" text-anchor="end" fill="#777" font-size="11">AMD Ryzen 5 9600X | Go 1.22.12 | Linux 6.6 (WSL2)</text>
+</svg>
