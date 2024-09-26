@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>API Design on Segflow</title><link>https://segflow.github.io/tags/api-design/</link><description>Recent content in API Design on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Thu, 26 Sep 2024 08:45:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/api-design/index.xml" rel="self" type="application/rss+xml"/><item><title>Self-explained function signatures</title><link>https://segflow.github.io/post/self-explained-function-signatures/</link><pubDate>Thu, 26 Sep 2024 08:45:00 +0100</pubDate><guid>https://segflow.github.io/post/self-explained-function-signatures/</guid><description>&lt;p&gt;A function I once shipped looked like this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;func&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Process&lt;/span&gt;(&lt;span style="color:#a6e22e"&gt;data&lt;/span&gt; []&lt;span style="color:#66d9ef"&gt;byte&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;error&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Innocent. You give it bytes, it returns an error. What more do you need?&lt;/p&gt;
+&lt;p&gt;Plenty, as it turned out. &lt;code&gt;Process&lt;/code&gt; also wrote a file to &lt;code&gt;/tmp&lt;/code&gt;, posted the
+same bytes to a webhook, and stashed a copy in a package-level global so the
+next call could &amp;ldquo;diff against the last one&amp;rdquo;. None of that was in the
+signature. None of it was in the doc comment either, because by the time
+anyone read the doc comment they&amp;rsquo;d already wired the function into a hot path
+and were wondering why CI was flaky.&lt;/p&gt;
+&lt;p&gt;The signature lied. Once a signature lies, every reader has to open the body
+to find the truth. That&amp;rsquo;s the cost.&lt;/p&gt;</description></item></channel></rss>

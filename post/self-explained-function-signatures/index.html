@@ -1,0 +1,145 @@
+<!doctype html><html lang=en><head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#"><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta name=description content><meta property="og:title" content="Self-explained function signatures"><meta property="og:type" content="article"><meta property="article:published_time" content="2024-09-26"><meta property="og:description" content><meta property="og:url" content="https://segflow.github.io/post/self-explained-function-signatures/"><meta property="og:site_name" content="Segflow"><meta property="og:tags" content="Go"><meta property="og:tags" content="Clean code"><meta property="og:tags" content="API design"><meta name=generator content="Hugo 0.162.0"><title>Self-explained function signatures &#183; Segflow</title><link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css><link rel=stylesheet href=https://segflow.github.io/css/style.css><link rel=icon href=https://segflow.github.io/favicon.ico></head><body><nav class="navbar navbar-default navbar-fixed-top visible-xs"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#bs-example-navbar-collapse-1>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+</button>
+<a class=navbar-brand href=https://segflow.github.io/>Segflow</a></div><div class="collapse navbar-collapse" id=bs-example-navbar-collapse-1><ul class="nav navbar-nav"><li><a href=https://segflow.github.io//>Home</a></li><li><a href=https://segflow.github.io/post/>Posts</a></li><li><a href=https://segflow.github.io/resume.pdf>Resume</a></li></ul></div></div></nav><div class=container-fluid><div class=row><div id=menu class="hidden-xs col-sm-3 col-md-3"><div id=menu-content class=vertical-align><h1 class=text-center><a href=https://segflow.github.io/>Segflow</a></h1><small class="text-center center-block">Assel Meher</small>
+<img id=profile-pic src=https://segflow.github.io//img/hacker_emblem.png alt="My Picture" class="img-circle center-block"><div id=social class=text-center><a href=https://github.com/segflow><i class="fa fa-github fa-2x"></i></a>
+<a href=https://www.linkedin.com/in/meher-assel-0122798a><i class="fa fa-linkedin fa-2x"></i></a>
+<a href=https://twitter.com/segfl0w><i class="fa fa-twitter fa-2x"></i></a>
+<a href=mailto:asselmeher@gmail.com><i class="fa fa-envelope-o fa-2x"></i></a></div><div id=links class=text-center><a href=https://segflow.github.io//>Home</a>
+<a href=https://segflow.github.io/post/>Posts</a>
+<a href=https://segflow.github.io/resume.pdf>Resume</a></div></div></div><div id=content class="col-xs-12 col-sm-9 col-md-9"><div class=row><div id=post class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10"><main><header><h1>Self-explained function signatures</h1></header><article><p>A function I once shipped looked like this:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Process</span>(<span style=color:#a6e22e>data</span> []<span style=color:#66d9ef>byte</span>) <span style=color:#66d9ef>error</span>
+</span></span></code></pre></div><p>Innocent. You give it bytes, it returns an error. What more do you need?</p><p>Plenty, as it turned out. <code>Process</code> also wrote a file to <code>/tmp</code>, posted the
+same bytes to a webhook, and stashed a copy in a package-level global so the
+next call could &ldquo;diff against the last one&rdquo;. None of that was in the
+signature. None of it was in the doc comment either, because by the time
+anyone read the doc comment they&rsquo;d already wired the function into a hot path
+and were wondering why CI was flaky.</p><p>The signature lied. Once a signature lies, every reader has to open the body
+to find the truth. That&rsquo;s the cost.</p><p>This post is about a small habit with a big payoff: making function
+signatures carry their own intent. What the function needs. What it returns.
+What it might fail at. And what it <em>won&rsquo;t</em> secretly do behind your back.</p><p>Four rules. One before/after each.</p><h2 id=rule-1-inputs-are-explicit>Rule 1: Inputs are explicit</h2><p>If your function reads from a global, a package-level singleton, or an
+<code>os.Getenv</code> call, that input belongs in the signature.</p><p>The only ambient input I&rsquo;ll allow is <code>context.Context</code>, because Go has
+standardised on it for cancellation and deadlines. Everything else goes
+through the door.</p><p><strong>Before:</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>defaultTimeoutMS</span> = <span style=color:#ae81ff>5000</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>FetchUser</span>(<span style=color:#a6e22e>id</span> <span style=color:#66d9ef>string</span>) ([]<span style=color:#66d9ef>byte</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// uses defaultTimeoutMS and a package-level http.Client</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>You can&rsquo;t call this without knowing about a variable that isn&rsquo;t mentioned
+in the signature. You can&rsquo;t test it with a fake client. You can&rsquo;t tell, from
+the signature alone, that it makes a network call.</p><p><strong>After:</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>HTTPClient</span> <span style=color:#66d9ef>interface</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>Get</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>url</span> <span style=color:#66d9ef>string</span>) ([]<span style=color:#66d9ef>byte</span>, <span style=color:#66d9ef>error</span>)
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>FetchUser</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>client</span> <span style=color:#a6e22e>HTTPClient</span>, <span style=color:#a6e22e>id</span> <span style=color:#66d9ef>string</span>) ([]<span style=color:#66d9ef>byte</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>client</span>.<span style=color:#a6e22e>Get</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#e6db74>&#34;/users/&#34;</span><span style=color:#f92672>+</span><span style=color:#a6e22e>id</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Now the signature tells you three things: this thing is cancellable, it
+talks to something over HTTP, and you can swap that something in tests. No
+hidden wires.</p><h2 id=rule-2-outputs-are-explicit>Rule 2: Outputs are explicit</h2><p>Return what you compute. Don&rsquo;t mutate the caller&rsquo;s input unless the name of
+the function says, in big friendly letters, that you do.</p><p>The Go standard library is consistent about this. <code>sort.Slice</code> mutates,
+because &ldquo;sort&rdquo; mutates. <code>strings.ToUpper</code> returns a new string, because it
+doesn&rsquo;t sound like it edits in place. When a function does need to mutate,
+the name says so: <code>Append</code>, <code>Sort</code>, or a pointer receiver.</p><p><strong>Before:</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Clean removes duplicates and sorts. Also: ruins your input.</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Clean</span>(<span style=color:#a6e22e>events</span> []<span style=color:#66d9ef>string</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>sort</span>.<span style=color:#a6e22e>Strings</span>(<span style=color:#a6e22e>events</span>)
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>j</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span>, <span style=color:#a6e22e>e</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>events</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span> <span style=color:#f92672>||</span> <span style=color:#a6e22e>e</span> <span style=color:#f92672>!=</span> <span style=color:#a6e22e>events</span>[<span style=color:#a6e22e>j</span><span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>] {
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>events</span>[<span style=color:#a6e22e>j</span>] = <span style=color:#a6e22e>e</span>
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>j</span><span style=color:#f92672>++</span>
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The name is &ldquo;Clean&rdquo;. It returns nothing. A reader has to guess what happened
+to <code>events</code>. Is the original still safe to use? No, and you only find out by
+reading the body or by your test failing.</p><p><strong>After:</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Cleaned</span>(<span style=color:#a6e22e>events</span> []<span style=color:#66d9ef>string</span>) []<span style=color:#66d9ef>string</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>out</span> <span style=color:#f92672>:=</span> append([]string(<span style=color:#66d9ef>nil</span>), <span style=color:#a6e22e>events</span><span style=color:#f92672>...</span>)
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>sort</span>.<span style=color:#a6e22e>Strings</span>(<span style=color:#a6e22e>out</span>)
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>j</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span>, <span style=color:#a6e22e>e</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>out</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span> <span style=color:#f92672>||</span> <span style=color:#a6e22e>e</span> <span style=color:#f92672>!=</span> <span style=color:#a6e22e>out</span>[<span style=color:#a6e22e>j</span><span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>] {
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>out</span>[<span style=color:#a6e22e>j</span>] = <span style=color:#a6e22e>e</span>
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>j</span><span style=color:#f92672>++</span>
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>out</span>[:<span style=color:#a6e22e>j</span>]
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The past-tense name and the return value together say: &ldquo;you give me a slice,
+I give you a new one, your slice is fine.&rdquo; If I really did need an in-place
+version, I&rsquo;d call it <code>SortAndDedupInPlace</code> and accept the ugly name. The
+name is doing real work.</p><h2 id=rule-3-side-effects-show-up-in-the-name-or-the-type>Rule 3: Side effects show up in the name or the type</h2><p>A function that writes to disk should either be called <code>Write…</code>, or take an
+<code>io.Writer</code>. A function that sends to a network should be called <code>Send…</code>,
+<code>Post…</code>, <code>Publish…</code>, or take a <code>Client</code>. A function that mutates a database
+should be called <code>Save…</code>, <code>Insert…</code>, <code>Update…</code>, or take a <code>Tx</code>.</p><p>If you can&rsquo;t tell from the signature whether calling the function twice is
+safe, the signature is wrong.</p><p><strong>Before:</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>FormatReport</span>(<span style=color:#a6e22e>r</span> <span style=color:#a6e22e>Report</span>) (<span style=color:#66d9ef>string</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>b</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>json</span>.<span style=color:#a6e22e>Marshal</span>(<span style=color:#a6e22e>r</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#e6db74>&#34;&#34;</span>, <span style=color:#a6e22e>err</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>WriteFile</span>(<span style=color:#e6db74>&#34;/tmp/&#34;</span><span style=color:#f92672>+</span><span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>ID</span><span style=color:#f92672>+</span><span style=color:#e6db74>&#34;.json&#34;</span>, <span style=color:#a6e22e>b</span>, <span style=color:#ae81ff>0</span><span style=color:#a6e22e>o644</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#e6db74>&#34;&#34;</span>, <span style=color:#a6e22e>err</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> string(<span style=color:#a6e22e>b</span>), <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The name is &ldquo;Format&rdquo;. Reasonable people will call this in a loop, in a
+template, in a test. The disk is going to fill up and nobody will know why.</p><p><strong>After (the name does the work):</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>WriteReport</span>(<span style=color:#a6e22e>path</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>r</span> <span style=color:#a6e22e>Report</span>) <span style=color:#66d9ef>error</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>b</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>json</span>.<span style=color:#a6e22e>Marshal</span>(<span style=color:#a6e22e>r</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>err</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>WriteFile</span>(<span style=color:#a6e22e>path</span>, <span style=color:#a6e22e>b</span>, <span style=color:#ae81ff>0</span><span style=color:#a6e22e>o644</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><strong>Or, even better, let the type do the work:</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>RenderReport</span>(<span style=color:#a6e22e>w</span> <span style=color:#a6e22e>io</span>.<span style=color:#a6e22e>Writer</span>, <span style=color:#a6e22e>r</span> <span style=color:#a6e22e>Report</span>) <span style=color:#66d9ef>error</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>json</span>.<span style=color:#a6e22e>NewEncoder</span>(<span style=color:#a6e22e>w</span>).<span style=color:#a6e22e>Encode</span>(<span style=color:#a6e22e>r</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The <code>io.Writer</code> version is my favourite. The function has no idea where the
+bytes go. The caller decides: a file, a buffer, an HTTP response, a gzip
+stream. The side effect is the caller&rsquo;s problem, and the test is one line:
+<code>RenderReport(&amp;buf, r)</code> and compare.</p><h2 id=rule-4-errors-are-part-of-the-signature>Rule 4: Errors are part of the signature</h2><p><code>error</code> is the laziest return type in Go. It tells you &ldquo;something might go
+wrong&rdquo; and nothing else. If a caller has to branch on <em>which</em> thing went
+wrong, the signature has to tell them what&rsquo;s possible.</p><p>That doesn&rsquo;t mean returning fifteen distinct error types. It means: when
+your callers will reasonably handle one failure differently from another,
+expose a sentinel they can match on.</p><p><strong>Before:</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Lookup</span>(<span style=color:#a6e22e>id</span> <span style=color:#66d9ef>string</span>) (<span style=color:#66d9ef>string</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>id</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;&#34;</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#e6db74>&#34;&#34;</span>, <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;not found&#34;</span>)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>id</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;x&#34;</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#e6db74>&#34;&#34;</span>, <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;forbidden&#34;</span>)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#e6db74>&#34;ok&#34;</span>, <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>A caller who wants a 404 on &ldquo;not found&rdquo; and a 403 on &ldquo;forbidden&rdquo; now has
+to do <code>strings.Contains(err.Error(), "not found")</code>, and it will work until
+you fix a typo and silently break every caller. We&rsquo;ve all done this.</p><p><strong>After:</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>var</span> (
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>ErrNotFound</span>  = <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>New</span>(<span style=color:#e6db74>&#34;not found&#34;</span>)
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>ErrForbidden</span> = <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>New</span>(<span style=color:#e6db74>&#34;forbidden&#34;</span>)
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Lookup</span>(<span style=color:#a6e22e>id</span> <span style=color:#66d9ef>string</span>) (<span style=color:#66d9ef>string</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>id</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;&#34;</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#e6db74>&#34;&#34;</span>, <span style=color:#a6e22e>ErrNotFound</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>id</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;x&#34;</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#e6db74>&#34;&#34;</span>, <span style=color:#a6e22e>ErrForbidden</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#e6db74>&#34;ok&#34;</span>, <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Now callers write <code>errors.Is(err, ErrNotFound)</code> and the compiler keeps them
+honest. The contract is: &ldquo;this function can fail in these specific ways, and
+if I add a new one I&rsquo;ll add a new sentinel and you&rsquo;ll see it in the diff.&rdquo;</p><p>That&rsquo;s all sentinel errors are. A promise that the failure modes are part
+of the API, not the implementation.</p><h2 id=what-you-get-back>What you get back</h2><p>The four rules pull in the same direction: a reader should be able to
+predict what a function does from its signature, and be right.</p><p>When that&rsquo;s true, code review changes. Reviewers stop asking &ldquo;does this also
+write to disk?&rdquo;, &ldquo;is this safe to call twice?&rdquo;, &ldquo;does this mutate the
+input?&rdquo; Those questions are answered before the body is opened.</p><p>Tests change too. Explicit inputs mean no <code>TestMain</code> monkey-patching
+globals. Explicit outputs mean no scanning <code>/tmp</code> to assert behaviour.
+Errors in the signature mean error paths you can cover without parsing
+strings.</p><p>A short rule of thumb: if you need a comment to explain what the signature
+should have said, you don&rsquo;t have a documentation problem. You have a
+signature problem.</p><hr><p>Next time, the other half of the signature: errors. We covered the &ldquo;they
+should exist&rdquo; part here. The next post is about what they should look like,
+when wrapping helps and when it hides things, and why most <code>error</code> returns
+in your codebase are doing less work than they could.</p></article></main><div id=bottom-nav class="text-center center-block"><a href=https://segflow.github.io/ class="btn btn-default"><i class="fa fa-home"></i> Home</a></div><div id=disqus_thread></div><script>window.disqus_config=function(){},function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById("disqus_thread").innerHTML="Disqus comments not available by default when the website is previewed locally.";return}var t=document,e=t.createElement("script");e.async=!0,e.src="//segflow-io.disqus.com/embed.js",e.setAttribute("data-timestamp",+new Date),(t.head||t.body).appendChild(e)}()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div></div></div></div></div><script>(function(e,t,n,s,o,i,a){e.GoogleAnalyticsObject=o,e[o]=e[o]||function(){(e[o].q=e[o].q||[]).push(arguments)},e[o].l=1*new Date,i=t.createElement(n),a=t.getElementsByTagName(n)[0],i.async=1,i.src=s,a.parentNode.insertBefore(i,a)})(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-111743535-1","auto"),ga("send","pageview"),window.baseURL="https://segflow.github.io/"</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js></script><script src=https://segflow.github.io//js/App.js></script></body></html>
