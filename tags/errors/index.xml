@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Errors on Segflow</title><link>https://segflow.github.io/tags/errors/</link><description>Recent content in Errors on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Thu, 14 Nov 2024 17:10:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/errors/index.xml" rel="self" type="application/rss+xml"/><item><title>Errors are values, but only if you treat them that way</title><link>https://segflow.github.io/post/errors-are-values/</link><pubDate>Thu, 14 Nov 2024 17:10:00 +0100</pubDate><guid>https://segflow.github.io/post/errors-are-values/</guid><description>&lt;p&gt;Last time I argued that a function&amp;rsquo;s &lt;a href="../../post/self-explained-function-signatures/"&gt;signature should never
+lie&lt;/a&gt;. The &lt;code&gt;error&lt;/code&gt; return is the
+most lied-about part of every Go signature I read. It gets logged,
+swallowed, repackaged, panicked on, and printed back to the user as
+&lt;code&gt;internal error: internal error: internal error&lt;/code&gt;. Three habits keep it
+honest.&lt;/p&gt;</description></item></channel></rss>
