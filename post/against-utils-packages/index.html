@@ -1,0 +1,123 @@
+<!doctype html><html lang=en><head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#"><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta name=description content><meta property="og:title" content="The case against helper packages named `utils`"><meta property="og:type" content="article"><meta property="article:published_time" content="2025-01-09"><meta property="og:description" content><meta property="og:url" content="https://segflow.github.io/post/against-utils-packages/"><meta property="og:site_name" content="Segflow"><meta property="og:tags" content="Go"><meta property="og:tags" content="design"><meta property="og:tags" content="package layout"><meta property="og:tags" content="refactoring"><meta name=generator content="Hugo 0.162.0"><title>The case against helper packages named `utils` &#183; Segflow</title><link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css><link rel=stylesheet href=https://segflow.github.io/css/style.css><link rel=icon href=https://segflow.github.io/favicon.ico></head><body><nav class="navbar navbar-default navbar-fixed-top visible-xs"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#bs-example-navbar-collapse-1>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+</button>
+<a class=navbar-brand href=https://segflow.github.io/>Segflow</a></div><div class="collapse navbar-collapse" id=bs-example-navbar-collapse-1><ul class="nav navbar-nav"><li><a href=https://segflow.github.io//>Home</a></li><li><a href=https://segflow.github.io/post/>Posts</a></li><li><a href=https://segflow.github.io/resume.pdf>Resume</a></li></ul></div></div></nav><div class=container-fluid><div class=row><div id=menu class="hidden-xs col-sm-3 col-md-3"><div id=menu-content class=vertical-align><h1 class=text-center><a href=https://segflow.github.io/>Segflow</a></h1><small class="text-center center-block">Assel Meher</small>
+<img id=profile-pic src=https://segflow.github.io//img/hacker_emblem.png alt="My Picture" class="img-circle center-block"><div id=social class=text-center><a href=https://github.com/segflow><i class="fa fa-github fa-2x"></i></a>
+<a href=https://www.linkedin.com/in/meher-assel-0122798a><i class="fa fa-linkedin fa-2x"></i></a>
+<a href=https://twitter.com/segfl0w><i class="fa fa-twitter fa-2x"></i></a>
+<a href=mailto:asselmeher@gmail.com><i class="fa fa-envelope-o fa-2x"></i></a></div><div id=links class=text-center><a href=https://segflow.github.io//>Home</a>
+<a href=https://segflow.github.io/post/>Posts</a>
+<a href=https://segflow.github.io/resume.pdf>Resume</a></div></div></div><div id=content class="col-xs-12 col-sm-9 col-md-9"><div class=row><div id=post class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10"><main><header><h1>The case against helper packages named `utils`</h1></header><article><p>I argued earlier that <a href=../../post/self-explained-function-signatures/>a function&rsquo;s signature should never
+lie</a>, and then that <a href=../../post/errors-are-values/>errors are
+values only if you treat them like values</a>. Both
+posts circled the same question at different scales: <em>what is this code
+for?</em> This one closes the loop at the package level. The short version: if
+your package is named <code>utils</code>, you don&rsquo;t have an answer.</p><h2 id=the-grep-that-started-it>The grep that started it</h2><p>I was reading a popular Go project on GitHub on a Sunday, the kind with
+thousands of stars and a logo, trying to learn how a piece of it worked. I
+ran this in the clone:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-bash data-lang=bash><span style=display:flex><span>$ grep -rl <span style=color:#e6db74>&#34;^package utils&#34;</span> . | wc -l
+</span></span><span style=display:flex><span><span style=color:#ae81ff>14</span>
+</span></span></code></pre></div><p>Fourteen <code>utils</code> packages. Different directories, different subsystems,
+different contents. One had retry logic and a SHA-256 helper. One had a
+<code>StringPtr(s string) *string</code> and three flavors of <code>Must</code>. One was just
+<code>SliceContains</code>. They imported each other through a chain that ran roughly:</p><pre tabindex=0><code>cmd/api ──► internal/utils ──► pkg/utils ──► common/utils
+                  │                │
+                  ▼                ▼
+            shared/utils ◄── infra/utils
+</code></pre><p>That diagram is not unusual. I&rsquo;ve seen the same shape in three other
+projects since. It&rsquo;s what happens when every subsystem writes its own
+<code>utils</code> and then nobody agrees which one owns the next helper.</p><h2 id=why-utils-is-a-name-smell>Why <code>utils</code> is a name smell</h2><p>Three failure modes, every time.</p><p><strong>Anti-cohesion.</strong> A package is a unit of meaning. <code>auth</code>, <code>billing</code>,
+<code>pricing</code>, <code>httpx</code> all promise something. <code>utils</code> promises nothing except
+&ldquo;we didn&rsquo;t know where to put it.&rdquo; Functions land there because the author
+ran out of patience, not because they belong together. Six months later
+nobody can describe what the package <em>is</em>.</p><p><strong>Import magnet, then primitive re-inventor.</strong> <code>utils</code> is convenient, so
+everyone imports it. Once everyone imports it, it can&rsquo;t import anyone back
+without risking a cycle. So when <code>utils</code> needs something from <code>auth</code> or
+<code>billing</code>, it doesn&rsquo;t import them, it re-implements them. Now you have two
+copies of the same logic and a slowly diverging definition of &ldquo;user.&rdquo;</p><p><strong>Untestable culture turns into a graveyard.</strong> It starts pure: a string
+helper, a slice helper. No domain, no tests needed, &ldquo;it&rsquo;s just utils.&rdquo; Then
+someone adds <code>utils.NormalizeUserEmail</code> which knows the rules of <em>your</em>
+product. Then <code>utils.ChargeIfTrial</code>. Domain logic sneaks in through the side
+door and lives somewhere with no owner and no tests.</p><h2 id=the-rename-game>The rename game</h2><p>Every helper in a <code>utils</code> package can be renamed into a real one. Five
+examples, each one line, each pointing at a concept that already has a name.</p><p><strong>1. <code>utils.RetryHTTP</code> → <code>httpx.Retry</code>.</strong> It&rsquo;s about HTTP. Put it next to
+HTTP.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>httpx</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Retry</span>(<span style=color:#a6e22e>do</span> <span style=color:#66d9ef>func</span>() (<span style=color:#f92672>*</span><span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Response</span>, <span style=color:#66d9ef>error</span>), <span style=color:#a6e22e>n</span> <span style=color:#66d9ef>int</span>, <span style=color:#a6e22e>backoff</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Duration</span>) (<span style=color:#f92672>*</span><span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Response</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> (
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>resp</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Response</span>
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>err</span>  <span style=color:#66d9ef>error</span>
+</span></span><span style=display:flex><span>    )
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#a6e22e>n</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>resp</span>, <span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>do</span>()
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>nil</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#a6e22e>resp</span>.<span style=color:#a6e22e>StatusCode</span> &lt; <span style=color:#ae81ff>500</span> {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>resp</span>, <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>resp</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>resp</span>.<span style=color:#a6e22e>Body</span>.<span style=color:#a6e22e>Close</span>()
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Sleep</span>(<span style=color:#a6e22e>backoff</span>)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>resp</span>, <span style=color:#a6e22e>err</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The package name carries half the meaning. <code>httpx.Retry</code> reads. <code>utils.RetryHTTP</code>
+reads like an apology.</p><p><strong>2. <code>utils.ParseDuration</code> → <code>timex.ParseLoose</code>.</strong> The stdlib already owns
+<code>time.ParseDuration</code>. If you wrote your own, it does something extra
+(probably <code>"d"</code> for days). Say so in the name and the package.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>timex</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>ParseLoose</span>(<span style=color:#a6e22e>s</span> <span style=color:#66d9ef>string</span>) (<span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Duration</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>strings</span>.<span style=color:#a6e22e>HasSuffix</span>(<span style=color:#a6e22e>s</span>, <span style=color:#e6db74>&#34;d&#34;</span>) {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>d</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>ParseDuration</span>(<span style=color:#a6e22e>strings</span>.<span style=color:#a6e22e>TrimSuffix</span>(<span style=color:#a6e22e>s</span>, <span style=color:#e6db74>&#34;d&#34;</span>) <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;h&#34;</span>)
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>, <span style=color:#a6e22e>err</span>
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>d</span> <span style=color:#f92672>*</span> <span style=color:#ae81ff>24</span>, <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>ParseDuration</span>(<span style=color:#a6e22e>s</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><strong>3. <code>utils.SliceContains</code> → <code>slices.Contains</code>.</strong> The stdlib has had this
+since Go 1.21. Delete yours.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>import</span> <span style=color:#e6db74>&#34;slices&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>ok</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>slices</span>.<span style=color:#a6e22e>Contains</span>(<span style=color:#a6e22e>users</span>, <span style=color:#e6db74>&#34;alice&#34;</span>)
+</span></span></code></pre></div><p>Half the <code>utils.go</code> files I&rsquo;ve seen could be deleted by upgrading Go and
+running <code>gofmt -r</code>. Do that first.</p><p><strong>4. <code>utils.MustEnv</code> → <code>config.MustEnv</code>.</strong> This one is sneaky. <code>MustEnv</code>
+isn&rsquo;t a generic helper. It&rsquo;s a <em>policy</em>: &ldquo;at process start, this variable
+must be set, otherwise we refuse to boot.&rdquo; That belongs with the rest of
+your configuration policy.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>config</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>MustEnv</span>(<span style=color:#a6e22e>key</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>string</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>v</span>, <span style=color:#a6e22e>ok</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>LookupEnv</span>(<span style=color:#a6e22e>key</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> !<span style=color:#a6e22e>ok</span> <span style=color:#f92672>||</span> <span style=color:#a6e22e>v</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;&#34;</span> {
+</span></span><span style=display:flex><span>        panic(<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;config: missing required env var %q&#34;</span>, <span style=color:#a6e22e>key</span>))
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>v</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><strong>5. <code>utils.HashPassword</code> → <code>auth.HashPassword</code>.</strong> If this one is in <code>utils</code>
+in your codebase, stop reading and go fix it. Password hashing is a security
+concern with an owner. Give it to the owner.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>auth</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>HashPassword</span>(<span style=color:#a6e22e>plaintext</span> <span style=color:#66d9ef>string</span>) (<span style=color:#a6e22e>hash</span>, <span style=color:#a6e22e>salt</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>err</span> <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Notice the pattern. None of these renames invented new packages out of
+nowhere. They moved each function next to the <em>concept</em> it serves.</p><h2 id=the-rule>The rule</h2><p>If you can&rsquo;t name the package after a concept, the code doesn&rsquo;t belong
+together.</p><p><code>httpx</code>, <code>timex</code>, <code>slices</code>, <code>config</code>, <code>auth</code> are concepts. <code>utils</code>,
+<code>helpers</code>, <code>common</code>, <code>misc</code>, <code>shared</code> are excuses. They tell you the author
+gave up.</p><p>A useful test: write the package&rsquo;s first doc comment.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Package httpx adds small extensions on top of net/http.</span>
+</span></span></code></pre></div><p>Try the same for <code>utils</code>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Package utils contains... uh... assorted things.</span>
+</span></span></code></pre></div><p>If you can&rsquo;t finish the sentence without listing the functions, the package
+shouldn&rsquo;t exist.</p><h2 id=migration-tip-shrink-dont-merge>Migration tip: shrink, don&rsquo;t merge</h2><p>The instinct when you find a 2,000-line <code>utils</code> package is to &ldquo;clean it up&rdquo;
+in one big PR. Don&rsquo;t. You&rsquo;ll spend two weeks rebasing and merge it half
+done.</p><p>Instead: every PR that touches <code>utils</code> is allowed to <em>only delete from it</em>.</p><ul><li>Move one function to its real home.</li><li>Update callers.</li><li>Open a 30-line PR.</li><li>Merge.</li></ul><p>After a dozen of those, <code>utils</code> is empty and you delete the directory. PRs
+that only delete are the most satisfying kind to review, and they never
+conflict with feature work.</p><p>If a function genuinely has no concept home (<code>Ptr[T any](v T) *T</code>, say),
+it&rsquo;s almost always small enough to inline at the call site or to live in a
+3-line <code>internal/ptr</code> package. Three lines is fine. Two thousand lines of
+&ldquo;assorted&rdquo; is not.</p><h2 id=wrapping-the-trilogy>Wrapping the trilogy</h2><p>Three posts, one question.</p><p>Post 1 said: a function&rsquo;s <em>signature</em> should answer &ldquo;what is this code
+for?&rdquo; If you need a comment to clarify it, the signature is wrong.</p><p>Post 2 said: an <em>error</em> should answer the same question on the way out. If
+you need to grep logs to figure out where it came from, the error is wrong.</p><p>This one says: a <em>package name</em> answers the same question one level up. If
+you can&rsquo;t name it after a concept, the package is wrong.</p><p>Signatures, errors, package names. Same conversation, three scales. The
+codebases I enjoy working in are the ones where every level of naming
+points at the thing it actually does. The ones I dread are the ones where
+every level shrugs.</p><p>Stop shrugging. Delete <code>utils</code>.</p></article></main><div id=bottom-nav class="text-center center-block"><a href=https://segflow.github.io/ class="btn btn-default"><i class="fa fa-home"></i> Home</a></div><div id=disqus_thread></div><script>window.disqus_config=function(){},function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById("disqus_thread").innerHTML="Disqus comments not available by default when the website is previewed locally.";return}var t=document,e=t.createElement("script");e.async=!0,e.src="//segflow-io.disqus.com/embed.js",e.setAttribute("data-timestamp",+new Date),(t.head||t.body).appendChild(e)}()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div></div></div></div></div><script>(function(e,t,n,s,o,i,a){e.GoogleAnalyticsObject=o,e[o]=e[o]||function(){(e[o].q=e[o].q||[]).push(arguments)},e[o].l=1*new Date,i=t.createElement(n),a=t.getElementsByTagName(n)[0],i.async=1,i.src=s,a.parentNode.insertBefore(i,a)})(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-111743535-1","auto"),ga("send","pageview"),window.baseURL="https://segflow.github.io/"</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js></script><script src=https://segflow.github.io//js/App.js></script></body></html>

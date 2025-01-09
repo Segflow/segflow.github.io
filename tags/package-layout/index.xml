@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Package Layout on Segflow</title><link>https://segflow.github.io/tags/package-layout/</link><description>Recent content in Package Layout on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Thu, 09 Jan 2025 12:00:00 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/package-layout/index.xml" rel="self" type="application/rss+xml"/><item><title>The case against helper packages named `utils`</title><link>https://segflow.github.io/post/against-utils-packages/</link><pubDate>Thu, 09 Jan 2025 12:00:00 +0100</pubDate><guid>https://segflow.github.io/post/against-utils-packages/</guid><description>&lt;p&gt;I argued earlier that &lt;a href="../../post/self-explained-function-signatures/"&gt;a function&amp;rsquo;s signature should never
+lie&lt;/a&gt;, and then that &lt;a href="../../post/errors-are-values/"&gt;errors are
+values only if you treat them like values&lt;/a&gt;. Both
+posts circled the same question at different scales: &lt;em&gt;what is this code
+for?&lt;/em&gt; This one closes the loop at the package level. The short version: if
+your package is named &lt;code&gt;utils&lt;/code&gt;, you don&amp;rsquo;t have an answer.&lt;/p&gt;</description></item></channel></rss>
