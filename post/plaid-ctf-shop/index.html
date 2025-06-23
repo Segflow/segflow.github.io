@@ -1,208 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#">
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <meta name="description" content="">
-    <meta property="og:title" content="PlaidCTF: Shop (pwn)">
-    
-    <meta property="og:type" content="article">
-    <meta property="article:published_time" content="2018-05-06">
-    
-    <meta property="og:description" content="">
-    <meta property="og:url" content="https://segflow.github.io/post/plaid-ctf-shop/">
-    <meta property="og:site_name" content="Segflow">
-    
-    <meta property="og:tags" content="writeup">
-    
-    <meta property="og:tags" content="ctf">
-    
-    <meta property="og:tags" content="pwn">
-    
-    <meta name="generator" content="Hugo 0.59.1" />
-
-    
-    <title>PlaidCTF: Shop (pwn) &middot; Segflow</title>
-    
-
-    
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css">
-    
-    <link rel="stylesheet" href="https://segflow.github.io/css/style.css">
-    
-    <link href="https://segflow.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Segflow" />
-    
-    
-    <link rel="icon" href="https://segflow.github.io/favicon.ico" />
-    
-
-    
-    
-</head>
-<body>
-
-<nav class="navbar navbar-default navbar-fixed-top visible-xs">
-	<div class="container-fluid">
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-				<span class="sr-only">Toggle navigation</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</button>
-			
-				<a class="navbar-brand" href="https://segflow.github.io/">Segflow</a>
-			
-		</div>
-		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-			<ul class="nav navbar-nav">
-				
-				
-					<li><a href="https://segflow.github.io//">Home</a></li>
-				
-					<li><a href="https://segflow.github.io/post/">Posts</a></li>
-				
-					<li><a href="https://segflow.github.io/resume.pdf">Resume</a></li>
-				
-			</ul>
-		</div>
-	</div>
-</nav>
-<div class="container-fluid">
-	<div class="row">
-		<div id="menu" class="hidden-xs col-sm-3 col-md-3">
-	<div id="menu-content" class="vertical-align">
-		
-			<h1 class="text-center"><a href="https://segflow.github.io/">Segflow</a></h1>
-		
-		
-		
-			<small class="text-center center-block">Assel Meher</small>
-		
-		
-		
-			<img id="profile-pic" src="https://segflow.github.io//img/hacker_emblem.png" alt="My Picture" class="img-circle center-block">
-		
-		<div id="social" class="text-center">
-			
-				<a href="https://github.com/segflow"><i class="fa fa-github fa-2x"></i></a>
-			
-				<a href="https://www.linkedin.com/in/meher-assel-0122798a"><i class="fa fa-linkedin fa-2x"></i></a>
-			
-				<a href="https://twitter.com/segfl0w"><i class="fa fa-twitter fa-2x"></i></a>
-			
-
-			<a href="mailto:asselmeher@gmail.com"><i class="fa fa-envelope-o fa-2x"></i></a>
-		</div>
-		<div id="links" class="text-center">
-			
-			
-				<a href="https://segflow.github.io//">Home</a>
-			
-				<a href="https://segflow.github.io/post/">Posts</a>
-			
-				<a href="https://segflow.github.io/resume.pdf">Resume</a>
-			
-		</div>
-	</div>
-</div>
-
-		<div id="content" class="col-xs-12 col-sm-9 col-md-9">
-			<div class="row">
-				<div id="post" class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10">
-
-<main>
-	<header>
-		<h1>PlaidCTF: Shop (pwn)</h1>
-	</header>
-
-	<article>
-		<p>Below you find the full exploit for PlaidCTF pwn200 task. The full write up will follow up.</p>
-
-<script type="application/javascript" src="https://gist.github.com/segflow/8118ae58bea31f36d83671c212ec6079.js"></script>
-
-
-<p>And we run it:</p>
-
-<pre><code class="language-shell">[+] Opening connection to shop.chal.pwning.xxx on port 9916: Done
-Stdout is at: 0x7f457d51d620
-Stdin is at: 0x7f457d51c8e0
-System is at: 0x7f457d19d390
-[*] Switching to interactive mode
-$ ls -la
-total 24
-drwxr-xr-x 2 root root  4096 May  5 01:33 .
-drwxr-xr-x 5 root root  4096 May  5 01:33 ..
--rw-r----- 1 root shop    37 May  5 01:26 flag.txt
--rwxr-s--- 1 root shop 10520 May  5 01:26 shop
-$ pwd
-/home/shop
-$ cat flag.txt
-PCTF{I_w3nt_sh0pp1ng_w1th_D3_8ruj1n}
-$ 
-</code></pre>
-
-<p>Flag: <strong>PCTF{I_w3nt_sh0pp1ng_w1th_D3_8ruj1n}</strong></p>
-	</article>
-</main>
-
-<div id="bottom-nav" class="text-center center-block">
-	<a href=" https://segflow.github.io/" class="btn btn-default"><i class="fa fa-home"></i> Home</a>
-</div>
-
-
-  <div id="disqus_thread"></div>
-<script type="application/javascript">
-    var disqus_config = function () {
-    
-    
-    
-    };
-    (function() {
-        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
-            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
-            return;
-        }
-        var d = document, s = d.createElement('script'); s.async = true;
-        s.src = '//' + "segflow-io" + '.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-    })();
-</script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-
-
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-  </div>
-  
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-111743535-1', 'auto');
-    ga('send', 'pageview');
-    window.baseURL = "https:\/\/segflow.github.io\/";
-  </script>
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
-  
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
-  
-  <script src="https://segflow.github.io//js/App.js"></script>
-  
-</body>
-</html>
+<!doctype html><html lang=en><head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#"><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta name=description content><meta property="og:title" content="PlaidCTF: Shop (pwn)"><meta property="og:type" content="article"><meta property="article:published_time" content="2018-05-06"><meta property="og:description" content><meta property="og:url" content="https://segflow.github.io/post/plaid-ctf-shop/"><meta property="og:site_name" content="Segflow"><meta property="og:tags" content="writeup"><meta property="og:tags" content="ctf"><meta property="og:tags" content="pwn"><meta name=generator content="Hugo 0.147.2"><title>PlaidCTF: Shop (pwn) &#183; Segflow</title>
+<link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css><link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css><link rel=stylesheet href=https://segflow.github.io/css/style.css><link rel=icon href=https://segflow.github.io/favicon.ico></head><body><nav class="navbar navbar-default navbar-fixed-top visible-xs"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#bs-example-navbar-collapse-1>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+</button>
+<a class=navbar-brand href=https://segflow.github.io/>Segflow</a></div><div class="collapse navbar-collapse" id=bs-example-navbar-collapse-1><ul class="nav navbar-nav"><li><a href=https://segflow.github.io//>Home</a></li><li><a href=https://segflow.github.io/post/>Posts</a></li><li><a href=https://segflow.github.io/resume.pdf>Resume</a></li></ul></div></div></nav><div class=container-fluid><div class=row><div id=menu class="hidden-xs col-sm-3 col-md-3"><div id=menu-content class=vertical-align><h1 class=text-center><a href=https://segflow.github.io/>Segflow</a></h1><small class="text-center center-block">Assel Meher</small>
+<img id=profile-pic src=https://segflow.github.io//img/hacker_emblem.png alt="My Picture" class="img-circle center-block"><div id=social class=text-center><a href=https://github.com/segflow><i class="fa fa-github fa-2x"></i></a>
+<a href=https://www.linkedin.com/in/meher-assel-0122798a><i class="fa fa-linkedin fa-2x"></i></a>
+<a href=https://twitter.com/segfl0w><i class="fa fa-twitter fa-2x"></i></a>
+<a href=mailto:asselmeher@gmail.com><i class="fa fa-envelope-o fa-2x"></i></a></div><div id=links class=text-center><a href=https://segflow.github.io//>Home</a>
+<a href=https://segflow.github.io/post/>Posts</a>
+<a href=https://segflow.github.io/resume.pdf>Resume</a></div></div></div><div id=content class="col-xs-12 col-sm-9 col-md-9"><div class=row><div id=post class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10"><main><header><h1>PlaidCTF: Shop (pwn)</h1></header><article><p>Below, you will find the full exploit for PlaidCTF pwn200 task. The full write-up will follow.</p><script src=https://gist.github.com/segflow/8118ae58bea31f36d83671c212ec6079.js></script><p>And we run it:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span><span style=color:#f92672>[</span>+<span style=color:#f92672>]</span> Opening connection to shop.chal.pwning.xxx on port 9916: Done
+</span></span><span style=display:flex><span>Stdout is at: 0x7f457d51d620
+</span></span><span style=display:flex><span>Stdin is at: 0x7f457d51c8e0
+</span></span><span style=display:flex><span>System is at: 0x7f457d19d390
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> Switching to interactive mode
+</span></span><span style=display:flex><span>$ ls -la
+</span></span><span style=display:flex><span>total <span style=color:#ae81ff>24</span>
+</span></span><span style=display:flex><span>drwxr-xr-x <span style=color:#ae81ff>2</span> root root  <span style=color:#ae81ff>4096</span> May  <span style=color:#ae81ff>5</span> 01:33 .
+</span></span><span style=display:flex><span>drwxr-xr-x <span style=color:#ae81ff>5</span> root root  <span style=color:#ae81ff>4096</span> May  <span style=color:#ae81ff>5</span> 01:33 ..
+</span></span><span style=display:flex><span>-rw-r----- <span style=color:#ae81ff>1</span> root shop    <span style=color:#ae81ff>37</span> May  <span style=color:#ae81ff>5</span> 01:26 flag.txt
+</span></span><span style=display:flex><span>-rwxr-s--- <span style=color:#ae81ff>1</span> root shop <span style=color:#ae81ff>10520</span> May  <span style=color:#ae81ff>5</span> 01:26 shop
+</span></span><span style=display:flex><span>$ pwd
+</span></span><span style=display:flex><span>/home/shop
+</span></span><span style=display:flex><span>$ cat flag.txt
+</span></span><span style=display:flex><span>PCTF<span style=color:#f92672>{</span>I_w3nt_sh0pp1ng_w1th_D3_8ruj1n<span style=color:#f92672>}</span>
+</span></span><span style=display:flex><span>$ 
+</span></span></code></pre></div><p>Flag: <strong>PCTF{I_w3nt_sh0pp1ng_w1th_D3_8ruj1n}</strong></p></article></main><div id=bottom-nav class="text-center center-block"><a href=https://segflow.github.io/ class="btn btn-default"><i class="fa fa-home"></i> Home</a></div><div id=disqus_thread></div><script>window.disqus_config=function(){},function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById("disqus_thread").innerHTML="Disqus comments not available by default when the website is previewed locally.";return}var t=document,e=t.createElement("script");e.async=!0,e.src="//segflow-io.disqus.com/embed.js",e.setAttribute("data-timestamp",+new Date),(t.head||t.body).appendChild(e)}()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div></div></div></div></div><script>(function(e,t,n,s,o,i,a){e.GoogleAnalyticsObject=o,e[o]=e[o]||function(){(e[o].q=e[o].q||[]).push(arguments)},e[o].l=1*new Date,i=t.createElement(n),a=t.getElementsByTagName(n)[0],i.async=1,i.src=s,a.parentNode.insertBefore(i,a)})(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-111743535-1","auto"),ga("send","pageview"),window.baseURL="https://segflow.github.io/"</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js></script><script src=https://segflow.github.io//js/App.js></script></body></html>

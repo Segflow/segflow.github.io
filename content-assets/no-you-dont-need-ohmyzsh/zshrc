@@ -1,0 +1,57 @@
+
+eval "$(starship init zsh)"
+
+# List of scripts to source if they exist
+local scripts_to_source=(
+    ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+    ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+    ~/ohmyzsh/plugins/kubectl/kubectl.plugin.zsh
+    /opt/homebrew/share/google-cloud-sdk/completion.zsh.inc
+    /opt/homebrew/share/google-cloud-sdk/path.zsh.inc
+    ~/.zsh/zsh-z/zsh-z.plugin.sh
+)
+
+autoload -Uz compinit
+compinit
+
+# Source the different files.
+for script_file in "${scripts_to_source[@]}"; do
+  if [ -r "$script_file" ]; then
+    source "$script_file"
+  else
+    print -P "%F{yellow}Warning:%f Script not found or not readable: $script_file"
+  fi
+done
+
+
+# k8s
+if command -v kubecolor >/dev/null 2>&1; then
+  # If it exists, set up the alias and completion
+  alias kubectl=kubecolor
+  compdef kubecolor=kubectl
+else
+  print -P "%F{yellow}Warning:%f 'kubecolor' command not found. Using default 'kubectl'."
+fi
+
+# docker autocomplete
+source <(docker completion zsh)
+
+# Clean up the variable from the shell environment
+unset scripts_to_source script_file
+
+# Fix `forward-word` and `backward-word`
+autoload -Uz select-word-style
+select-word-style normal
+zstyle ':zle:*' word-style unspecified
+
+# autocompletion using arrow keys (based on history)
+bindkey '\e[A' history-search-backward
+bindkey '\e[B' history-search-forward
+
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+zstyle ':completion:*' menu select # improve completion menu style
+zstyle ':completion:*' completer _complete _approximate
+
+
+alias ls='ls --color=auto'
+alias ll='ls -alF'

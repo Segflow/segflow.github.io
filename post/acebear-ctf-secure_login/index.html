@@ -1,167 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#">
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <meta name="description" content="">
-    <meta property="og:title" content="AceBear CTF: Secure login (reverse)">
-    
-    <meta property="og:type" content="article">
-    <meta property="article:published_time" content="2018-01-30">
-    
-    <meta property="og:description" content="">
-    <meta property="og:url" content="https://segflow.github.io/post/acebear-ctf-secure_login/">
-    <meta property="og:site_name" content="Segflow">
-    
-    <meta property="og:tags" content="writeup">
-    
-    <meta property="og:tags" content="ctf">
-    
-    <meta property="og:tags" content="reverse">
-    
-    <meta name="generator" content="Hugo 0.59.1" />
-
-    
-    <title>AceBear CTF: Secure login (reverse) &middot; Segflow</title>
-    
-
-    
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css">
-    
-    <link rel="stylesheet" href="https://segflow.github.io/css/style.css">
-    
-    <link href="https://segflow.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Segflow" />
-    
-    
-    <link rel="icon" href="https://segflow.github.io/favicon.ico" />
-    
-
-    
-    
-</head>
-<body>
-
-<nav class="navbar navbar-default navbar-fixed-top visible-xs">
-	<div class="container-fluid">
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-				<span class="sr-only">Toggle navigation</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</button>
-			
-				<a class="navbar-brand" href="https://segflow.github.io/">Segflow</a>
-			
-		</div>
-		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-			<ul class="nav navbar-nav">
-				
-				
-					<li><a href="https://segflow.github.io//">Home</a></li>
-				
-					<li><a href="https://segflow.github.io/post/">Posts</a></li>
-				
-					<li><a href="https://segflow.github.io/resume.pdf">Resume</a></li>
-				
-			</ul>
-		</div>
-	</div>
-</nav>
-<div class="container-fluid">
-	<div class="row">
-		<div id="menu" class="hidden-xs col-sm-3 col-md-3">
-	<div id="menu-content" class="vertical-align">
-		
-			<h1 class="text-center"><a href="https://segflow.github.io/">Segflow</a></h1>
-		
-		
-		
-			<small class="text-center center-block">Assel Meher</small>
-		
-		
-		
-			<img id="profile-pic" src="https://segflow.github.io//img/hacker_emblem.png" alt="My Picture" class="img-circle center-block">
-		
-		<div id="social" class="text-center">
-			
-				<a href="https://github.com/segflow"><i class="fa fa-github fa-2x"></i></a>
-			
-				<a href="https://www.linkedin.com/in/meher-assel-0122798a"><i class="fa fa-linkedin fa-2x"></i></a>
-			
-				<a href="https://twitter.com/segfl0w"><i class="fa fa-twitter fa-2x"></i></a>
-			
-
-			<a href="mailto:asselmeher@gmail.com"><i class="fa fa-envelope-o fa-2x"></i></a>
-		</div>
-		<div id="links" class="text-center">
-			
-			
-				<a href="https://segflow.github.io//">Home</a>
-			
-				<a href="https://segflow.github.io/post/">Posts</a>
-			
-				<a href="https://segflow.github.io/resume.pdf">Resume</a>
-			
-		</div>
-	</div>
-</div>
-
-		<div id="content" class="col-xs-12 col-sm-9 col-md-9">
-			<div class="row">
-				<div id="post" class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10">
-
-<main>
-	<header>
-		<h1>AceBear CTF: Secure login (reverse)</h1>
-	</header>
-
-	<article>
-		<p>In this article I will share with you the solution to <code>Secure Login</code> challenge presented at <em>Acebear CTF</em>, this task was worth 900 points. Even though I did not manage to solve the challenge on time, I still enjoyed it a lot.</p>
-
-<p>The task description was the following:</p>
-
-<blockquote>
-<p><a href="../../ctf-files/acebear-ctf-2018/secure_login.rar">Download Link</a></p>
-
-<p>Please run solution using ubuntu 16.04</p>
-
-<p>Time of server is UTC+000</p>
-
-<p>Service: nc securelogin.acebear.site 5001</p>
-</blockquote>
-
-<p>By downloading the binary and running it we get this:</p>
-
-<pre><code class="language-shell">$ ./secure_login
-**************************Welcome to secure login**************************
-*                                                                         *
-*************************Challenge Created By CNV**************************
-*   Team: AceBear                                                         *
-*   My blog: https://chung96vn.blogspot.com/                              *
-***************************************************************************
-Current time: Tue Jan 30 20:22:07 2018
-
-Give me your name: Segflow
-Welcome: Segflow
-Gime me your password: 1234
-Wrong password type!
-$ 
-</code></pre>
-
-<p>So mainly the binary prints a hello message, the current time, and then asks us about the name and the password. Obviously, the credentials we typed in are not correct, which made the server answer back with an error message. It also points out that the password <em>type</em> is wrong.</p>
-
-<p>I always prefer to use a <code>static analysis</code> first and then a <code>dynamic analysis</code> to understand the behavior of a binary.</p>
-
-<p>For the <code>static analysis</code>, I highly rely on Binary Ninja and its beautiful interface. At the start of the main function there is a call to <code>sub_8048aa3</code> which prints the hello message, and later calls <code>srand(time(NULL))</code>. So it&rsquo;s seeding the random number generator with the current timestamp.</p>
-
-<p>And since the server also prints the current time, we can know in advance any random number the server will generate using the <code>rand</code> function. Let&rsquo;s have this in mind, maybe we can use it.</p>
-
-<p>Right after that, a check is done to verify that the password length is 64, if it&rsquo;s not the program prints <code>Wrong password type!</code> and exits. The check was the following:</p>
-
-<pre><code>08048c6b  call    read_password
+<!doctype html><html lang=en><head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#"><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta name=description content><meta property="og:title" content="AceBear CTF: Secure login (reverse)"><meta property="og:type" content="article"><meta property="article:published_time" content="2018-01-30"><meta property="og:description" content><meta property="og:url" content="https://segflow.github.io/post/acebear-ctf-secure_login/"><meta property="og:site_name" content="Segflow"><meta property="og:tags" content="writeup"><meta property="og:tags" content="ctf"><meta property="og:tags" content="reverse"><meta name=generator content="Hugo 0.147.2"><title>AceBear CTF: Secure login (reverse) &#183; Segflow</title>
+<link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css><link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css><link rel=stylesheet href=https://segflow.github.io/css/style.css><link rel=icon href=https://segflow.github.io/favicon.ico></head><body><nav class="navbar navbar-default navbar-fixed-top visible-xs"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#bs-example-navbar-collapse-1>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+</button>
+<a class=navbar-brand href=https://segflow.github.io/>Segflow</a></div><div class="collapse navbar-collapse" id=bs-example-navbar-collapse-1><ul class="nav navbar-nav"><li><a href=https://segflow.github.io//>Home</a></li><li><a href=https://segflow.github.io/post/>Posts</a></li><li><a href=https://segflow.github.io/resume.pdf>Resume</a></li></ul></div></div></nav><div class=container-fluid><div class=row><div id=menu class="hidden-xs col-sm-3 col-md-3"><div id=menu-content class=vertical-align><h1 class=text-center><a href=https://segflow.github.io/>Segflow</a></h1><small class="text-center center-block">Assel Meher</small>
+<img id=profile-pic src=https://segflow.github.io//img/hacker_emblem.png alt="My Picture" class="img-circle center-block"><div id=social class=text-center><a href=https://github.com/segflow><i class="fa fa-github fa-2x"></i></a>
+<a href=https://www.linkedin.com/in/meher-assel-0122798a><i class="fa fa-linkedin fa-2x"></i></a>
+<a href=https://twitter.com/segfl0w><i class="fa fa-twitter fa-2x"></i></a>
+<a href=mailto:asselmeher@gmail.com><i class="fa fa-envelope-o fa-2x"></i></a></div><div id=links class=text-center><a href=https://segflow.github.io//>Home</a>
+<a href=https://segflow.github.io/post/>Posts</a>
+<a href=https://segflow.github.io/resume.pdf>Resume</a></div></div></div><div id=content class="col-xs-12 col-sm-9 col-md-9"><div class=row><div id=post class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10"><main><header><h1>AceBear CTF: Secure login (reverse)</h1></header><article><p>In this article I will share with you the solution to <code>Secure Login</code> challenge presented at <em>Acebear CTF</em>, this task was worth 900 points. Even though I did not manage to solve the challenge on time, I still enjoyed it a lot.</p><p>The task description was the following:</p><blockquote><p><a href=../../content-assets/acebear-ctf-secure_login/secure_login.rar>Download Link</a></p><p>Please run solution using ubuntu 16.04</p><p>Time of server is UTC+000</p><p>Service: nc securelogin.acebear.site 5001</p></blockquote><p>By downloading the binary and running it we get this:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ ./secure_login
+</span></span><span style=display:flex><span>**************************Welcome to secure login**************************
+</span></span><span style=display:flex><span>*                                                                         *
+</span></span><span style=display:flex><span>*************************Challenge Created By CNV**************************
+</span></span><span style=display:flex><span>*   Team: AceBear                                                         *
+</span></span><span style=display:flex><span>*   My blog: https://chung96vn.blogspot.com/                              *
+</span></span><span style=display:flex><span>***************************************************************************
+</span></span><span style=display:flex><span>Current time: Tue Jan <span style=color:#ae81ff>30</span> 20:22:07 <span style=color:#ae81ff>2018</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>Give me your name: Segflow
+</span></span><span style=display:flex><span>Welcome: Segflow
+</span></span><span style=display:flex><span>Gime me your password: <span style=color:#ae81ff>1234</span>
+</span></span><span style=display:flex><span>Wrong password type!
+</span></span><span style=display:flex><span>$ 
+</span></span></code></pre></div><p>So mainly the binary prints a hello message, the current time, and then asks us about the name and the password. Obviously, the credentials we typed in are not correct, which made the server answer back with an error message. It also points out that the password <em>type</em> is wrong.</p><p>I always prefer to use a <code>static analysis</code> first and then a <code>dynamic analysis</code> to understand the behavior of a binary.</p><p>For the <code>static analysis</code>, I highly rely on Binary Ninja and its beautiful interface. At the start of the main function there is a call to <code>sub_8048aa3</code> which prints the hello message, and later calls <code>srand(time(NULL))</code>. So it&rsquo;s seeding the random number generator with the current timestamp.</p><p>And since the server also prints the current time, we can know in advance any random number the server will generate using the <code>rand</code> function. Let&rsquo;s have this in mind, maybe we can use it.</p><p>Right after that, a check is done to verify that the password length is 64, if it&rsquo;s not the program prints <code>Wrong password type!</code> and exits. The check was the following:</p><pre tabindex=0><code>08048c6b  call    read_password
 08048c70  add     esp, 0x10
 08048c73  sub     esp, 0xc
 08048c76  lea     eax, [ebp-0xd0 {var_d8}]
@@ -170,229 +34,76 @@ $
 08048c82  add     esp, 0x10
 08048c85  cmp     eax, 0x40 (64)
 08048c88  jne     FAIL @0x8048ca0
-</code></pre>
-
-<p>Also after this, another check is done (function <code>sub_80488ed</code>), where the password is verified to only contain hexadecimal characters (<code>a-ZA-Z0-9</code>), if it does not, the program prints <code>Wrong password type!</code> and exits.</p>
-
-<p>With this in mind, let&rsquo;s try again with a valid password type, e.g: 64 character password with only hexadecimal characters</p>
-
-<pre><code class="language-shell">$ ./secure_login
-**************************Welcome to secure login**************************
-*                                                                         *
-*************************Challenge Created By CNV**************************
-*   Team: AceBear                                                         *
-*   My blog: https://chung96vn.blogspot.com/                              *
-***************************************************************************
-Current time: Tue Jan 30 20:42:24 2018
-
-Give me your name: Segflow
-Welcome: Segflow
-Gime me your password: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-Generated password: 85ED3925E8E7A00B06A350DF5F5FDE4F22D3929776D721E3172E0B66FBAA48BF
-Password incorrect!
-$ 
-</code></pre>
-
-<p>Great! Now the program prints a <code>Generated password</code> and then a <code>Password incorrect!</code> message, hmmm. Going back to Binary Ninja, we see this blocks:</p>
-
-<p><figure>
-    <img src="../../img/acebear-ctf-2018/safe_login-binja-generate-password.png" width="100%"/> 
-</figure>
-
-<br/></p>
-
-<p>Basically the logic behind this can be described by this pseudo-code:</p>
-
-<pre><code class="language-c++">generated_password = generate_password(password);
-hard_coded_password = &quot;F05664E983F54E5FA6D5D4FFC5BF930743F60D8FC2C78AFBB0AF7C82664F2043&quot;
-if (strcmp(generated_password,hard_coded_password) == 0) {
-    print(&quot;Success&quot;);
-    show_flag();
-} else {
-    print(&quot;Wrong password&quot;)
-    exit()
-}
-</code></pre>
-
-<p>So the function <code>generate_password</code> will receive our typed password as an argument, do some magic and return a new string. If the generated password is <code>F05664E983F54E5FA6D5D4FFC5BF930743F60D8FC2C78AFBB0AF7C82664F2043</code> we win, else we lose.</p>
-
-<p>So, in order to solve this, we need to reverse engineer the <code>generate_password</code> function so we can control its result and pass the <code>strcmp</code> check.</p>
-
-<p>The following loop can easily be spotted, by reading it carefully we knew that the password generation happens here:
-<figure>
-    <img src="../../img/acebear-ctf-2018/safe_login-binja-generate-hash.png" width="100%"/> 
-</figure>
-
-<br/></p>
-
-<p>With some assembly skills, we can re-write it using this pseudo code:</p>
-
-<pre><code class="language-python">s = 0x0  # 0x080489b8  mov     dword [ebp-0x24], 0x0
-i = 0    # 0x080489bf  mov     dword [ebp-0x28], 0x0
-while i &lt;= 15:
-    a = strtoul(user_input[i*4, i*4+4], 16)
-    b = rand() &amp; 0xffff
-    x = a XOR b XOR s
-
-    d = 0x804b0c0  # 0x080489e5  add     eax, 0x804b0c0
-    c = strtoul(d[i*4, i*4+4], 16)  # what's d??!
-    r = (x + 1) * c + x
-
-    result += int_to_hex(r &amp; 0xffff)
-
-    s = r     # 0x08048a4c  mov     dword [ebp-0x24], eax
-    i = i + 1 # 0x08048a70  add     dword [ebp-0x28], 0x1
-endwhile
-return result
-</code></pre>
-
-<p>Mainly we loop over the user_input, taking 4 bytes each time and converting them to a long integer by calling <code>strtoul</code>. Remember that the user input should only contain hexadecimal characters, that&rsquo;s why the third argument to <a href="http://www.cplusplus.com/reference/cstdlib/strtoul/">strtoul</a>, the <code>base</code> argument, is 16.</p>
-
-<p>The only unknown value here is the value of <code>d</code>, by following the cross-references of the address <strong>0x804b0c0</strong>, I found that when the program starts, in addition to printing the hello message, a file with the name <code>key</code> is opened and its content is read into the address <strong>0x804b0c0</strong>.</p>
-
-<p>Humm, we do not have the <code>key</code> file, so at this point, I started looking for a way to leak it. Fortunately, the programs prints the generated password even though it does not match the correct one, and with that fact, we can craft a special input so that the generated password that will get printed is, in fact, the <code>key</code>.</p>
-
-<p>Basically, we need to make the generation algorithm only depends on the <code>key</code> and nothing else, which means nullify the value of <code>x</code>. Since at the start <code>s</code> is null, we can nullify the value of <code>x</code> simply by forcing <code>a</code> to be equal to the value of <code>b</code> so that the value of <code>x</code> will be:</p>
-
-<blockquote>
-<p>x <code>=</code> b <code>XOR</code> b <code>XOR</code> s</p>
-
-<p>x <code>=</code> s (because b <code>XOR</code> b <code>=</code> 0)</p>
-
-<p>x <code>=</code> 0</p>
-</blockquote>
-
-<p>We know that in the first iteration <strong>s</strong> is equal to 0, which means that <strong>x</strong> is 0, which also means that <strong>r</strong> is, in fact, equal to <strong>c</strong> (the first 4 bytes of the key). And just like that, we are able to leak the first 4 bytes of the key, simply by forcing <strong>a</strong> to be equal to <strong>b</strong>.</p>
-
-<p>Since we know the time of the server (UTC+0-), we can locally use <code>srand</code> to seed the random number generator with the server time so we can predict the random numbers(huh? is it random?!) that will be used by the server.</p>
-
-<p><code>srand</code> and <code>rand</code> are both parts of the c library <code>libc</code>, but we can also use them in python through the <code>ctypes</code> module.</p>
-
-<pre><code class="language-python">import datetime
-import calendar
-from ctypes import *
-from pwn import *
-
-libc = CDLL(&quot;libc.so.6&quot;)
-
-r = remote(&quot;securelogin.acebear.site&quot;, 5001)
-
-# Wait for the hello message and get the server time
-seed = libc.time()
-libc.srand(seed)
-</code></pre>
-
-<p>Now every time we call <code>libc.rand()</code> we will get the same random number the server will get, thus allowing us to leak the value of the key, 4 bytes each time. After the first iteration, <strong>s</strong> will no longer contain null, it will contain the first leaked 4 bytes. Again to leak the second 4 bytes, we need to nullify the value of <strong>x</strong>, to do so we just need to have the value of the second 4 bytes of the input equal to <code>b XOR s</code>,</p>
-
-<blockquote>
-<p>x <code>=</code> (b <code>XOR</code> s) <code>XOR</code> b <code>XOR</code> s</p>
-
-<p>x <code>=</code> b <code>XOR</code> s <code>XOR</code> b <code>XOR</code> s</p>
-
-<p>x <code>=</code> 0</p>
-</blockquote>
-
-<p>Which lets us leak the second 4bytes on the key. By continuing with the same trick we can leak the full key, To make the post short, I will leave this as an exercise for the reader.</p>
-
-<p>The leaked key bytes are:</p>
-
-<pre><code>key = [0x5EDE, 0x28F8, 0x4F7D, 0x5C03, 0x9775, 0xB9DF, 0xFC1F, 0x8567,
+</code></pre><p>Also after this, another check is done (function <code>sub_80488ed</code>), where the password is verified to only contain hexadecimal characters (<code>a-ZA-Z0-9</code>), if it does not, the program prints <code>Wrong password type!</code> and exits.</p><p>With this in mind, let&rsquo;s try again with a valid password type, e.g: 64 character password with only hexadecimal characters</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ ./secure_login
+</span></span><span style=display:flex><span>**************************Welcome to secure login**************************
+</span></span><span style=display:flex><span>*                                                                         *
+</span></span><span style=display:flex><span>*************************Challenge Created By CNV**************************
+</span></span><span style=display:flex><span>*   Team: AceBear                                                         *
+</span></span><span style=display:flex><span>*   My blog: https://chung96vn.blogspot.com/                              *
+</span></span><span style=display:flex><span>***************************************************************************
+</span></span><span style=display:flex><span>Current time: Tue Jan <span style=color:#ae81ff>30</span> 20:42:24 <span style=color:#ae81ff>2018</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>Give me your name: Segflow
+</span></span><span style=display:flex><span>Welcome: Segflow
+</span></span><span style=display:flex><span>Gime me your password: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+</span></span><span style=display:flex><span>Generated password: 85ED3925E8E7A00B06A350DF5F5FDE4F22D3929776D721E3172E0B66FBAA48BF
+</span></span><span style=display:flex><span>Password incorrect!
+</span></span><span style=display:flex><span>$ 
+</span></span></code></pre></div><p>Great! Now the program prints a <code>Generated password</code> and then a <code>Password incorrect!</code> message, hmmm. Going back to Binary Ninja, we see this blocks:</p><p><figure><img src=../../content-assets/acebear-ctf-secure_login/safe_login-binja-generate-password.png width=100%></figure></p><p>Basically the logic behind this can be described by this pseudo-code:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c++ data-lang=c++><span style=display:flex><span>generated_password <span style=color:#f92672>=</span> generate_password(password);
+</span></span><span style=display:flex><span>hard_coded_password <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;F05664E983F54E5FA6D5D4FFC5BF930743F60D8FC2C78AFBB0AF7C82664F2043&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> (strcmp(generated_password,hard_coded_password) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span>) {
+</span></span><span style=display:flex><span>    print(<span style=color:#e6db74>&#34;Success&#34;</span>);
+</span></span><span style=display:flex><span>    show_flag();
+</span></span><span style=display:flex><span>} <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>    print(<span style=color:#e6db74>&#34;Wrong password&#34;</span>)
+</span></span><span style=display:flex><span>    exit()
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>So the function <code>generate_password</code> will receive our typed password as an argument, do some magic and return a new string. If the generated password is <code>F05664E983F54E5FA6D5D4FFC5BF930743F60D8FC2C78AFBB0AF7C82664F2043</code> we win, else we lose.</p><p>So, in order to solve this, we need to reverse engineer the <code>generate_password</code> function so we can control its result and pass the <code>strcmp</code> check.</p><p>The following loop can easily be spotted, by reading it carefully we knew that the password generation happens here:<figure><img src=../../content-assets/acebear-ctf-secure_login/safe_login-binja-generate-hash.png width=100%></figure></p><p>With some assembly skills, we can re-write it using this pseudo code:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span>s <span style=color:#f92672>=</span> <span style=color:#ae81ff>0x0</span>  <span style=color:#75715e># 0x080489b8  mov     dword [ebp-0x24], 0x0</span>
+</span></span><span style=display:flex><span>i <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>    <span style=color:#75715e># 0x080489bf  mov     dword [ebp-0x28], 0x0</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>while</span> i <span style=color:#f92672>&lt;=</span> <span style=color:#ae81ff>15</span>:
+</span></span><span style=display:flex><span>    a <span style=color:#f92672>=</span> strtoul(user_input[i<span style=color:#f92672>*</span><span style=color:#ae81ff>4</span>, i<span style=color:#f92672>*</span><span style=color:#ae81ff>4</span><span style=color:#f92672>+</span><span style=color:#ae81ff>4</span>], <span style=color:#ae81ff>16</span>)
+</span></span><span style=display:flex><span>    b <span style=color:#f92672>=</span> rand() <span style=color:#f92672>&amp;</span> <span style=color:#ae81ff>0xffff</span>
+</span></span><span style=display:flex><span>    x <span style=color:#f92672>=</span> a XOR b XOR s
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    d <span style=color:#f92672>=</span> <span style=color:#ae81ff>0x804b0c0</span>  <span style=color:#75715e># 0x080489e5  add     eax, 0x804b0c0</span>
+</span></span><span style=display:flex><span>    c <span style=color:#f92672>=</span> strtoul(d[i<span style=color:#f92672>*</span><span style=color:#ae81ff>4</span>, i<span style=color:#f92672>*</span><span style=color:#ae81ff>4</span><span style=color:#f92672>+</span><span style=color:#ae81ff>4</span>], <span style=color:#ae81ff>16</span>)  <span style=color:#75715e># what&#39;s d??!</span>
+</span></span><span style=display:flex><span>    r <span style=color:#f92672>=</span> (x <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>) <span style=color:#f92672>*</span> c <span style=color:#f92672>+</span> x
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    result <span style=color:#f92672>+=</span> int_to_hex(r <span style=color:#f92672>&amp;</span> <span style=color:#ae81ff>0xffff</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    s <span style=color:#f92672>=</span> r     <span style=color:#75715e># 0x08048a4c  mov     dword [ebp-0x24], eax</span>
+</span></span><span style=display:flex><span>    i <span style=color:#f92672>=</span> i <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span> <span style=color:#75715e># 0x08048a70  add     dword [ebp-0x28], 0x1</span>
+</span></span><span style=display:flex><span>endwhile
+</span></span><span style=display:flex><span><span style=color:#66d9ef>return</span> result
+</span></span></code></pre></div><p>Mainly we loop over the user_input, taking 4 bytes each time and converting them to a long integer by calling <code>strtoul</code>. Remember that the user input should only contain hexadecimal characters, that&rsquo;s why the third argument to <a href=http://www.cplusplus.com/reference/cstdlib/strtoul/>strtoul</a>, the <code>base</code> argument, is 16.</p><p>The only unknown value here is the value of <code>d</code>, by following the cross-references of the address <strong>0x804b0c0</strong>, I found that when the program starts, in addition to printing the hello message, a file with the name <code>key</code> is opened and its content is read into the address <strong>0x804b0c0</strong>.</p><p>Humm, we do not have the <code>key</code> file, so at this point, I started looking for a way to leak it. Fortunately, the programs prints the generated password even though it does not match the correct one, and with that fact, we can craft a special input so that the generated password that will get printed is, in fact, the <code>key</code>.</p><p>Basically, we need to make the generation algorithm only depends on the <code>key</code> and nothing else, which means nullify the value of <code>x</code>. Since at the start <code>s</code> is null, we can nullify the value of <code>x</code> simply by forcing <code>a</code> to be equal to the value of <code>b</code> so that the value of <code>x</code> will be:</p><blockquote><p>x <code>=</code> b <code>XOR</code> b <code>XOR</code> s</p><p>x <code>=</code> s (because b <code>XOR</code> b <code>=</code> 0)</p><p>x <code>=</code> 0</p></blockquote><p>We know that in the first iteration <strong>s</strong> is equal to 0, which means that <strong>x</strong> is 0, which also means that <strong>r</strong> is, in fact, equal to <strong>c</strong> (the first 4 bytes of the key). And just like that, we are able to leak the first 4 bytes of the key, simply by forcing <strong>a</strong> to be equal to <strong>b</strong>.</p><p>Since we know the time of the server (UTC+0-), we can locally use <code>srand</code> to seed the random number generator with the server time so we can predict the random numbers(huh? is it random?!) that will be used by the server.</p><p><code>srand</code> and <code>rand</code> are both parts of the c library <code>libc</code>, but we can also use them in python through the <code>ctypes</code> module.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#f92672>import</span> datetime
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> calendar
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> ctypes <span style=color:#f92672>import</span> <span style=color:#f92672>*</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> pwn <span style=color:#f92672>import</span> <span style=color:#f92672>*</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>libc <span style=color:#f92672>=</span> CDLL(<span style=color:#e6db74>&#34;libc.so.6&#34;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>r <span style=color:#f92672>=</span> remote(<span style=color:#e6db74>&#34;securelogin.acebear.site&#34;</span>, <span style=color:#ae81ff>5001</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Wait for the hello message and get the server time</span>
+</span></span><span style=display:flex><span>seed <span style=color:#f92672>=</span> libc<span style=color:#f92672>.</span>time()
+</span></span><span style=display:flex><span>libc<span style=color:#f92672>.</span>srand(seed)
+</span></span></code></pre></div><p>Now every time we call <code>libc.rand()</code> we will get the same random number the server will get, thus allowing us to leak the value of the key, 4 bytes each time. After the first iteration, <strong>s</strong> will no longer contain null, it will contain the first leaked 4 bytes. Again to leak the second 4 bytes, we need to nullify the value of <strong>x</strong>, to do so we just need to have the value of the second 4 bytes of the input equal to <code>b XOR s</code>,</p><blockquote><p>x <code>=</code> (b <code>XOR</code> s) <code>XOR</code> b <code>XOR</code> s</p><p>x <code>=</code> b <code>XOR</code> s <code>XOR</code> b <code>XOR</code> s</p><p>x <code>=</code> 0</p></blockquote><p>Which lets us leak the second 4bytes on the key. By continuing with the same trick we can leak the full key, To make the post short, I will leave this as an exercise for the reader.</p><p>The leaked key bytes are:</p><pre tabindex=0><code>key = [0x5EDE, 0x28F8, 0x4F7D, 0x5C03, 0x9775, 0xB9DF, 0xFC1F, 0x8567,
        0x3F20, 0xC837, 0x5793, 0x4BCD, 0x2FBC, 0x4886, 0x8044, 0xD193]
-</code></pre>
-
-<p>And the final hash bytes should be:</p>
-
-<pre><code>correct = [0xF056, 0x64E9, 0x83F5, 0x4E5F, 0xA6D5, 0xD4FF, 0xC5BF, 0x9307,
+</code></pre><p>And the final hash bytes should be:</p><pre tabindex=0><code>correct = [0xF056, 0x64E9, 0x83F5, 0x4E5F, 0xA6D5, 0xD4FF, 0xC5BF, 0x9307,
           0x43F6, 0x0D8F, 0xC2C7, 0x8AFB, 0xB0AF, 0x7C82, 0x664F, 0x2043]
-</code></pre>
-
-<p>At this point, we have all the data needed to come up with an input that, when processed by the algorithm, the result bytes should be equal to <strong>correct</strong>.</p>
-
-<p>You can do that manually if you are good at maths, or use a Theorem Prover like <a href="https://github.com/Z3Prover/z3">z3</a> to do that. I&rsquo;m bad at math so you can guess what approach I chose.</p>
-
-<p>The final code is the following:</p>
-
-<script type="application/javascript" src="https://gist.github.com/segflow/034e7747ead98ce751939da33cc450e9.js"></script>
-
-
-<p>And we run it:</p>
-
-<pre><code class="language-shell">**************************Welcome to secure login**************************
-*                                                                         *
-*************************Challenge Created By CNV**************************
-*   Team: AceBear                                                         *
-*   My blog: https://chung96vn.blogspot.com/                              *
-***************************************************************************
-Current time: Sun Feb 11 08:26:06 2018
-
-Give me your name: Welcome: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-Gime me your password: Generated password: F05664E983F54E5FA6D5D4FFC5BF930743F60D8FC2C78AFBB0AF7C82664F2043
-Congratulations!
-This is flag: AceBear{thi5_i5_fl4g_f0r_y0u}
-
-[*] Got EOF while reading in interactive
-$ 
-</code></pre>
-
-<p>Flag: <strong>AceBear{thi5_i5_fl4g_f0r_y0u}</strong></p>
-	</article>
-</main>
-
-<div id="bottom-nav" class="text-center center-block">
-	<a href=" https://segflow.github.io/" class="btn btn-default"><i class="fa fa-home"></i> Home</a>
-</div>
-
-
-  <div id="disqus_thread"></div>
-<script type="application/javascript">
-    var disqus_config = function () {
-    
-    
-    
-    };
-    (function() {
-        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
-            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
-            return;
-        }
-        var d = document, s = d.createElement('script'); s.async = true;
-        s.src = '//' + "segflow-io" + '.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-    })();
-</script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-
-
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-  </div>
-  
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-111743535-1', 'auto');
-    ga('send', 'pageview');
-    window.baseURL = "https:\/\/segflow.github.io\/";
-  </script>
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
-  
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
-  
-  <script src="https://segflow.github.io//js/App.js"></script>
-  
-</body>
-</html>
+</code></pre><p>At this point, we have all the data needed to come up with an input that, when processed by the algorithm, the result bytes should be equal to <strong>correct</strong>.</p><p>You can do that manually if you are good at maths, or use a Theorem Prover like <a href=https://github.com/Z3Prover/z3>z3</a> to do that. I&rsquo;m bad at math so you can guess what approach I chose.</p><p>The final code is the following:</p><script src=https://gist.github.com/segflow/034e7747ead98ce751939da33cc450e9.js></script><p>And we run it:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>**************************Welcome to secure login**************************
+</span></span><span style=display:flex><span>*                                                                         *
+</span></span><span style=display:flex><span>*************************Challenge Created By CNV**************************
+</span></span><span style=display:flex><span>*   Team: AceBear                                                         *
+</span></span><span style=display:flex><span>*   My blog: https://chung96vn.blogspot.com/                              *
+</span></span><span style=display:flex><span>***************************************************************************
+</span></span><span style=display:flex><span>Current time: Sun Feb <span style=color:#ae81ff>11</span> 08:26:06 <span style=color:#ae81ff>2018</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>Give me your name: Welcome: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+</span></span><span style=display:flex><span>Gime me your password: Generated password: F05664E983F54E5FA6D5D4FFC5BF930743F60D8FC2C78AFBB0AF7C82664F2043
+</span></span><span style=display:flex><span>Congratulations!
+</span></span><span style=display:flex><span>This is flag: AceBear<span style=color:#f92672>{</span>thi5_i5_fl4g_f0r_y0u<span style=color:#f92672>}</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> Got EOF <span style=color:#66d9ef>while</span> reading in interactive
+</span></span><span style=display:flex><span>$ 
+</span></span></code></pre></div><p>Flag: <strong>AceBear{thi5_i5_fl4g_f0r_y0u}</strong></p></article></main><div id=bottom-nav class="text-center center-block"><a href=https://segflow.github.io/ class="btn btn-default"><i class="fa fa-home"></i> Home</a></div><div id=disqus_thread></div><script>window.disqus_config=function(){},function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById("disqus_thread").innerHTML="Disqus comments not available by default when the website is previewed locally.";return}var t=document,e=t.createElement("script");e.async=!0,e.src="//segflow-io.disqus.com/embed.js",e.setAttribute("data-timestamp",+new Date),(t.head||t.body).appendChild(e)}()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div></div></div></div></div><script>(function(e,t,n,s,o,i,a){e.GoogleAnalyticsObject=o,e[o]=e[o]||function(){(e[o].q=e[o].q||[]).push(arguments)},e[o].l=1*new Date,i=t.createElement(n),a=t.getElementsByTagName(n)[0],i.async=1,i.src=s,a.parentNode.insertBefore(i,a)})(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-111743535-1","auto"),ga("send","pageview"),window.baseURL="https://segflow.github.io/"</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js></script><script src=https://segflow.github.io//js/App.js></script></body></html>

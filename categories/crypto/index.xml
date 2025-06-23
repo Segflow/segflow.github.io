@@ -1,26 +1,2 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>crypto on Segflow</title>
-    <link>https://segflow.github.io/categories/crypto/</link>
-    <description>Recent content in crypto on Segflow</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language>
-    <lastBuildDate>Sat, 30 Dec 2017 13:20:47 +0100</lastBuildDate>
-    
-	<atom:link href="https://segflow.github.io/categories/crypto/index.xml" rel="self" type="application/rss+xml" />
-    
-    
-    <item>
-      <title>3DS CTF: Xesar (crypto)</title>
-      <link>https://segflow.github.io/post/3ds-ctf-xesar/</link>
-      <pubDate>Sat, 30 Dec 2017 13:20:47 +0100</pubDate>
-      
-      <guid>https://segflow.github.io/post/3ds-ctf-xesar/</guid>
-      <description>&lt;p&gt;Recently I decided to start playing CTFs again, and since I needed some training before playing a real one, I decided to take a look at some recent CTFs in &lt;a href=&#34;https://ctftime.org/&#34;&gt;CTFtime.org&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;And then I found this crypto task with no writeup for it yet, and that&amp;rsquo;s why I jumped into it :)&lt;/p&gt;</description>
-    </item>
-    
-  </channel>
-</rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Crypto on Segflow</title><link>https://segflow.github.io/categories/crypto/</link><description>Recent content in Crypto on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 30 Dec 2017 13:20:47 +0100</lastBuildDate><atom:link href="https://segflow.github.io/categories/crypto/index.xml" rel="self" type="application/rss+xml"/><item><title>3DS CTF: Xesar (crypto)</title><link>https://segflow.github.io/post/3ds-ctf-xesar/</link><pubDate>Sat, 30 Dec 2017 13:20:47 +0100</pubDate><guid>https://segflow.github.io/post/3ds-ctf-xesar/</guid><description>&lt;p>Recently I decided to start playing CTFs again, and since I needed some training before playing a real one, I decided to take a look at some recent CTFs in &lt;a href="https://ctftime.org/">CTFtime.org&lt;/a>.&lt;/p>
+&lt;p>And then I found this crypto task with no write-up for it yet, and that&amp;rsquo;s why I jumped into it :)&lt;/p></description></item></channel></rss>

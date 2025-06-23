@@ -1,410 +1,127 @@
-<!DOCTYPE html>
-<html lang="en">
-<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#">
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <meta name="description" content="">
-    <meta property="og:title" content="3DS CTF: Xesar (crypto)">
-    
-    <meta property="og:type" content="article">
-    <meta property="article:published_time" content="2017-12-30">
-    
-    <meta property="og:description" content="">
-    <meta property="og:url" content="https://segflow.github.io/post/3ds-ctf-xesar/">
-    <meta property="og:site_name" content="Segflow">
-    
-    <meta property="og:tags" content="ctf">
-    
-    <meta property="og:tags" content="crypto">
-    
-    <meta property="og:tags" content="writeup">
-    
-    <meta name="generator" content="Hugo 0.59.1" />
-
-    
-    <title>3DS CTF: Xesar (crypto) &middot; Segflow</title>
-    
-
-    
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css">
-    
-    <link rel="stylesheet" href="https://segflow.github.io/css/style.css">
-    
-    <link href="https://segflow.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Segflow" />
-    
-    
-    <link rel="icon" href="https://segflow.github.io/favicon.ico" />
-    
-
-    
-    
-</head>
-<body>
-
-<nav class="navbar navbar-default navbar-fixed-top visible-xs">
-	<div class="container-fluid">
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-				<span class="sr-only">Toggle navigation</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</button>
-			
-				<a class="navbar-brand" href="https://segflow.github.io/">Segflow</a>
-			
-		</div>
-		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-			<ul class="nav navbar-nav">
-				
-				
-					<li><a href="https://segflow.github.io//">Home</a></li>
-				
-					<li><a href="https://segflow.github.io/post/">Posts</a></li>
-				
-					<li><a href="https://segflow.github.io/resume.pdf">Resume</a></li>
-				
-			</ul>
-		</div>
-	</div>
-</nav>
-<div class="container-fluid">
-	<div class="row">
-		<div id="menu" class="hidden-xs col-sm-3 col-md-3">
-	<div id="menu-content" class="vertical-align">
-		
-			<h1 class="text-center"><a href="https://segflow.github.io/">Segflow</a></h1>
-		
-		
-		
-			<small class="text-center center-block">Assel Meher</small>
-		
-		
-		
-			<img id="profile-pic" src="https://segflow.github.io//img/hacker_emblem.png" alt="My Picture" class="img-circle center-block">
-		
-		<div id="social" class="text-center">
-			
-				<a href="https://github.com/segflow"><i class="fa fa-github fa-2x"></i></a>
-			
-				<a href="https://www.linkedin.com/in/meher-assel-0122798a"><i class="fa fa-linkedin fa-2x"></i></a>
-			
-				<a href="https://twitter.com/segfl0w"><i class="fa fa-twitter fa-2x"></i></a>
-			
-
-			<a href="mailto:asselmeher@gmail.com"><i class="fa fa-envelope-o fa-2x"></i></a>
-		</div>
-		<div id="links" class="text-center">
-			
-			
-				<a href="https://segflow.github.io//">Home</a>
-			
-				<a href="https://segflow.github.io/post/">Posts</a>
-			
-				<a href="https://segflow.github.io/resume.pdf">Resume</a>
-			
-		</div>
-	</div>
-</div>
-
-		<div id="content" class="col-xs-12 col-sm-9 col-md-9">
-			<div class="row">
-				<div id="post" class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10">
-
-<main>
-	<header>
-		<h1>3DS CTF: Xesar (crypto)</h1>
-	</header>
-
-	<article>
-		<p>Recently I decided to start playing CTFs again, and since I needed some training before playing a real one, I decided to take a look at some recent CTFs in <a href="https://ctftime.org/">CTFtime.org</a>.</p>
-
-<p>And then I found this crypto task with no writeup for it yet, and that&rsquo;s why I jumped into it :)</p>
-
-<p>The task was the following:</p>
-
-<blockquote>
-<p>We found a paperback with some notes. Help us to find what is this.</p>
-
-<p><a href="https://810a5bdaafc6dd30b1d9979215935871.3dsctf.org//challs/crypto/xesar/e1636c027dcec01ce5a5038b48ec70d9.zip">Access</a></p>
-</blockquote>
-
-<p>The zip file contains two files: <code>encrypted_message.txt</code> and <code>draft_xesar.jpg</code></p>
-
-<p>The <code>draft_xesar.jpg</code> image is the following:</p>
-
-<blockquote>
-<figure>
-    <img src="../../img/3ds-ctf-2017/draft_xesar.jpg" width="100%"/> 
-</figure>
-
-</blockquote>
-
-<p>It&rsquo;s obvious that the ciphertext we have in the <code>encrypted_message.txt</code> is encrypted using this algorithm (but a different key), and our goal is to break it in order to recover the original message and get the flag.</p>
-
-<p>A Pythonic version of it can be written as:</p>
-
-<pre><code class="language-python">key = &quot;testkey&quot;
-plaintext = &quot;the flag is here&quot;
-keypass = &quot;testkeytestkeyte&quot; # len(plaintext) == len(keypass)
-
-cipher = &quot;&quot; 
-for i in range(len(keypass)):
-    x = ord(keypass[i])
-    y = rot(keypass, x) # rot(string, int)
-    cipher = cipher + chr(ord(plaintext[i]) ^ ord(y[i]))
-
-ciphertext = encode_base64(cipher)
-</code></pre>
-
-<p>So by base64 decoding the encrypted message, we get the content of <code>cipher</code> which itself is created by XORing every byte in the plaintext with <code>Y</code>.</p>
-
-<p>Y only depends on the key, making it act as a key itself, by being a direct derivate of the key we can compute Y even before start encrypting the original text, the following code shows how this is possible:</p>
-
-<pre><code class="language-python">key = &quot;testkey&quot;
-plaintext = &quot;the flag is here&quot;
-keypass = &quot;testkeytestkeyte&quot; # len(plaintext) == len(keypass)
-
-
-second_key = &quot;&quot;
-for i in range(len(keypass)):
-    x = ord(keypass[i])
-    y = rot(keypass, x) # rot(string, int)
-    second_key = second_key + y[i]
-
-cipher = &quot;&quot; 
-for i in range(len(plaintext)):
-    cipher = cipher + chr(ord(plaintext[i]) ^ ord(second_key[i]))
-
-ciphertext = encode_base64(cipher)
-</code></pre>
-
-<p>This code is easier to understand than the first one because it clearly shows that the encrypted text is the result of XORing the original text with a key (second_key).</p>
-
-<p>And now our goal is much simpler, we just need to crack the <code>second_key</code> value, which is the key of a simple XOR Cipher. More info about XOR Cipher can be found in this <a href="https://en.wikipedia.org/wiki/XOR_cipher">Wikipedia page</a></p>
-
-<p>XOR Cipher can be decoded in two steps:</p>
-
-<ul>
-<li>Calculate the key length using <code>Kasiski examination</code> attack,</li>
-<li>Compute the key byte per byte via a frequency analysis.</li>
-</ul>
-
-<h3 id="calculate-the-key-length">Calculate the key length</h3>
-
-<p>First, we need to find the key length, this can be done by performing a <a href="https://en.wikipedia.org/wiki/Kasiski_examination">Kasiski examination</a>,</p>
-
-<p>Mainly we need to take the ciphertext text, shift it by 1 byte to the left (or right) to have another ciphertext, which we will name ciphertext_shifted1</p>
-
-<p>Now via a simple loop, we count how many bytes both <code>ciphertext</code> and <code>ciphertext_shifted1</code> have in the same position I, let&rsquo;s name this value <code>same_count</code>. Here is an example to make it more understandable:</p>
-
-<pre><code>ciphertext =          &quot;ABCA&quot;
+<!doctype html><html lang=en><head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#"><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta name=description content><meta property="og:title" content="3DS CTF: Xesar (crypto)"><meta property="og:type" content="article"><meta property="article:published_time" content="2017-12-30"><meta property="og:description" content><meta property="og:url" content="https://segflow.github.io/post/3ds-ctf-xesar/"><meta property="og:site_name" content="Segflow"><meta property="og:tags" content="ctf"><meta property="og:tags" content="crypto"><meta property="og:tags" content="writeup"><meta name=generator content="Hugo 0.147.2"><title>3DS CTF: Xesar (crypto) &#183; Segflow</title>
+<link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css><link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css><link rel=stylesheet href=https://segflow.github.io/css/style.css><link rel=icon href=https://segflow.github.io/favicon.ico></head><body><nav class="navbar navbar-default navbar-fixed-top visible-xs"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#bs-example-navbar-collapse-1>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+</button>
+<a class=navbar-brand href=https://segflow.github.io/>Segflow</a></div><div class="collapse navbar-collapse" id=bs-example-navbar-collapse-1><ul class="nav navbar-nav"><li><a href=https://segflow.github.io//>Home</a></li><li><a href=https://segflow.github.io/post/>Posts</a></li><li><a href=https://segflow.github.io/resume.pdf>Resume</a></li></ul></div></div></nav><div class=container-fluid><div class=row><div id=menu class="hidden-xs col-sm-3 col-md-3"><div id=menu-content class=vertical-align><h1 class=text-center><a href=https://segflow.github.io/>Segflow</a></h1><small class="text-center center-block">Assel Meher</small>
+<img id=profile-pic src=https://segflow.github.io//img/hacker_emblem.png alt="My Picture" class="img-circle center-block"><div id=social class=text-center><a href=https://github.com/segflow><i class="fa fa-github fa-2x"></i></a>
+<a href=https://www.linkedin.com/in/meher-assel-0122798a><i class="fa fa-linkedin fa-2x"></i></a>
+<a href=https://twitter.com/segfl0w><i class="fa fa-twitter fa-2x"></i></a>
+<a href=mailto:asselmeher@gmail.com><i class="fa fa-envelope-o fa-2x"></i></a></div><div id=links class=text-center><a href=https://segflow.github.io//>Home</a>
+<a href=https://segflow.github.io/post/>Posts</a>
+<a href=https://segflow.github.io/resume.pdf>Resume</a></div></div></div><div id=content class="col-xs-12 col-sm-9 col-md-9"><div class=row><div id=post class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10"><main><header><h1>3DS CTF: Xesar (crypto)</h1></header><article><p>Recently I decided to start playing CTFs again, and since I needed some training before playing a real one, I decided to take a look at some recent CTFs in <a href=https://ctftime.org/>CTFtime.org</a>.</p><p>And then I found this crypto task with no write-up for it yet, and that&rsquo;s why I jumped into it :)</p><p>The task was the following:</p><blockquote><p>We found a paperback with some notes. Help us to find what this is.</p><p><a href=https://810a5bdaafc6dd30b1d9979215935871.3dsctf.org//challs/crypto/xesar/e1636c027dcec01ce5a5038b48ec70d9.zip>Access</a></p></blockquote><p>The zip file contains two files: <code>encrypted_message.txt</code> and <code>draft_xesar.jpg</code></p><p>The <code>draft_xesar.jpg</code> image is the following:</p><blockquote><figure><img src=../../content-assets/3ds-ctf-xesar/draft_xesar.jpg width=100%></figure></blockquote><p>It&rsquo;s obvious that the ciphertext we have in the <code>encrypted_message.txt</code> is encrypted using this algorithm (but a different key), and our goal is to break it in order to recover the original message and get the flag.</p><p>A Pythonic version of it can be written as:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span>key <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;testkey&#34;</span>
+</span></span><span style=display:flex><span>plaintext <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;the flag is here&#34;</span>
+</span></span><span style=display:flex><span>keypass <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;testkeytestkeyte&#34;</span> <span style=color:#75715e># len(plaintext) == len(keypass)</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>cipher <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;&#34;</span> 
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> i <span style=color:#f92672>in</span> range(len(keypass)):
+</span></span><span style=display:flex><span>    x <span style=color:#f92672>=</span> ord(keypass[i])
+</span></span><span style=display:flex><span>    y <span style=color:#f92672>=</span> rot(keypass, x) <span style=color:#75715e># rot(string, int)</span>
+</span></span><span style=display:flex><span>    cipher <span style=color:#f92672>=</span> cipher <span style=color:#f92672>+</span> chr(ord(plaintext[i]) <span style=color:#f92672>^</span> ord(y[i]))
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>ciphertext <span style=color:#f92672>=</span> encode_base64(cipher)
+</span></span></code></pre></div><p>So, by base64-decoding the encrypted message, we get the content of <code>cipher</code> which itself is created by XORing every byte in the plaintext with <code>Y</code>.</p><p>Y only depends on the key, making it act as a key itself. By being a direct derivative of the key, we can compute Y even before starting to encrypt the original text. The following code shows how this is possible:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span>key <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;testkey&#34;</span>
+</span></span><span style=display:flex><span>plaintext <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;the flag is here&#34;</span>
+</span></span><span style=display:flex><span>keypass <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;testkeytestkeyte&#34;</span> <span style=color:#75715e># len(plaintext) == len(keypass)</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>second_key <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> i <span style=color:#f92672>in</span> range(len(keypass)):
+</span></span><span style=display:flex><span>    x <span style=color:#f92672>=</span> ord(keypass[i])
+</span></span><span style=display:flex><span>    y <span style=color:#f92672>=</span> rot(keypass, x) <span style=color:#75715e># rot(string, int)</span>
+</span></span><span style=display:flex><span>    second_key <span style=color:#f92672>=</span> second_key <span style=color:#f92672>+</span> y[i]
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>cipher <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;&#34;</span> 
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> i <span style=color:#f92672>in</span> range(len(plaintext)):
+</span></span><span style=display:flex><span>    cipher <span style=color:#f92672>=</span> cipher <span style=color:#f92672>+</span> chr(ord(plaintext[i]) <span style=color:#f92672>^</span> ord(second_key[i]))
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>ciphertext <span style=color:#f92672>=</span> encode_base64(cipher)
+</span></span></code></pre></div><p>This code is easier to understand than the first one because it clearly shows that the encrypted text is the result of XORing the original text with a key (second_key).</p><p>And now our goal is much simpler, we just need to crack the <code>second_key</code> value, which is the key of a simple XOR Cipher. More info about XOR Cipher can be found in this <a href=https://en.wikipedia.org/wiki/XOR_cipher>Wikipedia page</a></p><p>XOR Cipher can be decoded in two steps:</p><ul><li>Calculate the key length using <code>Kasiski examination</code> attack,</li><li>Compute the key byte per byte via a frequency analysis.</li></ul><h3 id=calculate-the-key-length>Calculate the key length</h3><p>First, we need to find the key length, this can be done by performing a <a href=https://en.wikipedia.org/wiki/Kasiski_examination>Kasiski examination</a>,</p><p>Mainly we need to take the ciphertext text, shift it by 1 byte to the left (or right) to have another ciphertext, which we will name ciphertext_shifted1</p><p>Now via a simple loop, we count how many bytes both <code>ciphertext</code> and <code>ciphertext_shifted1</code> have in the same position I, let&rsquo;s name this value <code>same_count</code>. Here is an example to make it more understandable:</p><pre tabindex=0><code>ciphertext =          &#34;ABCA&#34;
                           ^
-ciphertext_shifted1 = &quot;BCAA&quot;
+ciphertext_shifted1 = &#34;BCAA&#34;
                           ^
-</code></pre>
-
-<p>The result here is 1 since only at position 4 do both the two ciphers have the same value (the byte A).</p>
-
-<p>We shift the ciphertext again by 2, 3 and so on and every time we calculate the <code>same_count</code>.</p>
-
-<p>The next code will do that for us:</p>
-
-<pre><code class="language-python">with open(&quot;encrypted_message_raw.bin&quot;) as f:
-    encrypted = f.read()
-
-def shift(data, offset):
-    return data[offset:] + data[:offset]
-
-def count_same(a, b):
-    count = 0
-    for i in range(len(a)):
-        if a[i] == b[i]:
-            count += 1
-    return count
-
-for key_len in range(1, 33): # try multiple key lengths
-    freq = count_same(encrypted, shift(encrypted, key_len))
-    print ('{0:&lt; 3d} | {1:3d} |'.format(key_len, freq) + '=' * (freq / 4))
-</code></pre>
-
-<p>When we execute this code and feed it our ciphertext we get the following output:</p>
-
-<pre><code class="language-shell">$ base64 -D encrypted_message.txt &gt; encrypted_message_raw.bin
-$ python same_counts.py
- 1  | 120 |==============================
- 2  |  96 |========================
- 3  |  96 |========================
- 4  |  83 |====================
- 5  |  66 |================
- 6  |  85 |=====================
- 7  |  82 |====================
- 8  | 116 |=============================
- 9  | 152 |======================================
- 10 | 252 |===============================================================
- 11 | 113 |============================
- 12 | 107 |==========================
- 13 |  97 |========================
- 14 |  81 |====================
- 15 |  83 |====================
- 16 |  89 |======================
- 17 | 114 |============================
- 18 | 116 |=============================
- 19 |  98 |========================
- 20 | 261 |=================================================================
- 21 | 125 |===============================
- 22 | 115 |============================
- 23 |  91 |======================
- 24 |  75 |==================
- 25 |  87 |=====================
- 26 |  91 |======================
- 27 |  94 |=======================
- 28 | 112 |============================
- 29 | 108 |===========================
- 30 | 225 |========================================================
- 31 | 109 |===========================
- 32 | 129 |================================
-</code></pre>
-
-<p>We notice that <code>same_count</code> value is especially high when we shift the ciphertext by 10, 20 and 30. Kasisky says that in this case, where multiple shift values have high <code>same_count</code> values the key length is probably the Greatest Common Divisor (GCD), in this case, it&rsquo;s 10.</p>
-
-<p>So probably the key length is 10. Now let&rsquo;s crack it.</p>
-
-<h3 id="key-decode">Key decode</h3>
-
-<p>Since the key is repeated to make its length equal to the original text, every i-th byte of the original text is actually XORed with the same key. So by lining up the ciphertext in n columns (remember n in the key length), we will get N different ciphertexts which can be treated as a simple substitution cipher.s</p>
-
-<p>Simple substitution ciphers can be broken by doing a simple frequency analysis, for example, let&rsquo;s say we have XORed every byte of a message by the byte 0x40, and this code will do just that</p>
-
-<pre><code class="language-python">xor_key = 0x40
-data = LONG_PLAIN_TEXT_HERE
-cipher = &quot;&quot;
-for x in data:
-    cipher += chr(ord(x) ^ xor_key)
-print(cipher)
-</code></pre>
-
-<p>Frequency analysis can help to break substitution ciphers here because of the fact that the count of the byte 0x20 in the original text is equal to the count of  0x20 XOR 0x40 (0x60) in the final cipher. So if we have an idea about the most present byte in the original text is, we can recover the xor_key from the cipher.</p>
-
-<p>In the English grammar, the letter E is the most used one, and another candidate is <code>space</code>, yes there are a lot of spaces in long texts right?</p>
-
-<p>Notice that frequency analysis is only effective if the ciphertext is long enough, which is the case here!</p>
-
-<p>First, let&rsquo;s start by splitting the ciphertext into 10(the key length) columns.</p>
-
-<pre><code class="language-python">key_len = 10
-columns = []
-for i in range(0, key_len):
-    col = []
-    for ch in encrypted[i::key_len]:
-        col.append(ch)
-    columns.append(col)
-</code></pre>
-
-<p>Now we get the most frequent character in each column and XOR it with our candidate &ldquo; &ldquo;, which is normally the most present character in a long human-readable text. The result we get for each column <code>i</code> is actually <code>key[i]</code></p>
-
-<pre><code class="language-python">def most_frequent(text):
-    frequency = Counter()
-    for x in text:
-        frequency[x] += 1
-    char, count = frequency.most_common(1)[0]
-    return char
-
-key = &quot;&quot;
-for col in columns:
-    f = most_frequent(col)
-    key = key + chr(ord(f) ^ ord(&quot; &quot;))
-
-print(key) # In our case this will print MOIIIG&quot;EMK
-</code></pre>
-
-<p>Now given the key <code>MOIIIG&quot;EMK</code> we can try to decode our ciphertext:</p>
-
-<pre><code class="language-python">def decrypt(c_num, k_num):
-    return ''.join(chr(ord(c) ^ ord(k)) for c, k in izip(c_num, cycle(k_num)))
-
-print(decrypt(encrypted, key))
-</code></pre>
-
-<p>This will print the text:</p>
-
-<pre><code class="language-text">LOREM  PSUM DOLO; SIT AMETE CONSECTE=UR ADIPIS*ING ELIT.IMAURIS MA=TIS RISUSIEU SUSCIP TCONSEQU(T. DONEC *ONGUE DAP BUS IPSUME A IMPERD ET EST RU=RUM ID. D&amp;NEC NON I9SUM EGET &amp;RCI VIVER;A PORTA. :ED SAGITT S IPSUM N,C LACUS S&lt;SCIPIT CO'VALLIS. N&lt;LLA IMPER-IET NISI &lt;T DICTUM :USCIPIT. -UIS AC SA.ITTIS LOR,M. PELLEN=ESQUE HAB TANT MORB  TRISTIQU, SENECTUSIET NETUS ,T MALESUA-A FAMES A* TURPIS E.ESTAS. PR&amp;IN BLANDI= NEQUE QU S MAURIS $AXIMUS,V,L PRETIUMINISI PORT(. INTEGERINEC SUSCI9IT URNA.F&lt;SCE IN PH(RETRA LAC&lt;S. FUSCE /EUGIATACIIPSUM ET $OLESTIE. :USPENDISS, NEC ENIMIA MASSA A*CUMSAN BL(NDIT. SUS9ENDISSE C&amp;NVALLIS O;CI SIT AM,T IPSUM C&amp;NSEQUAT, ?EL ALIQUA$ ENIM FEU.IAT. INTE.ER SED CO'DIMENTUM -OLOR, VIT(E CURSUS 'ULLA. VIV(MUS EGET 'UNC A MI 9LACERAT I$PERDIET. 'ULLAM ESTIJUSTO, AL QUET RHON*US ORCI S&amp;DALES, PU%VINAR VEH CULA DOLO;. VIVAMUSIRHONCUS D GNISSIM A;CU EU PHA;ETRA. SUS9ENDISSE E= DOLOR OD O. CURABI=UR IMPERD ET LECTUSISIT AMET %ACINIA VE!ICULA. FU:CE DIAM N SI, GRAVI-A ET SEMP,R SED, EL,IFEND UT $I.MAURIS :ODALES PU;US EFFICI=UR NISL C&lt;RSUS, AT =EMPOR PUR&lt;S PULVINA;. INTEGERIULTRICIESE IPSUM NE* LUCTUS C&amp;NSEQUAT, $AURIS EX =EMPUS MAS:A, NON MA%ESUADA LI.ULA TORTO; UT MASSAG SUSPENDI:SE VEHICU%A NEQUE V TAE LECTU: CONSEQUA=, QUIS CO'GUE ANTE ?OLUTPAT.  NTEGER SE$PER RUTRU$ MAGNA, S T AMET TR STIQUE MA.NA. ALIQU(M ERAT VO%UTPAT. ININON SOLLI*ITUDIN MIG MAECENASIVEHICULA (UGUE PURU:, A TINCI-UNT DOLORIFAUCIBUS :IT AMET. 'ULLAM BLA'DIT EFFIC TUR SAPIE' IN LAORE,T. CRAS V&amp;LUTPAT NE8UE MAGNA,IVOLUTPAT *ONSEQUAT %OREM FERM,NTUM EU. ,TIAM ET L&lt;CTUS METU:. NULLA A= METUS TE%LUS. PELL,NTESQUE R SUS IPSUME PORTA SI= AMET POS&lt;ERE ID, P!ARETRA NO' RISUS. Q&lt;ISQUE EGE= EST VEHI*ULA, TINC DUNT URNAIAT, MOLES=IE MI. SE- UT SEM A%IQUAM, TI'CIDUNT DI(M SED, PO;TTITOR OR*I. SED QU S BLANDITISEM. MAEC,NAS EST P&lt;RUS, VOLU=PAT SIT A$ET DUI EUE MATTIS A&lt;CTOR ELITGCRAS NEC 9URUS SIT (MET URNA 9LACERAT F,UGIAT. NU%LAM DICTU$ LIBERO E=ANTE GRA?IDA, LAOR,ET FACILI:IS URNA E&lt;ISMOD. ET AM ET QUA$ AC NIBH (CCUMSAN M&amp;LESTIE. VVAMUS MOL,STIE EST 8UIS SCELE;ISQUE IAC&lt;LIS. IN V,L ERAT NE8UE. NULLA$ SAGITTISINEC TELLU: ET PLACE;AT. MAURI: MOLESTIEISAPIEN SI= AMET SAP EN PLACER(T, EGET V,HICULA NU%LA DICTUMG NAM PURU: LECTUS, =RISTIQUE 'EC BLANDI= SED, VEH CULA VITA, NULLA. A%IQUAM ERA= VOLUTPATG QUISQUE -ICTUM ELE$ENTUM FEL S FEUGIATITEMPUS. I'TEGER ACC&lt;MSAN RISU: EGET MAX MUS EUISM&amp;D. PELLEN=ESQUE HAB TANT MORB  TRISTIQU, SENECTUSIET NETUS ,T MALESUA-A FAMES A* TURPIS E.ESTAS. VI?AMUS BLAN-IT, NISL  D CURSUS $OLESTIE, ?ELIT PURU: MATTIS L GULA, SITIAMET ELEM,NTUM AUGU, NISL VELITORTOR. P;OIN QUIS &lt;LTRICES N SL. CURAB TUR SEMPE; NULLA NO' ERAT PLA*ERAT, AT ;UTRUM TEL%US PELLEN=ESQUE. AE'EAN PELLE'TESQUE UL%AMCORPER =ELLUS, SO%LICITUDINIPORTTITORILACUS CON-IMENTUM E&lt;.UT NEC D&lt;I MOLLIS ,X VIVERRAICONVALLISG SUSPENDI:SE IN ANT, NON DIAMIULLAMCORP,R VARIUS ,U AC ODIOG DONEC OR*I VELIT, %UCTUS AC %ECTUS QUI:, BIBENDU$ ALIQUET -OLOR. AEN,AN QUAM T&lt;RPIS, PLA*ERAT SED (LIQUAM NO', PLACERA= QUIS LIG&lt;LA. MAURI: AC ANTE 9ORTTITOR %EO TINCID&lt;NT POSUER,. VESTIBU%UM MOLLISIID NULLA ,GET TRIST QUE. MAEC,NAS VIVER;A LACUS A&lt;CTOR LIGU%A POSUEREE EU SUSCI9IT EX HEN-RERIT.ETI(M EFFICIT&lt;R VESTIBU%UM DOLOR,INON PORTT TOR LECTU: PHARETRAIVEL. MAUR S PHARETR( ELEIFENDISCELERISQ&lt;E. PELLEN=ESQUE POR=A SEM LEOE NEC TEMP&amp;R URNA SE$PER SED. :ED DOLOR ,X, PRETIU$ VELENIMISED. THE /LAG IS 3D:{1_H4V3_5YM3_CR1P7065K1LL5}
-</code></pre>
-
-<p>Doesn&rsquo;t this look familiar? yes, it&rsquo;s the famous <code>Lorem Ipsum</code> text, but wait, something is strange here. Instead of the character <code>I</code> we have space! Actually, frequency analysis cannot be 100% accurate so human interference is sometimes needed to finish the job.</p>
-
-<p>In this case, the key is <code>MOIIIG&quot;EMK</code>, and we notice that always at the 7th character the result is wrong, so the frequency analysis in the 7th column was wrong. But since we know what the 7th character should be we can hardcode it.</p>
-
-<p>The 7th character in the ciphertext is 0x02, and in the final decoded text it should be 0x49 (ascii code of I), so the 7th character of the key should be 0x02 XOR 0x49 which is 0x4b the ascii code of <code>K</code></p>
-
-<p>With this patch the key becomes <code>MOIIIGKEMK</code>, decoding the ciphertext with it and we get the text:</p>
-
-<pre><code class="language-text">LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. MAURIS MATTIS RISUS EU SUSCIPITCONSEQUAT. DONEC CONGUE DAPIBUS IPSUM, A IMPERDIET EST RUTRUM ID. DONEC NON IPSUM EGET ORCI VIVERRA PORTA. SED SAGITTIS IPSUM NEC LACUS SUSCIPIT CONVALLIS. NULLA IMPERDIET NISI UT DICTUM SUSCIPIT. DUIS AC SAGITTIS LOREM. PELLENTESQUE HABITANT MORBI TRISTIQUE SENECTUS ET NETUS ET MALESUADA FAMES AC TURPIS EGESTAS. PROIN BLANDIT NEQUE QUIS MAURIS MAXIMUS,VEL PRETIUM NISI PORTA. INTEGER NEC SUSCIPIT URNA.FUSCE IN PHARETRA LACUS. FUSCE FEUGIATAC IPSUM ET MOLESTIE. SUSPENDISSE NEC ENIM A MASSA ACCUMSAN BLANDIT. SUSPENDISSE CONVALLIS ORCI SIT AMET IPSUM CONSEQUAT, VEL ALIQUAM ENIM FEUGIAT. INTEGER SED CONDIMENTUM DOLOR, VITAE CURSUS NULLA. VIVAMUS EGET NUNC A MI PLACERAT IMPERDIET. NULLAM EST JUSTO, ALIQUET RHONCUS ORCI SODALES, PULVINAR VEHICULA DOLOR. VIVAMUS RHONCUS DIGNISSIM ARCU EU PHARETRA. SUSPENDISSE ET DOLOR ODIO. CURABITUR IMPERDIET LECTUS SIT AMET LACINIA VEHICULA. FUSCE DIAM NISI, GRAVIDA ET SEMPER SED, ELEIFEND UT MI.MAURIS SODALES PURUS EFFICITUR NISL CURSUS, AT TEMPOR PURUS PULVINAR. INTEGER ULTRICIES, IPSUM NEC LUCTUS CONSEQUAT, MAURIS EX TEMPUS MASSA, NON MALESUADA LIGULA TORTOR UT MASSA. SUSPENDISSE VEHICULA NEQUE VITAE LECTUS CONSEQUAT, QUIS CONGUE ANTE VOLUTPAT. INTEGER SEMPER RUTRUM MAGNA, SIT AMET TRISTIQUE MAGNA. ALIQUAM ERAT VOLUTPAT. IN NON SOLLICITUDIN MI. MAECENAS VEHICULA AUGUE PURUS, A TINCIDUNT DOLOR FAUCIBUS SIT AMET. NULLAM BLANDIT EFFICITUR SAPIEN IN LAOREET. CRAS VOLUTPAT NEQUE MAGNA, VOLUTPAT CONSEQUAT LOREM FERMENTUM EU. ETIAM ET LUCTUS METUS. NULLA AT METUS TELLUS. PELLENTESQUE RISUS IPSUM, PORTA SIT AMET POSUERE ID, PHARETRA NON RISUS. QUISQUE EGET EST VEHICULA, TINCIDUNT URNA AT, MOLESTIE MI. SED UT SEM ALIQUAM, TINCIDUNT DIAM SED, PORTTITOR ORCI. SED QUIS BLANDIT SEM. MAECENAS EST PURUS, VOLUTPAT SIT AMET DUI EU, MATTIS AUCTOR ELIT.CRAS NEC PURUS SIT AMET URNA PLACERAT FEUGIAT. NULLAM DICTUM LIBERO ETANTE GRAVIDA, LAOREET FACILISIS URNA EUISMOD. ETIAM ET QUAM AC NIBH ACCUMSAN MOLESTIE. VIVAMUS MOLESTIE EST QUIS SCELERISQUE IACULIS. IN VEL ERAT NEQUE. NULLAM SAGITTIS NEC TELLUS ET PLACERAT. MAURIS MOLESTIE SAPIEN SIT AMET SAPIEN PLACERAT, EGET VEHICULA NULLA DICTUM. NAM PURUS LECTUS, TRISTIQUE NEC BLANDIT SED, VEHICULA VITAE NULLA. ALIQUAM ERAT VOLUTPAT. QUISQUE DICTUM ELEMENTUM FELIS FEUGIAT TEMPUS. INTEGER ACCUMSAN RISUS EGET MAXIMUS EUISMOD. PELLENTESQUE HABITANT MORBI TRISTIQUE SENECTUS ET NETUS ET MALESUADA FAMES AC TURPIS EGESTAS. VIVAMUS BLANDIT, NISL ID CURSUS MOLESTIE, VELIT PURUS MATTIS LIGULA, SIT AMET ELEMENTUM AUGUE NISL VEL TORTOR. PROIN QUIS ULTRICES NISL. CURABITUR SEMPER NULLA NON ERAT PLACERAT, AT RUTRUM TELLUS PELLENTESQUE. AENEAN PELLENTESQUE ULLAMCORPER TELLUS, SOLLICITUDIN PORTTITOR LACUS CONDIMENTUM EU.UT NEC DUI MOLLIS EX VIVERRA CONVALLIS. SUSPENDISSE IN ANTE NON DIAM ULLAMCORPER VARIUS EU AC ODIO. DONEC ORCI VELIT, LUCTUS AC LECTUS QUIS, BIBENDUM ALIQUET DOLOR. AENEAN QUAM TURPIS, PLACERAT SED ALIQUAM NON, PLACERAT QUIS LIGULA. MAURIS AC ANTE PORTTITOR LEO TINCIDUNT POSUERE. VESTIBULUM MOLLIS ID NULLA EGET TRISTIQUE. MAECENAS VIVERRA LACUS AUCTOR LIGULA POSUERE, EU SUSCIPIT EX HENDRERIT.ETIAM EFFICITUR VESTIBULUM DOLOR, NON PORTTITOR LECTUS PHARETRA VEL. MAURIS PHARETRA ELEIFEND SCELERISQUE. PELLENTESQUE PORTA SEM LEO, NEC TEMPOR URNA SEMPER SED. SED DOLOR EX, PRETIUM VELENIM SED. THE FLAG IS 3DS{1_H4V3_50M3_CR1P70_5K1LL5}
-</code></pre>
-
-<p>And that&rsquo;s it, the text is human-readable and at the end, we can see that the actual flag is <code>3DS{1_H4V3_50M3_CR1P70_5K1LL5}</code></p>
-
-<p>The final code can be found here: <a href="../../code/3ds-ctf-2017/xesar.py">Xesar.py</a></p>
-	</article>
-</main>
-
-<div id="bottom-nav" class="text-center center-block">
-	<a href=" https://segflow.github.io/" class="btn btn-default"><i class="fa fa-home"></i> Home</a>
-</div>
-
-
-  <div id="disqus_thread"></div>
-<script type="application/javascript">
-    var disqus_config = function () {
-    
-    
-    
-    };
-    (function() {
-        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
-            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
-            return;
-        }
-        var d = document, s = d.createElement('script'); s.async = true;
-        s.src = '//' + "segflow-io" + '.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-    })();
-</script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-
-
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-  </div>
-  
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-111743535-1', 'auto');
-    ga('send', 'pageview');
-    window.baseURL = "https:\/\/segflow.github.io\/";
-  </script>
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
-  
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
-  
-  <script src="https://segflow.github.io//js/App.js"></script>
-  
-</body>
-</html>
+</code></pre><p>The result here is 1 since only at position 4 do both the two ciphers have the same value (the byte A).</p><p>We shift the ciphertext again by 2, 3 and so on and every time we calculate the <code>same_count</code>.</p><p>The next code will do that for us:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#66d9ef>with</span> open(<span style=color:#e6db74>&#34;encrypted_message_raw.bin&#34;</span>) <span style=color:#66d9ef>as</span> f:
+</span></span><span style=display:flex><span>    encrypted <span style=color:#f92672>=</span> f<span style=color:#f92672>.</span>read()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>shift</span>(data, offset):
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> data[offset:] <span style=color:#f92672>+</span> data[:offset]
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>count_same</span>(a, b):
+</span></span><span style=display:flex><span>    count <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> i <span style=color:#f92672>in</span> range(len(a)):
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> a[i] <span style=color:#f92672>==</span> b[i]:
+</span></span><span style=display:flex><span>            count <span style=color:#f92672>+=</span> <span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> count
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> key_len <span style=color:#f92672>in</span> range(<span style=color:#ae81ff>1</span>, <span style=color:#ae81ff>33</span>): <span style=color:#75715e># try multiple key lengths</span>
+</span></span><span style=display:flex><span>    freq <span style=color:#f92672>=</span> count_same(encrypted, shift(encrypted, key_len))
+</span></span><span style=display:flex><span>    print (<span style=color:#e6db74>&#39;</span><span style=color:#e6db74>{0:&lt; 3d}</span><span style=color:#e6db74> | </span><span style=color:#e6db74>{1:3d}</span><span style=color:#e6db74> |&#39;</span><span style=color:#f92672>.</span>format(key_len, freq) <span style=color:#f92672>+</span> <span style=color:#e6db74>&#39;=&#39;</span> <span style=color:#f92672>*</span> (freq <span style=color:#f92672>/</span> <span style=color:#ae81ff>4</span>))
+</span></span></code></pre></div><p>When we execute this code and feed it our ciphertext we get the following output:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>$ base64 -D encrypted_message.txt &gt; encrypted_message_raw.bin
+</span></span><span style=display:flex><span>$ python same_counts.py
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>1</span>  | <span style=color:#ae81ff>120</span> |<span style=color:#f92672>==============================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>2</span>  |  <span style=color:#ae81ff>96</span> |<span style=color:#f92672>========================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>3</span>  |  <span style=color:#ae81ff>96</span> |<span style=color:#f92672>========================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>4</span>  |  <span style=color:#ae81ff>83</span> |<span style=color:#f92672>====================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>5</span>  |  <span style=color:#ae81ff>66</span> |<span style=color:#f92672>================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>6</span>  |  <span style=color:#ae81ff>85</span> |<span style=color:#f92672>=====================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>7</span>  |  <span style=color:#ae81ff>82</span> |<span style=color:#f92672>====================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>8</span>  | <span style=color:#ae81ff>116</span> |<span style=color:#f92672>=============================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>9</span>  | <span style=color:#ae81ff>152</span> |<span style=color:#f92672>======================================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>10</span> | <span style=color:#ae81ff>252</span> |<span style=color:#f92672>===============================================================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>11</span> | <span style=color:#ae81ff>113</span> |<span style=color:#f92672>============================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>12</span> | <span style=color:#ae81ff>107</span> |<span style=color:#f92672>==========================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>13</span> |  <span style=color:#ae81ff>97</span> |<span style=color:#f92672>========================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>14</span> |  <span style=color:#ae81ff>81</span> |<span style=color:#f92672>====================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>15</span> |  <span style=color:#ae81ff>83</span> |<span style=color:#f92672>====================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>16</span> |  <span style=color:#ae81ff>89</span> |<span style=color:#f92672>======================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>17</span> | <span style=color:#ae81ff>114</span> |<span style=color:#f92672>============================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>18</span> | <span style=color:#ae81ff>116</span> |<span style=color:#f92672>=============================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>19</span> |  <span style=color:#ae81ff>98</span> |<span style=color:#f92672>========================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>20</span> | <span style=color:#ae81ff>261</span> |<span style=color:#f92672>=================================================================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>21</span> | <span style=color:#ae81ff>125</span> |<span style=color:#f92672>===============================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>22</span> | <span style=color:#ae81ff>115</span> |<span style=color:#f92672>============================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>23</span> |  <span style=color:#ae81ff>91</span> |<span style=color:#f92672>======================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>24</span> |  <span style=color:#ae81ff>75</span> |<span style=color:#f92672>==================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>25</span> |  <span style=color:#ae81ff>87</span> |<span style=color:#f92672>=====================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>26</span> |  <span style=color:#ae81ff>91</span> |<span style=color:#f92672>======================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>27</span> |  <span style=color:#ae81ff>94</span> |<span style=color:#f92672>=======================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>28</span> | <span style=color:#ae81ff>112</span> |<span style=color:#f92672>============================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>29</span> | <span style=color:#ae81ff>108</span> |<span style=color:#f92672>===========================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>30</span> | <span style=color:#ae81ff>225</span> |<span style=color:#f92672>========================================================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>31</span> | <span style=color:#ae81ff>109</span> |<span style=color:#f92672>===========================</span>
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>32</span> | <span style=color:#ae81ff>129</span> |<span style=color:#f92672>================================</span>
+</span></span></code></pre></div><p>We notice that <code>same_count</code> value is especially high when we shift the ciphertext by 10, 20 and 30. Kasisky says that in this case, where multiple shift values have high <code>same_count</code> values the key length is probably the Greatest Common Divisor (GCD), in this case, it&rsquo;s 10.</p><p>So probably the key length is 10. Now let&rsquo;s crack it.</p><h3 id=key-decode>Key decode</h3><p>Since the key is repeated to make its length equal to the original text, every i-th byte of the original text is actually XORed with the same key. So by lining up the ciphertext in n columns (remember n in the key length), we will get N different ciphertexts which can be treated as a simple substitution cipher.s</p><p>Simple substitution ciphers can be broken by doing a simple frequency analysis, for example, let&rsquo;s say we have XORed every byte of a message by the byte 0x40, and this code will do just that</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span>xor_key <span style=color:#f92672>=</span> <span style=color:#ae81ff>0x40</span>
+</span></span><span style=display:flex><span>data <span style=color:#f92672>=</span> LONG_PLAIN_TEXT_HERE
+</span></span><span style=display:flex><span>cipher <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> x <span style=color:#f92672>in</span> data:
+</span></span><span style=display:flex><span>    cipher <span style=color:#f92672>+=</span> chr(ord(x) <span style=color:#f92672>^</span> xor_key)
+</span></span><span style=display:flex><span>print(cipher)
+</span></span></code></pre></div><p>Frequency analysis can help to break substitution ciphers here because of the fact that the count of the byte 0x20 in the original text is equal to the count of 0x20 XOR 0x40 (0x60) in the final cipher. So if we have an idea about the most present byte in the original text is, we can recover the xor_key from the cipher.</p><p>In the English grammar, the letter E is the most used one, and another candidate is <code>space</code>, yes there are a lot of spaces in long texts right?</p><p>Notice that frequency analysis is only effective if the ciphertext is long enough, which is the case here!</p><p>First, let&rsquo;s start by splitting the ciphertext into 10(the key length) columns.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span>key_len <span style=color:#f92672>=</span> <span style=color:#ae81ff>10</span>
+</span></span><span style=display:flex><span>columns <span style=color:#f92672>=</span> []
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> i <span style=color:#f92672>in</span> range(<span style=color:#ae81ff>0</span>, key_len):
+</span></span><span style=display:flex><span>    col <span style=color:#f92672>=</span> []
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> ch <span style=color:#f92672>in</span> encrypted[i::key_len]:
+</span></span><span style=display:flex><span>        col<span style=color:#f92672>.</span>append(ch)
+</span></span><span style=display:flex><span>    columns<span style=color:#f92672>.</span>append(col)
+</span></span></code></pre></div><p>Now we get the most frequent character in each column and XOR it with our candidate " &ldquo;, which is normally the most present character in a long human-readable text. The result we get for each column <code>i</code> is actually <code>key[i]</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>most_frequent</span>(text):
+</span></span><span style=display:flex><span>    frequency <span style=color:#f92672>=</span> Counter()
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> x <span style=color:#f92672>in</span> text:
+</span></span><span style=display:flex><span>        frequency[x] <span style=color:#f92672>+=</span> <span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>    char, count <span style=color:#f92672>=</span> frequency<span style=color:#f92672>.</span>most_common(<span style=color:#ae81ff>1</span>)[<span style=color:#ae81ff>0</span>]
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> char
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>key <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> col <span style=color:#f92672>in</span> columns:
+</span></span><span style=display:flex><span>    f <span style=color:#f92672>=</span> most_frequent(col)
+</span></span><span style=display:flex><span>    key <span style=color:#f92672>=</span> key <span style=color:#f92672>+</span> chr(ord(f) <span style=color:#f92672>^</span> ord(<span style=color:#e6db74>&#34; &#34;</span>))
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>print(key) <span style=color:#75715e># In our case this will print MOIIIG&#34;EMK</span>
+</span></span></code></pre></div><p>Now given the key <code>MOIIIG"EMK</code> we can try to decode our ciphertext:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>decrypt</span>(c_num, k_num):
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#e6db74>&#39;&#39;</span><span style=color:#f92672>.</span>join(chr(ord(c) <span style=color:#f92672>^</span> ord(k)) <span style=color:#66d9ef>for</span> c, k <span style=color:#f92672>in</span> izip(c_num, cycle(k_num)))
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>print(decrypt(encrypted, key))
+</span></span></code></pre></div><p>This will print the text:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-text data-lang=text><span style=display:flex><span>LOREM  PSUM DOLO; SIT AMETE CONSECTE=UR ADIPIS*ING ELIT.IMAURIS MA=TIS RISUSIEU SUSCIP TCONSEQU(T. DONEC *ONGUE DAP BUS IPSUME A IMPERD ET EST RU=RUM ID. D&amp;NEC NON I9SUM EGET &amp;RCI VIVER;A PORTA. :ED SAGITT S IPSUM N,C LACUS S&lt;SCIPIT CO&#39;VALLIS. N&lt;LLA IMPER-IET NISI &lt;T DICTUM :USCIPIT. -UIS AC SA.ITTIS LOR,M. PELLEN=ESQUE HAB TANT MORB  TRISTIQU, SENECTUSIET NETUS ,T MALESUA-A FAMES A* TURPIS E.ESTAS. PR&amp;IN BLANDI= NEQUE QU S MAURIS $AXIMUS,V,L PRETIUMINISI PORT(. INTEGERINEC SUSCI9IT URNA.F&lt;SCE IN PH(RETRA LAC&lt;S. FUSCE /EUGIATACIIPSUM ET $OLESTIE. :USPENDISS, NEC ENIMIA MASSA A*CUMSAN BL(NDIT. SUS9ENDISSE C&amp;NVALLIS O;CI SIT AM,T IPSUM C&amp;NSEQUAT, ?EL ALIQUA$ ENIM FEU.IAT. INTE.ER SED CO&#39;DIMENTUM -OLOR, VIT(E CURSUS &#39;ULLA. VIV(MUS EGET &#39;UNC A MI 9LACERAT I$PERDIET. &#39;ULLAM ESTIJUSTO, AL QUET RHON*US ORCI S&amp;DALES, PU%VINAR VEH CULA DOLO;. VIVAMUSIRHONCUS D GNISSIM A;CU EU PHA;ETRA. SUS9ENDISSE E= DOLOR OD O. CURABI=UR IMPERD ET LECTUSISIT AMET %ACINIA VE!ICULA. FU:CE DIAM N SI, GRAVI-A ET SEMP,R SED, EL,IFEND UT $I.MAURIS :ODALES PU;US EFFICI=UR NISL C&lt;RSUS, AT =EMPOR PUR&lt;S PULVINA;. INTEGERIULTRICIESE IPSUM NE* LUCTUS C&amp;NSEQUAT, $AURIS EX =EMPUS MAS:A, NON MA%ESUADA LI.ULA TORTO; UT MASSAG SUSPENDI:SE VEHICU%A NEQUE V TAE LECTU: CONSEQUA=, QUIS CO&#39;GUE ANTE ?OLUTPAT.  NTEGER SE$PER RUTRU$ MAGNA, S T AMET TR STIQUE MA.NA. ALIQU(M ERAT VO%UTPAT. ININON SOLLI*ITUDIN MIG MAECENASIVEHICULA (UGUE PURU:, A TINCI-UNT DOLORIFAUCIBUS :IT AMET. &#39;ULLAM BLA&#39;DIT EFFIC TUR SAPIE&#39; IN LAORE,T. CRAS V&amp;LUTPAT NE8UE MAGNA,IVOLUTPAT *ONSEQUAT %OREM FERM,NTUM EU. ,TIAM ET L&lt;CTUS METU:. NULLA A= METUS TE%LUS. PELL,NTESQUE R SUS IPSUME PORTA SI= AMET POS&lt;ERE ID, P!ARETRA NO&#39; RISUS. Q&lt;ISQUE EGE= EST VEHI*ULA, TINC DUNT URNAIAT, MOLES=IE MI. SE- UT SEM A%IQUAM, TI&#39;CIDUNT DI(M SED, PO;TTITOR OR*I. SED QU S BLANDITISEM. MAEC,NAS EST P&lt;RUS, VOLU=PAT SIT A$ET DUI EUE MATTIS A&lt;CTOR ELITGCRAS NEC 9URUS SIT (MET URNA 9LACERAT F,UGIAT. NU%LAM DICTU$ LIBERO E=ANTE GRA?IDA, LAOR,ET FACILI:IS URNA E&lt;ISMOD. ET AM ET QUA$ AC NIBH (CCUMSAN M&amp;LESTIE. VVAMUS MOL,STIE EST 8UIS SCELE;ISQUE IAC&lt;LIS. IN V,L ERAT NE8UE. NULLA$ SAGITTISINEC TELLU: ET PLACE;AT. MAURI: MOLESTIEISAPIEN SI= AMET SAP EN PLACER(T, EGET V,HICULA NU%LA DICTUMG NAM PURU: LECTUS, =RISTIQUE &#39;EC BLANDI= SED, VEH CULA VITA, NULLA. A%IQUAM ERA= VOLUTPATG QUISQUE -ICTUM ELE$ENTUM FEL S FEUGIATITEMPUS. I&#39;TEGER ACC&lt;MSAN RISU: EGET MAX MUS EUISM&amp;D. PELLEN=ESQUE HAB TANT MORB  TRISTIQU, SENECTUSIET NETUS ,T MALESUA-A FAMES A* TURPIS E.ESTAS. VI?AMUS BLAN-IT, NISL  D CURSUS $OLESTIE, ?ELIT PURU: MATTIS L GULA, SITIAMET ELEM,NTUM AUGU, NISL VELITORTOR. P;OIN QUIS &lt;LTRICES N SL. CURAB TUR SEMPE; NULLA NO&#39; ERAT PLA*ERAT, AT ;UTRUM TEL%US PELLEN=ESQUE. AE&#39;EAN PELLE&#39;TESQUE UL%AMCORPER =ELLUS, SO%LICITUDINIPORTTITORILACUS CON-IMENTUM E&lt;.UT NEC D&lt;I MOLLIS ,X VIVERRAICONVALLISG SUSPENDI:SE IN ANT, NON DIAMIULLAMCORP,R VARIUS ,U AC ODIOG DONEC OR*I VELIT, %UCTUS AC %ECTUS QUI:, BIBENDU$ ALIQUET -OLOR. AEN,AN QUAM T&lt;RPIS, PLA*ERAT SED (LIQUAM NO&#39;, PLACERA= QUIS LIG&lt;LA. MAURI: AC ANTE 9ORTTITOR %EO TINCID&lt;NT POSUER,. VESTIBU%UM MOLLISIID NULLA ,GET TRIST QUE. MAEC,NAS VIVER;A LACUS A&lt;CTOR LIGU%A POSUEREE EU SUSCI9IT EX HEN-RERIT.ETI(M EFFICIT&lt;R VESTIBU%UM DOLOR,INON PORTT TOR LECTU: PHARETRAIVEL. MAUR S PHARETR( ELEIFENDISCELERISQ&lt;E. PELLEN=ESQUE POR=A SEM LEOE NEC TEMP&amp;R URNA SE$PER SED. :ED DOLOR ,X, PRETIU$ VELENIMISED. THE /LAG IS 3D:{1_H4V3_5YM3_CR1P7065K1LL5}
+</span></span></code></pre></div><p>Doesn&rsquo;t this look familiar? yes, it&rsquo;s the famous <code>Lorem Ipsum</code> text, but wait, something is strange here. Instead of the character <code>I</code> we have space! Actually, frequency analysis cannot be 100% accurate so human interference is sometimes needed to finish the job.</p><p>In this case, the key is <code>MOIIIG"EMK</code>, and we notice that always at the 7th character the result is wrong, so the frequency analysis in the 7th column was wrong. But since we know what the 7th character should be we can hardcode it.</p><p>The 7th character in the ciphertext is 0x02, and in the final decoded text it should be 0x49 (ascii code of I), so the 7th character of the key should be 0x02 XOR 0x49 which is 0x4b the ascii code of <code>K</code></p><p>With this patch the key becomes <code>MOIIIGKEMK</code>, decoding the ciphertext with it and we get the text:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-text data-lang=text><span style=display:flex><span>LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. MAURIS MATTIS RISUS EU SUSCIPITCONSEQUAT. DONEC CONGUE DAPIBUS IPSUM, A IMPERDIET EST RUTRUM ID. DONEC NON IPSUM EGET ORCI VIVERRA PORTA. SED SAGITTIS IPSUM NEC LACUS SUSCIPIT CONVALLIS. NULLA IMPERDIET NISI UT DICTUM SUSCIPIT. DUIS AC SAGITTIS LOREM. PELLENTESQUE HABITANT MORBI TRISTIQUE SENECTUS ET NETUS ET MALESUADA FAMES AC TURPIS EGESTAS. PROIN BLANDIT NEQUE QUIS MAURIS MAXIMUS,VEL PRETIUM NISI PORTA. INTEGER NEC SUSCIPIT URNA.FUSCE IN PHARETRA LACUS. FUSCE FEUGIATAC IPSUM ET MOLESTIE. SUSPENDISSE NEC ENIM A MASSA ACCUMSAN BLANDIT. SUSPENDISSE CONVALLIS ORCI SIT AMET IPSUM CONSEQUAT, VEL ALIQUAM ENIM FEUGIAT. INTEGER SED CONDIMENTUM DOLOR, VITAE CURSUS NULLA. VIVAMUS EGET NUNC A MI PLACERAT IMPERDIET. NULLAM EST JUSTO, ALIQUET RHONCUS ORCI SODALES, PULVINAR VEHICULA DOLOR. VIVAMUS RHONCUS DIGNISSIM ARCU EU PHARETRA. SUSPENDISSE ET DOLOR ODIO. CURABITUR IMPERDIET LECTUS SIT AMET LACINIA VEHICULA. FUSCE DIAM NISI, GRAVIDA ET SEMPER SED, ELEIFEND UT MI.MAURIS SODALES PURUS EFFICITUR NISL CURSUS, AT TEMPOR PURUS PULVINAR. INTEGER ULTRICIES, IPSUM NEC LUCTUS CONSEQUAT, MAURIS EX TEMPUS MASSA, NON MALESUADA LIGULA TORTOR UT MASSA. SUSPENDISSE VEHICULA NEQUE VITAE LECTUS CONSEQUAT, QUIS CONGUE ANTE VOLUTPAT. INTEGER SEMPER RUTRUM MAGNA, SIT AMET TRISTIQUE MAGNA. ALIQUAM ERAT VOLUTPAT. IN NON SOLLICITUDIN MI. MAECENAS VEHICULA AUGUE PURUS, A TINCIDUNT DOLOR FAUCIBUS SIT AMET. NULLAM BLANDIT EFFICITUR SAPIEN IN LAOREET. CRAS VOLUTPAT NEQUE MAGNA, VOLUTPAT CONSEQUAT LOREM FERMENTUM EU. ETIAM ET LUCTUS METUS. NULLA AT METUS TELLUS. PELLENTESQUE RISUS IPSUM, PORTA SIT AMET POSUERE ID, PHARETRA NON RISUS. QUISQUE EGET EST VEHICULA, TINCIDUNT URNA AT, MOLESTIE MI. SED UT SEM ALIQUAM, TINCIDUNT DIAM SED, PORTTITOR ORCI. SED QUIS BLANDIT SEM. MAECENAS EST PURUS, VOLUTPAT SIT AMET DUI EU, MATTIS AUCTOR ELIT.CRAS NEC PURUS SIT AMET URNA PLACERAT FEUGIAT. NULLAM DICTUM LIBERO ETANTE GRAVIDA, LAOREET FACILISIS URNA EUISMOD. ETIAM ET QUAM AC NIBH ACCUMSAN MOLESTIE. VIVAMUS MOLESTIE EST QUIS SCELERISQUE IACULIS. IN VEL ERAT NEQUE. NULLAM SAGITTIS NEC TELLUS ET PLACERAT. MAURIS MOLESTIE SAPIEN SIT AMET SAPIEN PLACERAT, EGET VEHICULA NULLA DICTUM. NAM PURUS LECTUS, TRISTIQUE NEC BLANDIT SED, VEHICULA VITAE NULLA. ALIQUAM ERAT VOLUTPAT. QUISQUE DICTUM ELEMENTUM FELIS FEUGIAT TEMPUS. INTEGER ACCUMSAN RISUS EGET MAXIMUS EUISMOD. PELLENTESQUE HABITANT MORBI TRISTIQUE SENECTUS ET NETUS ET MALESUADA FAMES AC TURPIS EGESTAS. VIVAMUS BLANDIT, NISL ID CURSUS MOLESTIE, VELIT PURUS MATTIS LIGULA, SIT AMET ELEMENTUM AUGUE NISL VEL TORTOR. PROIN QUIS ULTRICES NISL. CURABITUR SEMPER NULLA NON ERAT PLACERAT, AT RUTRUM TELLUS PELLENTESQUE. AENEAN PELLENTESQUE ULLAMCORPER TELLUS, SOLLICITUDIN PORTTITOR LACUS CONDIMENTUM EU.UT NEC DUI MOLLIS EX VIVERRA CONVALLIS. SUSPENDISSE IN ANTE NON DIAM ULLAMCORPER VARIUS EU AC ODIO. DONEC ORCI VELIT, LUCTUS AC LECTUS QUIS, BIBENDUM ALIQUET DOLOR. AENEAN QUAM TURPIS, PLACERAT SED ALIQUAM NON, PLACERAT QUIS LIGULA. MAURIS AC ANTE PORTTITOR LEO TINCIDUNT POSUERE. VESTIBULUM MOLLIS ID NULLA EGET TRISTIQUE. MAECENAS VIVERRA LACUS AUCTOR LIGULA POSUERE, EU SUSCIPIT EX HENDRERIT.ETIAM EFFICITUR VESTIBULUM DOLOR, NON PORTTITOR LECTUS PHARETRA VEL. MAURIS PHARETRA ELEIFEND SCELERISQUE. PELLENTESQUE PORTA SEM LEO, NEC TEMPOR URNA SEMPER SED. SED DOLOR EX, PRETIUM VELENIM SED. THE FLAG IS 3DS{1_H4V3_50M3_CR1P70_5K1LL5}
+</span></span></code></pre></div><p>And that&rsquo;s it, the text is human-readable and at the end, we can see that the actual flag is <code>3DS{1_H4V3_50M3_CR1P70_5K1LL5}</code></p><p>The final code can be found here: <a href=../../content-assets/3ds-ctf-xesar/xesar.py>Xesar.py</a></p></article></main><div id=bottom-nav class="text-center center-block"><a href=https://segflow.github.io/ class="btn btn-default"><i class="fa fa-home"></i> Home</a></div><div id=disqus_thread></div><script>window.disqus_config=function(){},function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById("disqus_thread").innerHTML="Disqus comments not available by default when the website is previewed locally.";return}var t=document,e=t.createElement("script");e.async=!0,e.src="//segflow-io.disqus.com/embed.js",e.setAttribute("data-timestamp",+new Date),(t.head||t.body).appendChild(e)}()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div></div></div></div></div><script>(function(e,t,n,s,o,i,a){e.GoogleAnalyticsObject=o,e[o]=e[o]||function(){(e[o].q=e[o].q||[]).push(arguments)},e[o].l=1*new Date,i=t.createElement(n),a=t.getElementsByTagName(n)[0],i.async=1,i.src=s,a.parentNode.insertBefore(i,a)})(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-111743535-1","auto"),ga("send","pageview"),window.baseURL="https://segflow.github.io/"</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js></script><script src=https://segflow.github.io//js/App.js></script></body></html>

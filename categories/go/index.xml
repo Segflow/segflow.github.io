@@ -1,28 +1,3 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Go on Segflow</title>
-    <link>https://segflow.github.io/categories/go/</link>
-    <description>Recent content in Go on Segflow</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language>
-    <lastBuildDate>Tue, 28 Apr 2020 13:20:28 +0100</lastBuildDate>
-    
-	<atom:link href="https://segflow.github.io/categories/go/index.xml" rel="self" type="application/rss+xml" />
-    
-    
-    <item>
-      <title>My journey optimizing the Go Compiler</title>
-      <link>https://segflow.github.io/post/go-compiler-optimization/</link>
-      <pubDate>Tue, 28 Apr 2020 13:20:28 +0100</pubDate>
-      
-      <guid>https://segflow.github.io/post/go-compiler-optimization/</guid>
-      <description>&lt;p&gt;At &lt;a href=&#34;https://edge.network/&#34;&gt;EDGE&lt;/a&gt; we write a lot of Go, and we love it for various reasons, one of them being speed. One day I got into a situation where I need to assign an &lt;code&gt;int&lt;/code&gt; to a variable based on another string value.&lt;/p&gt;
-
-&lt;p&gt;Sounds easy right? well yes, but this particular use case awakened the beast in me and made me think what&amp;rsquo;s the &lt;strong&gt;best&lt;/strong&gt; way to do it.&lt;/p&gt;
-
-&lt;p&gt;The journey finished by me contributing to the language compiler and make &lt;code&gt;map&lt;/code&gt; lookups faster.&lt;/p&gt;</description>
-    </item>
-    
-  </channel>
-</rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Go on Segflow</title><link>https://segflow.github.io/categories/go/</link><description>Recent content in Go on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Tue, 28 Apr 2020 13:20:28 +0100</lastBuildDate><atom:link href="https://segflow.github.io/categories/go/index.xml" rel="self" type="application/rss+xml"/><item><title>My journey optimizing the Go Compiler</title><link>https://segflow.github.io/post/go-compiler-optimization/</link><pubDate>Tue, 28 Apr 2020 13:20:28 +0100</pubDate><guid>https://segflow.github.io/post/go-compiler-optimization/</guid><description>&lt;p>At &lt;a href="https://edge.network/">EDGE&lt;/a> we write a lot of Go, and we love it for various reasons, one of them being speed. One day I got into a situation where I need to assign an &lt;code>int&lt;/code> to a variable based on another string value.&lt;/p>
+&lt;p>Sounds easy right? well yes, but this particular use case awakened the beast in me and made me think what&amp;rsquo;s the &lt;strong>best&lt;/strong> way to do it.&lt;/p>
+&lt;p>The journey finished by me contributing to the language compiler and make &lt;code>map&lt;/code> lookups faster.&lt;/p></description></item></channel></rss>

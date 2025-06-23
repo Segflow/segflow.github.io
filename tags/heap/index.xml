@@ -1,25 +1,2 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>heap on Segflow</title>
-    <link>https://segflow.github.io/tags/heap/</link>
-    <description>Recent content in heap on Segflow</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language>
-    <lastBuildDate>Sun, 09 Sep 2018 19:21:10 +0100</lastBuildDate>
-    
-	<atom:link href="https://segflow.github.io/tags/heap/index.xml" rel="self" type="application/rss+xml" />
-    
-    
-    <item>
-      <title>Noxale CTF: Grocery List (pwn)</title>
-      <link>https://segflow.github.io/post/noxale-ctf-grocery_list/</link>
-      <pubDate>Sun, 09 Sep 2018 19:21:10 +0100</pubDate>
-      
-      <guid>https://segflow.github.io/post/noxale-ctf-grocery_list/</guid>
-      <description>&lt;p&gt;In this challenge, we are given a service IP and PORT, to which we can connect using &lt;code&gt;netcat&lt;/code&gt; or any similar tool.
-We are also provided with an &lt;code&gt;ELF&lt;/code&gt; file.&lt;/p&gt;</description>
-    </item>
-    
-  </channel>
-</rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Heap on Segflow</title><link>https://segflow.github.io/tags/heap/</link><description>Recent content in Heap on Segflow</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sun, 09 Sep 2018 19:21:10 +0100</lastBuildDate><atom:link href="https://segflow.github.io/tags/heap/index.xml" rel="self" type="application/rss+xml"/><item><title>Noxale CTF: Grocery List (pwn)</title><link>https://segflow.github.io/post/noxale-ctf-grocery_list/</link><pubDate>Sun, 09 Sep 2018 19:21:10 +0100</pubDate><guid>https://segflow.github.io/post/noxale-ctf-grocery_list/</guid><description>&lt;p>In this challenge, we are given a service IP and PORT, to which we can connect using &lt;code>netcat&lt;/code> or any similar tool.
+We are also provided with an &lt;code>ELF&lt;/code> file.&lt;/p></description></item></channel></rss>
