@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 540" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">
+<rect width="980" height="540" fill="#fdfdfb"/>
+<text x="410.0" y="28" text-anchor="middle" font-size="18" font-weight="600" fill="#222">Throughput vs. goroutine count</text>
+<text x="410.0" y="46" text-anchor="middle" font-size="12" fill="#666">MB/s on a 6c/12t Ryzen 9600X. Log2 x axis. Higher is better.</text>
+<line x1="80" y1="470.0" x2="740" y2="470.0" stroke="#bbb"/>
+<text x="74" y="474.0" text-anchor="end" fill="#666">0</text>
+<line x1="80" y1="432.7" x2="740" y2="432.7" stroke="#ddd"/>
+<line x1="80" y1="395.5" x2="740" y2="395.5" stroke="#bbb"/>
+<text x="74" y="399.5" text-anchor="end" fill="#666">10,000</text>
+<line x1="80" y1="358.2" x2="740" y2="358.2" stroke="#ddd"/>
+<line x1="80" y1="320.9" x2="740" y2="320.9" stroke="#bbb"/>
+<text x="74" y="324.9" text-anchor="end" fill="#666">20,000</text>
+<line x1="80" y1="283.6" x2="740" y2="283.6" stroke="#ddd"/>
+<line x1="80" y1="246.4" x2="740" y2="246.4" stroke="#bbb"/>
+<text x="74" y="250.4" text-anchor="end" fill="#666">30,000</text>
+<line x1="80" y1="209.1" x2="740" y2="209.1" stroke="#ddd"/>
+<line x1="80" y1="171.8" x2="740" y2="171.8" stroke="#bbb"/>
+<text x="74" y="175.8" text-anchor="end" fill="#666">40,000</text>
+<line x1="80" y1="134.5" x2="740" y2="134.5" stroke="#ddd"/>
+<line x1="80" y1="97.3" x2="740" y2="97.3" stroke="#bbb"/>
+<text x="74" y="101.3" text-anchor="end" fill="#666">50,000</text>
+<line x1="80" y1="60.0" x2="740" y2="60.0" stroke="#ddd"/>
+<text x="20" y="265.0" text-anchor="middle" transform="rotate(-90, 20, 265.0)" fill="#444" font-size="13">MB / second</text>
+<line x1="80.0" y1="470" x2="80.0" y2="475" stroke="#666"/>
+<text x="80.0" y="488" text-anchor="middle" fill="#444">1</text>
+<line x1="180.2" y1="470" x2="180.2" y2="475" stroke="#666"/>
+<text x="180.2" y="488" text-anchor="middle" fill="#444">2</text>
+<line x1="280.5" y1="470" x2="280.5" y2="475" stroke="#666"/>
+<text x="280.5" y="488" text-anchor="middle" fill="#444">4</text>
+<line x1="339.1" y1="470" x2="339.1" y2="475" stroke="#666"/>
+<text x="339.1" y="488" text-anchor="middle" fill="#444">6</text>
+<line x1="380.7" y1="470" x2="380.7" y2="475" stroke="#666"/>
+<text x="380.7" y="488" text-anchor="middle" fill="#444">8</text>
+<line x1="439.3" y1="470" x2="439.3" y2="475" stroke="#666"/>
+<text x="439.3" y="488" text-anchor="middle" fill="#444">12</text>
+<line x1="539.5" y1="470" x2="539.5" y2="475" stroke="#666"/>
+<text x="539.5" y="488" text-anchor="middle" fill="#444">24</text>
+<line x1="639.8" y1="470" x2="639.8" y2="475" stroke="#666"/>
+<text x="639.8" y="488" text-anchor="middle" fill="#444">48</text>
+<line x1="740.0" y1="470" x2="740.0" y2="475" stroke="#666"/>
+<text x="740.0" y="488" text-anchor="middle" fill="#444">96</text>
+<text x="410.0" y="514" text-anchor="middle" fill="#444" font-size="13">goroutines</text>
+<line x1="339.1" y1="60" x2="339.1" y2="470" stroke="#aaa" stroke-dasharray="3 3"/>
+<text x="344.1" y="72" fill="#777" font-size="11">6 physical cores</text>
+<line x1="439.3" y1="60" x2="439.3" y2="470" stroke="#aaa" stroke-dasharray="3 3"/>
+<text x="444.3" y="86" fill="#777" font-size="11">12 logical (SMT)</text>
+<path d="M 80.0 386.4 L 180.2 335.3 L 280.5 287.2 L 339.1 267.8 L 380.7 278.9 L 439.3 320.5 L 539.5 275.0 L 639.8 253.5 L 740.0 257.1" fill="none" stroke="#a35a5a" stroke-width="2.5"/>
+<circle cx="80.0" cy="386.4" r="3.5" fill="#a35a5a"/>
+<circle cx="180.2" cy="335.3" r="3.5" fill="#a35a5a"/>
+<circle cx="280.5" cy="287.2" r="3.5" fill="#a35a5a"/>
+<circle cx="339.1" cy="267.8" r="3.5" fill="#a35a5a"/>
+<circle cx="380.7" cy="278.9" r="3.5" fill="#a35a5a"/>
+<circle cx="439.3" cy="320.5" r="3.5" fill="#a35a5a"/>
+<circle cx="539.5" cy="275.0" r="3.5" fill="#a35a5a"/>
+<circle cx="639.8" cy="253.5" r="3.5" fill="#a35a5a"/>
+<circle cx="740.0" cy="257.1" r="3.5" fill="#a35a5a"/>
+<path d="M 80.0 356.2 L 180.2 306.1 L 280.5 261.6 L 339.1 262.9 L 380.7 289.5 L 439.3 261.8 L 539.5 261.6 L 639.8 259.7 L 740.0 256.2" fill="none" stroke="#c98a2b" stroke-width="2.5"/>
+<circle cx="80.0" cy="356.2" r="3.5" fill="#c98a2b"/>
+<circle cx="180.2" cy="306.1" r="3.5" fill="#c98a2b"/>
+<circle cx="280.5" cy="261.6" r="3.5" fill="#c98a2b"/>
+<circle cx="339.1" cy="262.9" r="3.5" fill="#c98a2b"/>
+<circle cx="380.7" cy="289.5" r="3.5" fill="#c98a2b"/>
+<circle cx="439.3" cy="261.8" r="3.5" fill="#c98a2b"/>
+<circle cx="539.5" cy="261.6" r="3.5" fill="#c98a2b"/>
+<circle cx="639.8" cy="259.7" r="3.5" fill="#c98a2b"/>
+<circle cx="740.0" cy="256.2" r="3.5" fill="#c98a2b"/>
+<path d="M 80.0 378.5 L 180.2 344.2 L 280.5 274.2 L 339.1 285.1 L 380.7 234.8 L 439.3 216.6 L 539.5 161.2 L 639.8 166.7 L 740.0 181.5" fill="none" stroke="#3b6db5" stroke-width="2.5"/>
+<circle cx="80.0" cy="378.5" r="3.5" fill="#3b6db5"/>
+<circle cx="180.2" cy="344.2" r="3.5" fill="#3b6db5"/>
+<circle cx="280.5" cy="274.2" r="3.5" fill="#3b6db5"/>
+<circle cx="339.1" cy="285.1" r="3.5" fill="#3b6db5"/>
+<circle cx="380.7" cy="234.8" r="3.5" fill="#3b6db5"/>
+<circle cx="439.3" cy="216.6" r="3.5" fill="#3b6db5"/>
+<circle cx="539.5" cy="161.2" r="3.5" fill="#3b6db5"/>
+<circle cx="639.8" cy="166.7" r="3.5" fill="#3b6db5"/>
+<circle cx="740.0" cy="181.5" r="3.5" fill="#3b6db5"/>
+<path d="M 80.0 341.3 L 180.2 273.0 L 280.5 162.1 L 339.1 123.4 L 380.7 113.6 L 439.3 111.9 L 539.5 139.9 L 639.8 134.8 L 740.0 139.1" fill="none" stroke="#1f9d55" stroke-width="2.5"/>
+<circle cx="80.0" cy="341.3" r="3.5" fill="#1f9d55"/>
+<circle cx="180.2" cy="273.0" r="3.5" fill="#1f9d55"/>
+<circle cx="280.5" cy="162.1" r="3.5" fill="#1f9d55"/>
+<circle cx="339.1" cy="123.4" r="3.5" fill="#1f9d55"/>
+<circle cx="380.7" cy="113.6" r="3.5" fill="#1f9d55"/>
+<circle cx="439.3" cy="111.9" r="3.5" fill="#1f9d55"/>
+<circle cx="539.5" cy="139.9" r="3.5" fill="#1f9d55"/>
+<circle cx="639.8" cy="134.8" r="3.5" fill="#1f9d55"/>
+<circle cx="740.0" cy="139.1" r="3.5" fill="#1f9d55"/>
+<path d="M 80.0 339.9 L 180.2 249.7 L 280.5 163.2 L 339.1 135.7 L 380.7 114.0 L 439.3 114.4 L 539.5 122.6 L 639.8 128.5 L 740.0 156.3" fill="none" stroke="#7e3cc5" stroke-width="2.5"/>
+<circle cx="80.0" cy="339.9" r="3.5" fill="#7e3cc5"/>
+<circle cx="180.2" cy="249.7" r="3.5" fill="#7e3cc5"/>
+<circle cx="280.5" cy="163.2" r="3.5" fill="#7e3cc5"/>
+<circle cx="339.1" cy="135.7" r="3.5" fill="#7e3cc5"/>
+<circle cx="380.7" cy="114.0" r="3.5" fill="#7e3cc5"/>
+<circle cx="439.3" cy="114.4" r="3.5" fill="#7e3cc5"/>
+<circle cx="539.5" cy="122.6" r="3.5" fill="#7e3cc5"/>
+<circle cx="639.8" cy="128.5" r="3.5" fill="#7e3cc5"/>
+<circle cx="740.0" cy="156.3" r="3.5" fill="#7e3cc5"/>
+<rect x="750" y="54" width="210" height="120" fill="#fff" stroke="#ddd" rx="3"/>
+<rect x="760" y="64" width="14" height="3" fill="#a35a5a"/>
+<circle cx="767" cy="65.5" r="3" fill="#a35a5a"/>
+<text x="782" y="69" fill="#222" font-size="11">v6: mmap parallel (scalar)</text>
+<rect x="760" y="86" width="14" height="3" fill="#c98a2b"/>
+<circle cx="767" cy="87.5" r="3" fill="#c98a2b"/>
+<text x="782" y="91" fill="#222" font-size="11">v9: mmap parallel + AVX2</text>
+<rect x="760" y="108" width="14" height="3" fill="#3b6db5"/>
+<circle cx="767" cy="109.5" r="3" fill="#3b6db5"/>
+<text x="782" y="113" fill="#222" font-size="11">v7: pread parallel (scalar)</text>
+<rect x="760" y="130" width="14" height="3" fill="#1f9d55"/>
+<circle cx="767" cy="131.5" r="3" fill="#1f9d55"/>
+<text x="782" y="135" fill="#222" font-size="11">v11: pread parallel + AVX2 asm</text>
+<rect x="760" y="152" width="14" height="3" fill="#7e3cc5"/>
+<circle cx="767" cy="153.5" r="3" fill="#7e3cc5"/>
+<text x="782" y="157" fill="#222" font-size="11">v13: pread parallel + archsimd</text>
+<text x="760" y="528" fill="#777" font-size="10">FILE=4 GiB | trimmed mean of 5 runs</text>
+</svg>
