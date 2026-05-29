@@ -142,6 +142,28 @@ article img, .post-content img, .post img {
 /* Keep it lighter so the post title remains the loudest element. */
 .sidebar-about h1 { font-size: 26px; }
 
+/* Match the existing subtitle palette (#81bbdc) so the workplace line
+ * sits quietly below "Assel Meher" instead of shouting. */
+.sidebar-workplace {
+  display: block;
+  margin-top: 2px;
+  margin-bottom: 16px;
+  color: #81bbdc;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+.sidebar-workplace a {
+  color: #81bbdc;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(129, 187, 220, 0.5);
+}
+.sidebar-workplace a:hover {
+  color: #bddbed;
+  border-bottom-color: #bddbed;
+}
+
 /* ---------- Home-page post summaries ---------------------------------- */
 /* The theme wraps each post on the listing page in `<h3>` inside a
  * `.panel-header`. Bump it well above the body so titles are visibly the
